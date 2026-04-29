@@ -804,6 +804,21 @@ canvas{max-width:100%}
   </div>
 </div>
 
+<!-- Closed tours recap modal -->
+<div id="closed-tours-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--surface);border:1px solid #334155;border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;padding:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <h2 style="margin:0;font-size:1rem;color:#fff">📋 Tour Chiusi — <span id="closed-modal-date" style="color:var(--teal)">—</span></h2>
+      <button onclick="document.getElementById('closed-tours-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer">×</button>
+    </div>
+    <div id="closed-modal-summary" style="display:flex;gap:24px;margin-bottom:18px;padding:14px 16px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--green)"></div>
+    <div id="closed-modal-list"></div>
+    <div style="margin-top:18px;text-align:right">
+      <button onclick="document.getElementById('closed-tours-modal').style.display='none'" style="background:var(--surface2);color:var(--muted2);border:1px solid #334155;border-radius:8px;padding:10px 16px;font-size:.82rem;cursor:pointer;font-family:inherit">Chiudi</button>
+    </div>
+  </div>
+</div>
+
 <!-- Outlook briefing modal -->
 <div id="outlook-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--surface);border:1px solid #334155;border-radius:14px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;padding:24px">
@@ -2768,6 +2783,12 @@ function renderDashboard(data){
       <div class="val" id="closed-val">${k.val}</div>
       <div class="sub" id="closed-sub">${k.sub}</div>
       <span class="trend ${k.up?'up':'down'}" id="closed-trend">${k.trend}</span>
+      <button id="closed-details-btn" onclick="window.openClosedToursModal()"
+        style="margin-top:10px;width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--muted2);font-size:.7rem;padding:6px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit"
+        onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted2)'">
+        📋 Vedi dettagli
+      </button>
     </div>`;
     }
     if(k.daily){
@@ -2837,6 +2858,74 @@ function renderDashboard(data){
   }
 
   window._allDailyTours = allToday;
+
+  // Open closed-tours recap modal for the date currently selected in the picker
+  window.openClosedToursModal = function(){
+    const iso = document.getElementById('closed-date-picker')?.value || todayIso;
+    const tours = (window._allDailyTours||[]).filter(t=>t.bookDate===iso);
+    const rev = tours.reduce((s,t)=>s+(t.price||0),0);
+    const [yy,mm,dd] = iso.split('-').map(Number);
+    const dObj = new Date(yy,mm-1,dd);
+    const dateLabel = dObj.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+    document.getElementById('closed-modal-date').textContent = dateLabel;
+    document.getElementById('closed-modal-summary').innerHTML = `
+      <div>
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Fatturato chiuso</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#fff;line-height:1">${fmt(rev)}</div>
+      </div>
+      <div>
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Prenotazioni</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#fff;line-height:1">${tours.length}</div>
+      </div>
+      <div>
+        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Ticket medio</div>
+        <div style="font-size:1.5rem;font-weight:800;color:#fff;line-height:1">${tours.length?fmt(rev/tours.length):'—'}</div>
+      </div>
+    `;
+
+    const listEl = document.getElementById('closed-modal-list');
+    if(tours.length===0){
+      listEl.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--muted2);font-size:.85rem;background:var(--surface2);border-radius:8px;border:1px dashed var(--border)">Nessun tour chiuso in questa data.</div>`;
+    } else {
+      const sorted = [...tours].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
+      listEl.innerHTML = `
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+          <thead>
+            <tr style="color:var(--muted);text-transform:uppercase;font-size:.62rem;letter-spacing:.08em">
+              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)">#</th>
+              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)">Data Tour</th>
+              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)">Servizio</th>
+              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)">Canale</th>
+              <th style="text-align:right;padding:8px 10px;border-bottom:1px solid var(--border)">Prezzo</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map((t,i)=>{
+              const parts = (t.date||'').split('-').map(Number);
+              const tourDateLbl = (parts.length===3 && parts[0])
+                ? new Date(parts[0],parts[1]-1,parts[2]).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short',year:'numeric'})
+                : '—';
+              const isCasa = !!t.platform;
+              const service = isCasa ? `🏠 Casa` : `⛵ ${t.boat||'Tour'}`;
+              const channel = isCasa ? (t.platform||'—') : (t.channel||'—');
+              return `
+                <tr style="border-bottom:1px solid var(--border)">
+                  <td style="padding:10px;color:var(--muted)">${i+1}</td>
+                  <td style="padding:10px;color:var(--text)">${tourDateLbl}</td>
+                  <td style="padding:10px;color:var(--text);font-weight:600">${service}</td>
+                  <td style="padding:10px;color:var(--muted2)">${channel}</td>
+                  <td style="padding:10px;text-align:right;color:#22c55e;font-weight:700">${fmt(t.price||0)}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    document.getElementById('closed-tours-modal').style.display = 'flex';
+  };
 
   // Wire up closed-tours date picker
   const cpick = document.getElementById('closed-date-picker');
@@ -4289,6 +4378,11 @@ function renderTodos(){
   // Close outlook modal on background click
   document.getElementById('outlook-modal')?.addEventListener('click',e=>{
     if(e.target.id==='outlook-modal') e.target.style.display='none';
+  });
+
+  // Close closed-tours modal on background click
+  document.getElementById('closed-tours-modal')?.addEventListener('click',e=>{
+    if(e.target.id==='closed-tours-modal') e.target.style.display='none';
   });
 })();
 </script>
