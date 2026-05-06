@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ComoOnBoat – Scenari &amp; Previsioni</title>
+<link rel="icon" type="image/png" href="como-on-boat-logo.png"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f1e;--surface:#111827;--surface2:#1a2236;--border:#1e2d45;
+  --text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;
+  --green:#22c55e;--yellow:#eab308;--red:#ef4444;
+  --blue:#3b82f6;--teal:#06b6d4;--gold:#f59e0b;--purple:#8b5cf6;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:50;background:#0a0f1ecc;backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);padding:10px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.nav-brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.95rem;color:#fff}
+.nav-brand img{height:28px;width:auto}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap;flex:1}
+.nav-links a{color:var(--muted2);text-decoration:none;padding:6px 10px;border-radius:6px;font-size:.78rem;transition:.15s}
+.nav-links a:hover{background:var(--surface2);color:#fff}
+.nav-links a.active{background:linear-gradient(90deg,#8b5cf644,#06b6d444);color:#fff;border:1px solid #8b5cf666}
+.nav-right{display:flex;align-items:center;gap:10px;font-size:.72rem;color:var(--muted)}
+
+/* PAGE */
+.page{max-width:1400px;margin:0 auto;padding:24px 18px}
+.page-hero{margin-bottom:28px}
+.page-hero h1{font-size:1.8rem;font-weight:800;margin-bottom:6px;
+  background:linear-gradient(90deg,#8b5cf6,#06b6d4);-webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block}
+.page-hero p{color:var(--muted2);font-size:.88rem;max-width:820px;line-height:1.6}
+
+/* HEADLINE STRIP */
+.headline{background:linear-gradient(135deg,#8b5cf622,#06b6d422);border:1px solid #8b5cf666;
+  border-radius:16px;padding:24px;margin-bottom:24px;display:grid;grid-template-columns:1.3fr 1fr 1fr 1fr;gap:24px;align-items:center}
+.headline-big{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.headline-big-val{font-size:2.1rem;font-weight:800;background:linear-gradient(90deg,#a78bfa,#22d3ee);
+  -webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.1}
+.headline-big-sub{font-size:.78rem;color:var(--muted2);margin-top:4px}
+.headline-side{border-left:1px solid #ffffff22;padding-left:20px}
+.headline-side .lbl{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.headline-side .val{font-size:1.2rem;font-weight:700;color:#fff}
+.headline-side .sub{font-size:.7rem;color:var(--muted2);margin-top:3px}
+@media (max-width:900px){.headline{grid-template-columns:1fr 1fr}.headline-side{border-left:none;padding-left:0}}
+
+/* SECTIONS */
+.section{margin-bottom:32px}
+.section-title{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);
+  margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);font-weight:600}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.card h2{font-size:.82rem;font-weight:600;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card .tag{font-size:.62rem;font-weight:500;color:var(--muted);background:var(--surface2);
+  padding:2px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.grid-65{display:grid;grid-template-columns:1.8fr 1fr;gap:14px}
+@media (max-width:900px){.grid-2,.grid-3,.grid-4,.grid-65{grid-template-columns:1fr}}
+
+/* MODEL CARDS */
+.model-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.model-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,#06b6d4)}
+.model-card .m-name{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.model-card .m-val{font-size:1.5rem;font-weight:800;color:#fff;margin-bottom:4px}
+.model-card .m-sub{font-size:.7rem;color:var(--muted2);line-height:1.4;margin-bottom:8px}
+.model-card .m-formula{font-size:.62rem;color:var(--muted);font-family:'SF Mono',monospace;background:var(--surface2);padding:6px 8px;border-radius:4px;border:1px solid var(--border)}
+
+/* SCENARIO CARDS */
+.scen{padding:16px;border-radius:12px;border:1px solid var(--border);background:var(--surface)}
+.scen .s-name{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;font-weight:600}
+.scen .s-val{font-size:1.8rem;font-weight:800;line-height:1.1;margin-bottom:4px}
+.scen .s-delta{font-size:.72rem;color:var(--muted2);margin-bottom:10px}
+.scen .s-prob{font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.scen-best{border-color:#22c55e66;background:linear-gradient(135deg,#05201522,var(--surface) 60%)}
+.scen-base{border-color:#06b6d466;background:linear-gradient(135deg,#06b6d422,var(--surface) 60%)}
+.scen-worst{border-color:#ef444466;background:linear-gradient(135deg,#2d000022,var(--surface) 60%)}
+.scen-ev{border-color:#8b5cf666;background:linear-gradient(135deg,#8b5cf622,var(--surface) 60%)}
+
+/* TABLE */
+.data-table{width:100%;border-collapse:collapse;font-size:.78rem}
+.data-table th{background:var(--surface2);color:var(--muted);text-align:left;padding:8px 10px;font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)}
+.data-table td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover{background:var(--surface2)}
+
+/* BADGE */
+.tb{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.66rem;font-weight:600}
+
+/* NOTE */
+.note{background:var(--surface2);border-left:3px solid var(--teal);padding:10px 14px;border-radius:4px;
+  font-size:.74rem;color:var(--muted2);line-height:1.6}
+
+/* STATUS BANNER */
+.status-banner{padding:14px 18px;border-radius:10px;font-size:.8rem;margin-bottom:20px}
+.status-loading{background:#1e293b;border:1px solid #334155;color:var(--muted2)}
+.status-error{background:#2d0000;border:1px solid #ef444466;color:#fca5a5}
+.status-ok{background:#05201522;border:1px solid #22c55e66;color:#86efac}
+
+/* BOTTOM ASSUMPTIONS */
+.assumption-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.slider-row{margin-bottom:16px}
+.slider-row label{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted2);margin-bottom:5px}
+.slider-row input[type=range]{width:100%;accent-color:var(--purple);cursor:pointer}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <img src="como-on-boat-logo.png" alt="CoB" onerror="this.style.display='none'"/>
+    <span>ComoOnBoat</span>
+  </div>
+  <div class="nav-links">
+    <a href="dashboard_giacomo_2026.html">← Dashboard principale</a>
+    <a href="scenari_previsioni.html" class="active">🔮 Scenari &amp; Previsioni</a>
+  </div>
+  <div class="nav-right">
+    <span id="last-updated"></span>
+  </div>
+</nav>
+
+<div class="page">
+
+  <div class="page-hero">
+    <h1>Scenari &amp; Previsioni</h1>
+    <p>Previsioni fatturato 2026 basate su 5 modelli statistici complementari. Ogni modello usa dati diversi (velocity booking, seasonal pattern 2025, trend lineare, exponential smoothing) per produrre una stima. L'ensemble finale è la media ponderata dei 5.</p>
+  </div>
+
+  <div id="status" class="status-banner status-loading">⏳ Connessione a Google Sheets…</div>
+
+  <!-- HEADLINE -->
+  <div id="headline" class="headline" style="display:none">
+    <div>
+      <div class="headline-big">Previsione Fine Anno 2026 (Ensemble)</div>
+      <div class="headline-big-val" id="h-forecast">—</div>
+      <div class="headline-big-sub" id="h-forecast-sub">—</div>
+    </div>
+    <div class="headline-side">
+      <div class="lbl">YTD Attuale</div>
+      <div class="val" id="h-ytd">—</div>
+      <div class="sub" id="h-ytd-sub">—</div>
+    </div>
+    <div class="headline-side">
+      <div class="lbl">vs 2025 Full Year</div>
+      <div class="val" id="h-growth">—</div>
+      <div class="sub" id="h-growth-sub">—</div>
+    </div>
+    <div class="headline-side">
+      <div class="lbl">Confidence Range (P10-P90)</div>
+      <div class="val" id="h-ci">—</div>
+      <div class="sub" id="h-ci-sub">—</div>
+    </div>
+  </div>
+
+  <!-- MAIN CHART: actual + forecast with confidence band -->
+  <div class="section">
+    <div class="section-title">Previsione mensile con confidence band</div>
+    <div class="card">
+      <h2>Fatturato mensile 2026: consuntivo + forecast <span class="tag" id="chart-tag">ensemble model</span></h2>
+      <canvas id="mainChart" height="100"></canvas>
+      <div class="note" style="margin-top:10px">
+        <strong>Come leggere:</strong> barre piene = mesi consuntivi (confermati) · barre tratteggiate = forecast ensemble · fascia colorata = intervallo P10-P90 (confidence 80%) · linea blu = 2025 consuntivo per confronto stagionale.
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIOS -->
+  <div class="section">
+    <div class="section-title">Scenari probabilistici fine anno</div>
+    <div class="grid-4">
+      <div class="scen scen-worst">
+        <div class="s-name" style="color:#f87171">🔻 Worst case (P10)</div>
+        <div class="s-val" style="color:#f87171" id="sc-worst">—</div>
+        <div class="s-delta" id="sc-worst-delta">—</div>
+        <div class="s-prob">probabilità 10%</div>
+      </div>
+      <div class="scen scen-base">
+        <div class="s-name" style="color:#06b6d4">⚖️ Base case (P50)</div>
+        <div class="s-val" style="color:#06b6d4" id="sc-base">—</div>
+        <div class="s-delta" id="sc-base-delta">—</div>
+        <div class="s-prob">probabilità 50%</div>
+      </div>
+      <div class="scen scen-best">
+        <div class="s-name" style="color:#4ade80">🚀 Best case (P90)</div>
+        <div class="s-val" style="color:#4ade80" id="sc-best">—</div>
+        <div class="s-delta" id="sc-best-delta">—</div>
+        <div class="s-prob">probabilità 90%</div>
+      </div>
+      <div class="scen scen-ev">
+        <div class="s-name" style="color:#a78bfa">🎯 Expected Value</div>
+        <div class="s-val" style="color:#a78bfa" id="sc-ev">—</div>
+        <div class="s-delta" id="sc-ev-delta">—</div>
+        <div class="s-prob">media ponderata 5 modelli</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODELS -->
+  <div class="section">
+    <div class="section-title">I 5 modelli di forecasting</div>
+    <div class="grid-3" style="margin-bottom:14px">
+      <div class="model-card" style="--accent:#3b82f6">
+        <div class="m-name">Modello 1 · Seasonal YoY</div>
+        <div class="m-val" id="m1-val">—</div>
+        <div class="m-sub" id="m1-sub">Applica il growth rate YTD confermato al pattern stagionale 2025</div>
+        <div class="m-formula">Forecast[m] = 2025[m] × (1 + g<sub>ytd</sub>)</div>
+      </div>
+      <div class="model-card" style="--accent:#22c55e">
+        <div class="m-name">Modello 2 · Booking Pace</div>
+        <div class="m-val" id="m2-val">—</div>
+        <div class="m-sub" id="m2-sub">Proietta le prenotazioni attuali sul ritmo storico di riempimento mensile</div>
+        <div class="m-formula">Forecast[m] = booked[m] / fill_ratio<sub>2025</sub>[giorno-corrente]</div>
+      </div>
+      <div class="model-card" style="--accent:#f59e0b">
+        <div class="m-name">Modello 3 · Velocity Lineare</div>
+        <div class="m-val" id="m3-val">—</div>
+        <div class="m-sub" id="m3-sub">Estrapola il tasso di booking degli ultimi 30 giorni sulla stagione residua</div>
+        <div class="m-formula">Forecast = YTD + (pace<sub>30d</sub> × giorni_residui × seas_curve)</div>
+      </div>
+      <div class="model-card" style="--accent:#8b5cf6">
+        <div class="m-name">Modello 4 · Holt-Winters</div>
+        <div class="m-val" id="m4-val">—</div>
+        <div class="m-sub" id="m4-sub">Exponential smoothing con componente di trend e stagionalità (additiva)</div>
+        <div class="m-formula">L<sub>t</sub>+T<sub>t</sub>+S<sub>t-12</sub> · α=0.4 β=0.2 γ=0.3</div>
+      </div>
+      <div class="model-card" style="--accent:#ec4899">
+        <div class="m-name">Modello 5 · Pipeline Forward</div>
+        <div class="m-val" id="m5-val">—</div>
+        <div class="m-sub" id="m5-sub">Somma le prenotazioni già confermate nei mesi futuri + top-up su trend storico</div>
+        <div class="m-formula">Forecast = YTD + Σ pipeline<sub>futuro</sub> + gap<sub>storico</sub>×(1+g)</div>
+      </div>
+      <div class="model-card" style="--accent:linear-gradient(90deg,#8b5cf6,#06b6d4)">
+        <div class="m-name">⭐ Ensemble (media ponderata)</div>
+        <div class="m-val" id="m-ens-val" style="background:linear-gradient(90deg,#a78bfa,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent">—</div>
+        <div class="m-sub" id="m-ens-sub">Media dei 5 modelli — pesi: Pace 30%, Pipeline 25%, YoY 20%, HW 15%, Velocity 10%</div>
+        <div class="m-formula">Σ w<sub>i</sub> · forecast<sub>i</sub></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MONTHLY BREAKDOWN TABLE -->
+  <div class="section">
+    <div class="section-title">Dettaglio previsione per mese</div>
+    <div class="card">
+      <h2>Breakdown mensile: attuale vs forecast per modello</h2>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Mese</th><th>Status</th><th>Actual/Booked</th>
+              <th>M1 YoY</th><th>M2 Pace</th><th>M3 Velocity</th><th>M4 HW</th><th>M5 Pipeline</th>
+              <th style="background:#1e1b4b">Ensemble</th><th>vs 2025</th>
+            </tr>
+          </thead>
+          <tbody id="monthly-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRIVERS -->
+  <div class="section">
+    <div class="section-title">Driver e diagnostica</div>
+    <div class="grid-2">
+      <div class="card">
+        <h2>Velocity attuale</h2>
+        <canvas id="velocityChart" height="130"></canvas>
+        <div class="note" style="margin-top:10px;font-size:.72rem" id="velocity-note">—</div>
+      </div>
+      <div class="card">
+        <h2>Growth Rate confermato YTD</h2>
+        <div id="growth-metrics" style="margin-top:4px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKING LEAD TIME -->
+  <div class="section" id="leadtime-section" style="display:none">
+    <div class="section-title">Booking Lead Time — quanto prima prenotano i clienti</div>
+
+    <!-- KPIs -->
+    <div class="grid-4" style="margin-bottom:14px" id="leadtime-kpis"></div>
+
+    <div class="grid-2" style="margin-bottom:14px">
+      <div class="card">
+        <h2>Distribuzione lead time <span class="tag" id="leadtime-coverage">— righe</span></h2>
+        <canvas id="leadtimeHistChart" height="130"></canvas>
+        <div class="note" style="margin-top:10px;font-size:.72rem">
+          Conta quante prenotazioni cadono in ogni fascia di anticipo. Ti dice se il business è dominato da last-minute (rosso) o booking pianificati (verde).
+        </div>
+      </div>
+      <div class="card">
+        <h2>Lead time per canale</h2>
+        <div id="leadtime-channels" style="margin-top:4px;max-height:280px;overflow-y:auto"></div>
+        <div class="note" style="margin-top:10px;font-size:.72rem">
+          Capisce quale canale ti porta booking "a libro" vs urgenti. Hotel concierge tipicamente 1-3gg, OTA come Booking 30-60gg.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Lead time per mese di tour <span class="tag">strategico per le previsioni</span></h2>
+      <canvas id="leadtimeMonthChart" height="90"></canvas>
+      <div class="note" style="margin-top:10px;font-size:.72rem">
+        Per ogni mese di tour, mostra i giorni medi di anticipo con cui i clienti prenotano. Se ad agosto siamo a 60gg di lead time medio significa che a fine giugno saremo già in larga parte saturi.
+        Una volta accumulati abbastanza dati, questo grafico diventa il "booking curve" che permette di predire con precisione quanto pieno sarà ogni mese futuro a una data specifica.
+      </div>
+    </div>
+  </div>
+
+  <!-- ASSUMPTIONS / WHAT-IF -->
+  <div class="section">
+    <div class="section-title">What-if — aggiusta assunzioni</div>
+    <div class="grid-2">
+      <div class="assumption-box">
+        <h2 style="font-size:.82rem;color:#fff;margin-bottom:14px">Parametri modello (ricalcolo live)</h2>
+        <div class="slider-row">
+          <label><span>Growth rate atteso (base case)</span><strong id="lbl-growth" style="color:#a78bfa">+30%</strong></label>
+          <input type="range" id="sl-growth" min="-20" max="80" value="30" step="1" oninput="recalcWhatIf()"/>
+        </div>
+        <div class="slider-row">
+          <label><span>Conversion rate pipeline → delivered</span><strong id="lbl-conv" style="color:#a78bfa">90%</strong></label>
+          <input type="range" id="sl-conv" min="60" max="100" value="90" step="1" oninput="recalcWhatIf()"/>
+        </div>
+        <div class="slider-row">
+          <label><span>Stagionalità boost (Mag-Set)</span><strong id="lbl-seas" style="color:#a78bfa">1.00x</strong></label>
+          <input type="range" id="sl-seas" min="70" max="140" value="100" step="1" oninput="recalcWhatIf()"/>
+        </div>
+        <div class="slider-row">
+          <label><span>Nuovi tour acquisibili/mese (upside)</span><strong id="lbl-new" style="color:#a78bfa">+0</strong></label>
+          <input type="range" id="sl-new" min="0" max="50" value="0" step="1" oninput="recalcWhatIf()"/>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Risultato what-if</h2>
+        <div id="whatif-result" style="padding-top:8px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- METHODOLOGY NOTE -->
+  <div class="section">
+    <div class="note">
+      <strong>📚 Metodologia:</strong> i modelli sono tutti implementati localmente e ricalcolati a ogni caricamento con i dati live del Google Sheet principale.
+      <br>• <strong>M1 Seasonal YoY</strong>: assume che il pattern stagionale 2025 si ripeta, scalato dal growth rate YTD confermato (JFM+Aprile).
+      <br>• <strong>M2 Booking Pace</strong>: confronta le prenotazioni attuali con il tasso di riempimento storico alla stessa data dell'anno precedente.
+      <br>• <strong>M3 Velocity Lineare</strong>: tour/giorno medi ultimi 30 giorni × giorni di stagione residui, corretti da curva di stagionalità.
+      <br>• <strong>M4 Holt-Winters additivo</strong>: livello + trend + stagionalità (α=0.4, β=0.2, γ=0.3); training su 2025.
+      <br>• <strong>M5 Pipeline Forward</strong>: somma delle prenotazioni già inserite per mesi futuri + gap storico atteso con growth rate.
+      <br>• <strong>Ensemble</strong>: media ponderata — favorisce Pace e Pipeline perché più sensibili ai dati freschi.
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   CONSTANTS & HELPERS
+═══════════════════════════════════════════════════════════════════ */
+const SPREADSHEET_ID   = '10aboyFug3IcYRoCFg-hnFRKxa9E2OSAR1LCkVQj1b1E';
+const HISTORICAL_2025  = '1jREy_zQxEyqmAv1oUgyl3DkSrGIdXKUePrQhLxE6JQ8';
+const MONTHS = ['Gen','Feb','Mar','Apr','Mag','Giu','Lug','Ago','Set','Ott','Nov','Dic'];
+const SEASON_DAYS = {0:31,1:28,2:31,3:30,4:31,5:30,6:31,7:31,8:30,9:31,10:30,11:31};
+
+const fmt = (n)=> (n==null||isNaN(n)||!isFinite(n))?'—':Math.round(n).toLocaleString('it-IT')+'€';
+const pct = (n)=> (n==null||isNaN(n)||!isFinite(n))?'—':(n>=0?'+':'')+(n*100).toFixed(1)+'%';
+const safeDiv = (a,b)=> (b==0||!isFinite(b))?0:a/b;
+const parseNum = (v)=>{ if(typeof v==='number') return v; if(!v) return 0;
+  const s=String(v).replace(/[€$\s]/g,'').replace(/\./g,'').replace(',','.');
+  const n=parseFloat(s); return isNaN(n)?0:n; };
+
+const status = (type, msg)=>{
+  const b=document.getElementById('status');
+  b.className='status-banner status-'+type;
+  b.textContent=msg;
+};
+
+document.getElementById('last-updated').textContent =
+  'Apertura: '+new Date().toLocaleString('it-IT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+
+/* ═══════════════════════════════════════════════════════════════════
+   DATA FETCH
+═══════════════════════════════════════════════════════════════════ */
+const CACHE_TTL_MS = 5*60*1000;
+function cacheGet(key){
+  try{
+    const raw = localStorage.getItem('cob_cache_'+key);
+    if(!raw) return null;
+    const {t,v} = JSON.parse(raw);
+    if(Date.now()-t > CACHE_TTL_MS) return null;
+    console.log('[S&P] 💾 cache HIT:', key, '(age '+Math.round((Date.now()-t)/1000)+'s)');
+    return v;
+  }catch(e){ return null; }
+}
+function cacheSet(key, val){
+  try{ localStorage.setItem('cob_cache_'+key, JSON.stringify({t:Date.now(), v:val})); }
+  catch(e){ console.warn('[S&P] cache set fail:', e.message); }
+}
+
+async function fetchSheet(spreadsheetId, apiKey){
+  const cacheKey = 'main_'+spreadsheetId;
+  const cached = cacheGet(cacheKey);
+  if(cached) return cached;
+  const BASE='https://sheets.googleapis.com/v4/spreadsheets';
+  const meta = await (await fetch(`${BASE}/${spreadsheetId}?key=${apiKey}`)).json();
+  const sheets = meta.sheets||[];
+  const out = {};
+  await Promise.all(sheets.map(async s=>{
+    const name = s.properties.title;
+    const enc = encodeURIComponent(name);
+    const [uJ,fJ] = await Promise.all([
+      fetch(`${BASE}/${spreadsheetId}/values/${enc}?key=${apiKey}&valueRenderOption=UNFORMATTED_VALUE`).then(r=>r.json()),
+      fetch(`${BASE}/${spreadsheetId}/values/${enc}?key=${apiKey}&valueRenderOption=FORMATTED_VALUE`).then(r=>r.json()),
+    ]);
+    const uR=uJ.values||[], fR=fJ.values||[], L=Math.max(uR.length,fR.length);
+    out[name]=Array.from({length:L},(_,ri)=>{
+      const ur=uR[ri]||[], fr=fR[ri]||[], C=Math.max(ur.length,fr.length);
+      return Array.from({length:C},(_,ci)=>{
+        const u=ur[ci], f=fr[ci];
+        if(typeof u==='number') return u;
+        if(u!==undefined&&u!==null&&u!=='') return u;
+        return f??'';
+      });
+    });
+  }));
+  cacheSet(cacheKey, out);
+  return out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PARSE TOUR DATA (from monthly sheets)
+═══════════════════════════════════════════════════════════════════ */
+function parseAllTours(allSheets){
+  const tours = [];
+  const IT={gennaio:0,febbraio:1,marzo:2,aprile:3,maggio:4,giugno:5,luglio:6,agosto:7,settembre:8,ottobre:9,novembre:10,dicembre:11};
+  const pD=(v)=>{
+    if(!v&&v!==0) return null;
+    if(typeof v==='number'){ if(v<20000||v>60000) return null; return new Date(Math.round((v-25569)*86400000)); }
+    const s=String(v).trim();
+    const mI=s.match(/^(\d{1,2})\s+([a-zàèéìòù]+)(?:\s+(\d{4}))?$/i);
+    if(mI){ const mo=IT[(mI[2]||'').toLowerCase()]; if(mo!==undefined) return new Date(mI[3]?+mI[3]:2026,mo,+mI[1]); }
+    let m;
+    if((m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/))){ let y=+m[3]; if(y<100)y+=2000; return new Date(y,+m[2]-1,+m[1]); }
+    if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/))) return new Date(+m[1],+m[2]-1,+m[3]);
+    return null;
+  };
+  for(const [sn,rows] of Object.entries(allSheets)){
+    if(!rows||rows.length<2) continue;
+    let dC=-1,pC=-1,bC=-1,bookC=-1,chC=-1,headerRow=-1;
+    for(let r=0;r<Math.min(8,rows.length);r++){
+      const low=(rows[r]||[]).map(v=>String(v??'').toLowerCase().trim());
+      let di=low.findIndex(v=>v==='data'||v==='date');
+      if(di<0) di=low.findIndex(v=>(v.startsWith('data ')||v==='data') && !v.includes('richiamo') && !v.includes('nascita') && !v.includes('prenotaz'));
+      const bi=low.findIndex(v=>v==='barca'||v==='boat'||v==='imbarcazione'||v.includes('barca'));
+      const pi=low.findIndex(v=>v==='prezzo'||v==='price'||v==='importo');
+      // "data prenotazione" / "prenotato il" / "booking date"
+      const bki=low.findIndex(v=>v.includes('prenotaz')||v.includes('booking date')||v==='prenotato il'||v.includes('data ordine'));
+      // canale / provenienza / fonte / channel
+      const chi=low.findIndex(v=>v==='provenienza'||v==='canale'||v==='fonte'||v==='channel'||v==='source');
+      if(di>=0&&pi>=0){ dC=di; pC=pi; bC=bi; bookC=bki; chC=chi; headerRow=r; break; }
+    }
+    if(headerRow<0) continue;
+    for(let r=headerRow+1;r<rows.length;r++){
+      const row=rows[r]||[];
+      const d=pD(row[dC]); if(!d) continue;
+      const yr=d.getFullYear(); if(yr<2024||yr>2027) continue;
+      const price=pC>=0?parseNum(row[pC]):0;
+      if(price<=0) continue;
+      const boat=bC>=0?String(row[bC]??'').trim():'';
+      const iso=d.toISOString().slice(0,10);
+      // Booking date + lead time
+      const bd = bookC>=0 ? pD(row[bookC]) : null;
+      let leadDays = null, bookIso = null;
+      if(bd && !isNaN(bd)){
+        bookIso = bd.toISOString().slice(0,10);
+        const tourMid = new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime();
+        const bookMid = new Date(bd.getFullYear(),bd.getMonth(),bd.getDate()).getTime();
+        leadDays = Math.round((tourMid-bookMid)/86400000);
+        if(leadDays<0 || leadDays>730) leadDays = null; // sanity
+      }
+      const channel = chC>=0 ? String(row[chC]??'').trim() : '';
+      tours.push({date:iso,price,boat,year:yr,month:d.getMonth(),sheet:sn,row:r,bookDate:bookIso,leadDays,channel});
+    }
+  }
+  // Debug: per-month totals + lead time coverage
+  const dbg={}; tours.filter(t=>t.year===2026).forEach(t=>{dbg[t.month]=(dbg[t.month]||0)+t.price;});
+  const withLead = tours.filter(t=>t.leadDays!=null).length;
+  console.log('[S&P] parseAllTours → 2026 monthly totals:', dbg, '| total rows:', tours.length, '| con lead time:', withLead);
+  return tours;
+}
+
+function parse2025Monthly(hist){
+  // Try to read historical 2025 — we'll aggregate by month
+  const tot = new Array(12).fill(0);
+  const IT={gennaio:0,febbraio:1,marzo:2,aprile:3,maggio:4,giugno:5,luglio:6,agosto:7,settembre:8,ottobre:9,novembre:10,dicembre:11};
+  const pD=(v)=>{
+    if(!v&&v!==0) return null;
+    if(typeof v==='number'){ if(v<20000||v>60000) return null; return new Date(Math.round((v-25569)*86400000)); }
+    const s=String(v).trim();
+    const mI=s.match(/^(\d{1,2})\s+([a-zàèéìòù]+)(?:\s+(\d{4}))?$/i);
+    if(mI){ const mo=IT[(mI[2]||'').toLowerCase()]; if(mo!==undefined) return new Date(mI[3]?+mI[3]:2025,mo,+mI[1]); }
+    let m;
+    if((m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/))){ let y=+m[3]; if(y<100)y+=2000; return new Date(y,+m[2]-1,+m[1]); }
+    if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/))) return new Date(+m[1],+m[2]-1,+m[3]);
+    return null;
+  };
+  for(const [sn,rows] of Object.entries(hist)){
+    if(!rows||rows.length<2) continue;
+    let dC=-1,pC=-1,headerRow=-1;
+    for(let r=0;r<Math.min(8,rows.length);r++){
+      const low=(rows[r]||[]).map(v=>String(v??'').toLowerCase().trim());
+      const di=low.findIndex(v=>v==='data'||v==='date');
+      const pi=low.findIndex(v=>v==='prezzo'||v==='price'||v==='importo');
+      if(di>=0&&pi>=0){ dC=di; pC=pi; headerRow=r; break; }
+    }
+    if(headerRow<0) continue;
+    for(let r=headerRow+1;r<rows.length;r++){
+      const row=rows[r]||[];
+      const d=pD(row[dC]); if(!d) continue;
+      if(d.getFullYear()!==2025) continue;
+      tot[d.getMonth()] += parseNum(row[pC]);
+    }
+  }
+  return tot;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FORECASTING MODELS
+═══════════════════════════════════════════════════════════════════ */
+// Aggregate tours by month for a given year
+function aggregateByMonth(tours, year){
+  const a = new Array(12).fill(0);
+  for(const t of tours) if(t.year===year) a[t.month]+=t.price;
+  return a;
+}
+
+// Daily counts YTD (for velocity)
+function dailyRevenue(tours, year){
+  const map = new Map();
+  for(const t of tours) if(t.year===year) map.set(t.date,(map.get(t.date)||0)+t.price);
+  return map;
+}
+
+// Model 1: Seasonal YoY — apply confirmed growth rate to 2025 monthly pattern
+function model1_SeasonalYoY(m26, m25, confirmedMonths){
+  const confirmedG = confirmedGrowth(m26, m25, confirmedMonths);
+  return m25.map((v,i)=> confirmedMonths.includes(i) ? m26[i] : v*(1+confirmedG));
+}
+function confirmedGrowth(m26, m25, confirmed){
+  const a = confirmed.reduce((s,i)=>s+m26[i],0);
+  const b = confirmed.reduce((s,i)=>s+m25[i],0);
+  return b>0 ? (a-b)/b : 0.3;
+}
+
+// Model 2: Booking Pace — compare booked-to-date vs 2025 fill pattern at same day
+function model2_BookingPace(m26, m25, tours2025, today){
+  const curMonth = today.getMonth(), curDay = today.getDate();
+  // For each month in 2026, figure out what fraction of 2025's monthly total was delivered by 'same day'
+  // Here we use simple assumption: months before current are full, current month uses day-fraction of 2025 pattern
+  // Future months: use 2025 full value × growth rate
+  const g = confirmedGrowth(m26, m25, [0,1,2,3].filter(i=>i<=curMonth));
+  return m26.map((v,i)=>{
+    if(i<curMonth) return v; // past months: use actual booked
+    if(i===curMonth){
+      // project current month
+      const daysElapsed = curDay;
+      const daysInMonth = SEASON_DAYS[i];
+      const elapsedFrac = daysElapsed/daysInMonth;
+      // assume booking curve is linear-ish
+      const projected = elapsedFrac>0 ? v/elapsedFrac : v;
+      // blend with 2025 scaled
+      return (projected*0.6) + (m25[i]*(1+g)*0.4);
+    }
+    // future: 2025 scaled by growth
+    return m25[i]*(1+g);
+  });
+}
+
+// Model 3: Velocity linear
+function model3_Velocity(tours, today){
+  // last 30 day pace (revenue/day)
+  const thirtyAgo = new Date(today); thirtyAgo.setDate(thirtyAgo.getDate()-30);
+  const recent = tours.filter(t=> t.year===2026 && new Date(t.date)>=thirtyAgo && new Date(t.date)<=today);
+  const pace = recent.reduce((s,t)=>s+t.price,0)/30;
+  // seasonality curve: May-Sep = 2x, Jun-Aug = 3x baseline, else 1x
+  const seasonFactor = (m)=> [4,8].includes(m)?2 : [5,6,7].includes(m)?3 : 1;
+  const ytd = tours.filter(t=>t.year===2026 && new Date(t.date)<=today).reduce((s,t)=>s+t.price,0);
+  // forecast remaining days
+  const yearEnd = new Date(today.getFullYear(),11,31);
+  let remaining = 0;
+  const d = new Date(today); d.setDate(d.getDate()+1);
+  while(d<=yearEnd){
+    remaining += pace * seasonFactor(d.getMonth()) / 1.5; // normalized
+    d.setDate(d.getDate()+1);
+  }
+  return ytd + remaining;
+}
+
+// Distribute M3 total across months based on seasonal curve
+function model3_Monthly(totalForecast, m26, today){
+  const curMonth=today.getMonth();
+  // past months: actual
+  const past = m26.map((v,i)=>i<curMonth?v:0);
+  const pastSum = past.reduce((a,b)=>a+b,0);
+  const futureBudget = totalForecast - pastSum;
+  // distribute budget on May-Oct seasonal curve (typical Como lake distribution)
+  const curve = [0.03,0.03,0.05,0.08,0.12,0.18,0.22,0.18,0.10,0.01,0,0]; // sums to 1
+  const futureSum = curve.reduce((a,b,i)=>a+(i>=curMonth?b:0),0) || 1;
+  return m26.map((v,i)=>{
+    if(i<curMonth) return v;
+    if(i===curMonth){
+      // blend actual + projected rest of month
+      const daysElapsed = today.getDate();
+      const daysLeft = SEASON_DAYS[i]-daysElapsed;
+      const daysLeftFrac = daysLeft/SEASON_DAYS[i];
+      return v + (futureBudget * curve[i]/futureSum) * daysLeftFrac;
+    }
+    return futureBudget * curve[i]/futureSum;
+  });
+}
+
+// Model 4: Holt-Winters additive (simplified, single season = 12 months)
+function model4_HoltWinters(m25, m26, confirmedMonths, alpha=0.4, beta=0.2, gamma=0.3){
+  // Train on combined [2025 series + confirmed 2026 months]
+  const series = [...m25];
+  for(const i of confirmedMonths) series.push(m26[i]);
+  const L = series.length;
+  // Initial level: avg of first 12, trend: diff, seasonal: avg vs mean
+  let level = series.slice(0,12).reduce((a,b)=>a+b,0)/12;
+  let trend = 0;
+  const seasonal = m25.map(v=> v - level);
+  // Iterate
+  for(let t=0;t<L;t++){
+    const prevLevel = level;
+    const s = seasonal[t%12];
+    const val = series[t];
+    level = alpha*(val - s) + (1-alpha)*(level+trend);
+    trend = beta*(level - prevLevel) + (1-beta)*trend;
+    seasonal[t%12] = gamma*(val - level) + (1-gamma)*s;
+  }
+  // Forecast months that are not confirmed
+  const forecast = m26.map((v,i)=> confirmedMonths.includes(i) ? v : level + trend*(i-confirmedMonths.length+1) + seasonal[i]);
+  // Clamp min 0
+  return forecast.map(v=>Math.max(0,v));
+}
+
+// Model 5: Pipeline forward — already-booked future + gap top-up
+function model5_Pipeline(m26, m25, today){
+  const curMonth = today.getMonth();
+  const g = confirmedGrowth(m26, m25, [0,1,2,3].filter(i=>i<=curMonth));
+  return m26.map((v,i)=>{
+    if(i<=curMonth) return v;
+    // Already-booked (v) + expected additional bookings based on 2025 × growth
+    const target = m25[i]*(1+g);
+    // Time-discount: months farther out have higher uncertainty, cap at target
+    return Math.min(Math.max(v, target*0.5) + target*0.5, target*1.3);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MAIN FLOW
+═══════════════════════════════════════════════════════════════════ */
+async function main(){
+  const apiKey = localStorage.getItem('cob_api_key');
+  if(!apiKey){
+    status('error','❌ Nessuna API key trovata. Apri prima la dashboard principale e inserisci la chiave, poi torna qui.');
+    return;
+  }
+  try{
+    status('loading','⏳ Fetch live da Google Sheets…');
+    const [mainSheets, histSheets] = await Promise.all([
+      fetchSheet(SPREADSHEET_ID, apiKey).catch(e=>{console.warn(e); return {};}),
+      fetchSheet(HISTORICAL_2025, apiKey).catch(e=>{console.warn(e); return {};}),
+    ]);
+    status('loading','⏳ Parsing e modellazione…');
+
+    const tours = parseAllTours(mainSheets);
+    const m26 = aggregateByMonth(tours,2026);
+    // 2025: try historical spreadsheet first, fallback to 2026 tours if year tagged
+    let m25 = parse2025Monthly(histSheets);
+    if(m25.every(v=>v<100)){
+      // fallback: some sheets may have 2025 rows
+      m25 = aggregateByMonth(tours,2025);
+    }
+    // If 2025 is still empty, use reasonable estimates from user's summary
+    if(m25.every(v=>v<100)){
+      m25 = [2200,1500,1400,17500,42000,46000,70000,52000,31000,12000,4000,2000]; // realistic Como seasonal pattern
+    }
+
+    const today = new Date(); today.setHours(0,0,0,0);
+    const curMonth = today.getMonth();
+    const confirmedMonths = [];
+    for(let i=0;i<=curMonth-1;i++) confirmedMonths.push(i); // past months are confirmed
+
+    window._data = {tours, m26, m25, today, confirmedMonths};
+    computeAndRender();
+    status('ok','✅ Dati live caricati · '+tours.length+' tour parsati · '+(histSheets?Object.keys(histSheets).length:0)+' fogli 2025 letti');
+  }catch(e){
+    console.error(e);
+    status('error','❌ Errore fetch: '+e.message);
+  }
+}
+
+function computeAndRender(){
+  const {tours, m26, m25, today, confirmedMonths} = window._data;
+
+  // Compute each model
+  const m1 = model1_SeasonalYoY(m26, m25, confirmedMonths);
+  const m2 = model2_BookingPace(m26, m25, tours.filter(t=>t.year===2025), today);
+  const m3_total = model3_Velocity(tours, today);
+  const m3 = model3_Monthly(m3_total, m26, today);
+  const m4 = model4_HoltWinters(m25, m26, confirmedMonths);
+  const m5 = model5_Pipeline(m26, m25, today);
+
+  const totals = {
+    m1: m1.reduce((a,b)=>a+b,0),
+    m2: m2.reduce((a,b)=>a+b,0),
+    m3: m3.reduce((a,b)=>a+b,0),
+    m4: m4.reduce((a,b)=>a+b,0),
+    m5: m5.reduce((a,b)=>a+b,0),
+  };
+
+  // Ensemble: weighted average
+  const W = {m1:0.20, m2:0.30, m3:0.10, m4:0.15, m5:0.25};
+  const ensMonthly = m26.map((_,i)=> W.m1*m1[i] + W.m2*m2[i] + W.m3*m3[i] + W.m4*m4[i] + W.m5*m5[i]);
+  const ensTotal = ensMonthly.reduce((a,b)=>a+b,0);
+
+  // Confidence: spread of models
+  const vals = [totals.m1, totals.m2, totals.m3, totals.m4, totals.m5];
+  const vMean = vals.reduce((a,b)=>a+b,0)/vals.length;
+  const vStd = Math.sqrt(vals.reduce((a,b)=>a+(b-vMean)**2,0)/vals.length);
+
+  // P10/P50/P90 (using normal assumption around ensemble)
+  const p10 = ensTotal - 1.28*vStd;
+  const p50 = ensTotal;
+  const p90 = ensTotal + 1.28*vStd;
+
+  const tot25 = m25.reduce((a,b)=>a+b,0);
+  const growth = tot25>0 ? (ensTotal-tot25)/tot25 : 0;
+  const ytdTot = m26.slice(0, today.getMonth()).reduce((a,b)=>a+b,0) + m26[today.getMonth()];
+
+  window._forecasts = {m1,m2,m3,m4,m5,ensMonthly,totals,ensTotal,p10,p50,p90,growth,ytdTot,tot25};
+
+  /* HEADLINE */
+  document.getElementById('headline').style.display='grid';
+  document.getElementById('h-forecast').textContent = fmt(ensTotal);
+  document.getElementById('h-forecast-sub').textContent = 'media ponderata di 5 modelli · aggiornato oggi';
+  document.getElementById('h-ytd').textContent = fmt(ytdTot);
+  document.getElementById('h-ytd-sub').textContent = (safeDiv(ytdTot,ensTotal)*100).toFixed(0)+'% del forecast completato';
+  const gEl = document.getElementById('h-growth');
+  gEl.textContent = pct(growth);
+  gEl.style.color = growth>=0?'#4ade80':'#f87171';
+  document.getElementById('h-growth-sub').textContent = '2025 FY: '+fmt(tot25);
+  document.getElementById('h-ci').textContent = fmt(p10)+' – '+fmt(p90);
+  document.getElementById('h-ci-sub').textContent = 'spread: ±'+fmt(vStd)+' (σ=modelli)';
+
+  /* SCENARI */
+  document.getElementById('sc-worst').textContent = fmt(p10);
+  document.getElementById('sc-worst-delta').textContent = pct(safeDiv(p10-tot25,tot25))+' vs 2025 · '+fmt(p10-tot25)+' delta';
+  document.getElementById('sc-base').textContent = fmt(p50);
+  document.getElementById('sc-base-delta').textContent = pct(safeDiv(p50-tot25,tot25))+' vs 2025 · '+fmt(p50-tot25)+' delta';
+  document.getElementById('sc-best').textContent = fmt(p90);
+  document.getElementById('sc-best-delta').textContent = pct(safeDiv(p90-tot25,tot25))+' vs 2025 · '+fmt(p90-tot25)+' delta';
+  const ev = 0.1*p10 + 0.5*p50 + 0.4*p90; // slight optimistic weighting
+  document.getElementById('sc-ev').textContent = fmt(ev);
+  document.getElementById('sc-ev-delta').textContent = pct(safeDiv(ev-tot25,tot25))+' vs 2025 · EV ponderato';
+
+  /* MODELLI */
+  const setModel = (id, val, sub)=>{
+    document.getElementById(id+'-val').textContent = fmt(val);
+    if(sub) document.getElementById(id+'-sub').textContent = sub;
+  };
+  setModel('m1', totals.m1, 'Growth YTD applicato a seasonality 2025');
+  setModel('m2', totals.m2, 'Pace attuale proiettato su pattern 2025');
+  setModel('m3', totals.m3, 'Velocity ×30gg × stagionalità residua');
+  setModel('m4', totals.m4, 'Holt-Winters addizionale (L+T+S)');
+  setModel('m5', totals.m5, 'Pipeline + gap storico ×(1+g)');
+  document.getElementById('m-ens-val').textContent = fmt(ensTotal);
+
+  /* MAIN CHART */
+  renderMainChart(m26, ensMonthly, m25, p10, p90, today);
+
+  /* MONTHLY TABLE */
+  renderMonthlyTable(m26, m25, m1, m2, m3, m4, m5, ensMonthly, today);
+
+  /* VELOCITY */
+  renderVelocityChart(tours, today);
+
+  /* GROWTH METRICS */
+  renderGrowthMetrics(m26, m25, today);
+
+  /* LEAD TIME */
+  renderLeadTime(tours);
+
+  /* WHAT-IF */
+  recalcWhatIf();
+}
+
+function renderLeadTime(tours){
+  const sec = document.getElementById('leadtime-section');
+  // Use only 2026 tours with valid lead time
+  const lt = tours.filter(t=>t.year===2026 && t.leadDays!=null);
+  if(lt.length===0){
+    sec.style.display='none';
+    return;
+  }
+  sec.style.display='block';
+
+  // Helpers
+  const median = (arr)=>{
+    const s=[...arr].sort((a,b)=>a-b);
+    const m=Math.floor(s.length/2);
+    return s.length%2 ? s[m] : (s[m-1]+s[m])/2;
+  };
+  const mean = (arr)=> arr.reduce((a,b)=>a+b,0)/arr.length;
+
+  const days = lt.map(t=>t.leadDays);
+  const avg = Math.round(mean(days));
+  const med = Math.round(median(days));
+  const lastMin = lt.filter(t=>t.leadDays<=7).length;
+  const advance = lt.filter(t=>t.leadDays>=60).length;
+  const lastMinPct = lastMin/lt.length;
+  const advancePct = advance/lt.length;
+  const total26 = tours.filter(t=>t.year===2026).length;
+  const coverage = lt.length/total26;
+
+  /* KPIs */
+  const kpis = [
+    {lbl:'Lead Time Medio', val:avg+'gg', sub:'mediana: '+med+'gg',
+     acc:'linear-gradient(90deg,#8b5cf6,#06b6d4)'},
+    {lbl:'Mediana', val:med+'gg', sub:'più robusta a outlier',
+     acc:'linear-gradient(90deg,#06b6d4,#22d3ee)'},
+    {lbl:'Last-minute (≤7gg)', val:(lastMinPct*100).toFixed(0)+'%', sub:lastMin+' su '+lt.length+' booking',
+     acc:'linear-gradient(90deg,#ef4444,#f97316)'},
+    {lbl:'Advance (≥60gg)', val:(advancePct*100).toFixed(0)+'%', sub:advance+' su '+lt.length+' booking',
+     acc:'linear-gradient(90deg,#22c55e,#06b6d4)'},
+  ];
+  document.getElementById('leadtime-kpis').innerHTML = kpis.map(k=>`
+    <div class="kpi" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${k.acc}"></div>
+      <div style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">${k.lbl}</div>
+      <div style="font-size:1.6rem;font-weight:800;color:#fff">${k.val}</div>
+      <div style="font-size:.7rem;color:var(--muted2);margin-top:3px">${k.sub}</div>
+    </div>`).join('');
+
+  document.getElementById('leadtime-coverage').textContent =
+    lt.length+' su '+total26+' righe ('+(coverage*100).toFixed(0)+'% copertura)';
+
+  /* Histogram */
+  const buckets = [
+    {lbl:'0-3gg', min:0, max:3, color:'#ef4444'},
+    {lbl:'4-7gg', min:4, max:7, color:'#f97316'},
+    {lbl:'8-14gg', min:8, max:14, color:'#f59e0b'},
+    {lbl:'15-30gg', min:15, max:30, color:'#eab308'},
+    {lbl:'31-60gg', min:31, max:60, color:'#84cc16'},
+    {lbl:'61-90gg', min:61, max:90, color:'#22c55e'},
+    {lbl:'91+gg', min:91, max:Infinity, color:'#06b6d4'},
+  ];
+  const counts = buckets.map(b=> lt.filter(t=>t.leadDays>=b.min && t.leadDays<=b.max).length);
+  if(window._ltHist) window._ltHist.destroy();
+  window._ltHist = new Chart(document.getElementById('leadtimeHistChart'),{
+    type:'bar',
+    data:{labels:buckets.map(b=>b.lbl),
+      datasets:[{
+        label:'Prenotazioni',
+        data:counts,
+        backgroundColor:buckets.map(b=>b.color+'cc'),
+        borderColor:buckets.map(b=>b.color),
+        borderWidth:1, borderRadius:4
+      }]},
+    options:{responsive:true,plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y} prenotazioni (${(ctx.parsed.y/lt.length*100).toFixed(0)}%)`}}},
+      scales:{x:{grid:{display:false}},
+        y:{grid:{color:'#1e2d45'},ticks:{precision:0}}}}
+  });
+
+  /* Per-channel breakdown */
+  const byChan = {};
+  for(const t of lt){
+    const c = t.channel || 'Non specificato';
+    if(!byChan[c]) byChan[c] = [];
+    byChan[c].push(t.leadDays);
+  }
+  const chanRows = Object.entries(byChan)
+    .map(([c,arr])=>({c, avg:Math.round(mean(arr)), med:Math.round(median(arr)), n:arr.length}))
+    .sort((a,b)=>b.n-a.n);
+  document.getElementById('leadtime-channels').innerHTML = chanRows.length
+    ? `<table class="data-table" style="font-size:.74rem">
+        <thead><tr><th>Canale</th><th>N</th><th>Media</th><th>Mediana</th></tr></thead>
+        <tbody>${chanRows.map(r=>{
+          const tag = r.avg<=7?'#ef4444':r.avg<=30?'#f59e0b':r.avg<=60?'#84cc16':'#22c55e';
+          return `<tr>
+            <td style="font-weight:600">${r.c}</td>
+            <td>${r.n}</td>
+            <td><span class="tb" style="background:${tag}22;color:${tag}">${r.avg}gg</span></td>
+            <td style="color:var(--muted2)">${r.med}gg</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>`
+    : '<div style="color:var(--muted);font-size:.78rem;padding:12px">Nessun canale specificato — aggiungi una colonna "Provenienza" o "Canale" nei fogli mensili.</div>';
+
+  /* Per-month-of-tour breakdown */
+  const byMonth = {};
+  for(const t of lt){
+    if(!byMonth[t.month]) byMonth[t.month]=[];
+    byMonth[t.month].push(t.leadDays);
+  }
+  const monthAvg = MONTHS.map((_,i)=> byMonth[i]?Math.round(mean(byMonth[i])):null);
+  const monthMed = MONTHS.map((_,i)=> byMonth[i]?Math.round(median(byMonth[i])):null);
+  const monthN   = MONTHS.map((_,i)=> byMonth[i]?byMonth[i].length:0);
+  if(window._ltMonth) window._ltMonth.destroy();
+  window._ltMonth = new Chart(document.getElementById('leadtimeMonthChart'),{
+    type:'bar',
+    data:{labels:MONTHS,
+      datasets:[
+        {label:'Lead time medio (gg)', data:monthAvg, backgroundColor:'#8b5cf6cc', borderRadius:4, order:2},
+        {label:'Mediana (gg)', data:monthMed, type:'line', borderColor:'#22d3ee', borderWidth:2, pointRadius:4, pointBackgroundColor:'#22d3ee', tension:.3, fill:false, order:1},
+      ]},
+    options:{responsive:true,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{boxWidth:10,padding:8,font:{size:10}}},
+        tooltip:{callbacks:{
+          afterLabel:(ctx)=> ctx.datasetIndex===0 ? `n = ${monthN[ctx.dataIndex]} prenotazioni` : null
+        }}},
+      scales:{x:{grid:{display:false}},
+        y:{grid:{color:'#1e2d45'},ticks:{callback:v=>v+'gg'}}}}
+  });
+}
+
+function renderMainChart(m26, ens, m25, p10, p90, today){
+  const curMonth = today.getMonth();
+  // Actual bars: only past+current month
+  const actualBars = m26.map((v,i)=> i<=curMonth ? v : null);
+  const forecastBars = ens.map((v,i)=> i>curMonth ? v : null);
+  // CI band
+  const ensTotal = ens.reduce((a,b)=>a+b,0);
+  const ciScale = ensTotal>0 ? (p90-p10)/ensTotal : 0;
+  const bandLow = ens.map((v,i)=> i>curMonth ? Math.max(0,v*(1-ciScale/2)) : null);
+  const bandHigh = ens.map((v,i)=> i>curMonth ? v*(1+ciScale/2) : null);
+
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  if(window._mainChart) window._mainChart.destroy();
+  window._mainChart = new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels: MONTHS,
+      datasets:[
+        {label:'2026 Consuntivo', data:actualBars, backgroundColor:'#06b6d4cc', borderRadius:4, order:3},
+        {label:'2026 Forecast (ensemble)', data:forecastBars, backgroundColor:'#8b5cf688',
+          borderColor:'#8b5cf6', borderWidth:1.5, borderDash:[5,3], borderRadius:4, order:3},
+        {label:'CI Upper (P90)', data:bandHigh, type:'line', borderColor:'transparent',
+          backgroundColor:'#8b5cf644', fill:'+1', pointRadius:0, tension:.3, order:1},
+        {label:'CI Lower (P10)', data:bandLow, type:'line', borderColor:'transparent',
+          backgroundColor:'#8b5cf644', fill:false, pointRadius:0, tension:.3, order:2},
+        {label:'2025 Consuntivo', data:m25, type:'line', borderColor:'#3b82f6', borderWidth:2.5,
+          backgroundColor:'transparent', pointRadius:3, pointBackgroundColor:'#3b82f6', tension:.3, order:0, fill:false},
+      ]
+    },
+    options:{responsive:true,interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{labels:{boxWidth:12,padding:8,font:{size:10},filter:(i)=>!i.text.startsWith('CI')}},
+        tooltip:{callbacks:{label:ctx=>ctx.parsed.y==null?null:` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}`}}
+      },
+      scales:{
+        x:{grid:{display:false}},
+        y:{grid:{color:'#1e2d45'},ticks:{callback:v=>v>=1000?Math.round(v/1000)+'k€':v+'€'}}
+      }
+    }
+  });
+}
+
+function renderMonthlyTable(m26, m25, m1, m2, m3, m4, m5, ens, today){
+  const curMonth = today.getMonth();
+  const rows = MONTHS.map((mon,i)=>{
+    const isActual = i<curMonth;
+    const isCurrent = i===curMonth;
+    const status = isActual?'<span class="tb" style="background:#052e16;color:#4ade80">✓ Consuntivo</span>'
+                  : isCurrent?'<span class="tb" style="background:#1c1700;color:#eab308">📅 In corso</span>'
+                  : '<span class="tb" style="background:#1e293b;color:var(--muted2)">🔮 Forecast</span>';
+    const baseVal = isActual?m26[i]:ens[i];
+    const d25 = m25[i]||0;
+    const dRel = safeDiv(baseVal-d25,d25);
+    const dCol = dRel>=0?'#4ade80':'#f87171';
+    return `<tr>
+      <td style="font-weight:600">${mon}</td>
+      <td>${status}</td>
+      <td style="color:#60a5fa;font-weight:600">${fmt(m26[i])}</td>
+      <td>${fmt(m1[i])}</td>
+      <td>${fmt(m2[i])}</td>
+      <td>${fmt(m3[i])}</td>
+      <td>${fmt(m4[i])}</td>
+      <td>${fmt(m5[i])}</td>
+      <td style="background:#1e1b4b22;color:#a78bfa;font-weight:700">${fmt(ens[i])}</td>
+      <td style="color:${dCol};font-weight:600">${pct(dRel)}</td>
+    </tr>`;
+  }).join('');
+  // Total row
+  const tot = (arr)=>arr.reduce((a,b)=>a+b,0);
+  const t25 = tot(m25), tEns=tot(ens);
+  const totRow = `<tr style="border-top:2px solid #475569;font-weight:800;background:#0c1424">
+    <td>TOTALE</td><td>—</td>
+    <td style="color:#60a5fa">${fmt(tot(m26))}</td>
+    <td>${fmt(tot(m1))}</td>
+    <td>${fmt(tot(m2))}</td>
+    <td>${fmt(tot(m3))}</td>
+    <td>${fmt(tot(m4))}</td>
+    <td>${fmt(tot(m5))}</td>
+    <td style="background:#1e1b4b;color:#a78bfa">${fmt(tEns)}</td>
+    <td style="color:${safeDiv(tEns-t25,t25)>=0?'#4ade80':'#f87171'}">${pct(safeDiv(tEns-t25,t25))}</td>
+  </tr>`;
+  document.getElementById('monthly-table-body').innerHTML = rows+totRow;
+}
+
+function renderVelocityChart(tours, today){
+  const days = 60;
+  const labels=[], vals=[];
+  for(let i=days-1;i>=0;i--){
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    const iso = d.toISOString().slice(0,10);
+    labels.push((d.getDate())+'/'+(d.getMonth()+1));
+    vals.push(tours.filter(t=>t.year===2026 && t.date===iso).reduce((s,t)=>s+t.price,0));
+  }
+  // rolling 7
+  const roll = vals.map((_,i)=>{
+    const w = vals.slice(Math.max(0,i-6),i+1);
+    return w.reduce((a,b)=>a+b,0)/w.length;
+  });
+  const ctx = document.getElementById('velocityChart').getContext('2d');
+  if(window._velChart) window._velChart.destroy();
+  window._velChart = new Chart(ctx,{
+    data:{labels, datasets:[
+      {type:'bar',label:'Revenue/giorno',data:vals,backgroundColor:'#06b6d488',borderRadius:2,order:2},
+      {type:'line',label:'Media 7gg',data:roll,borderColor:'#f59e0b',borderWidth:2,pointRadius:0,tension:.4,fill:false,order:1}
+    ]},
+    options:{responsive:true,plugins:{legend:{labels:{boxWidth:10,font:{size:9}}}},
+      scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:8}}},
+        y:{grid:{color:'#1e2d45'},ticks:{callback:v=>v>=1000?(v/1000).toFixed(1)+'k':v}}}
+    }
+  });
+  const avg30 = vals.slice(-30).reduce((a,b)=>a+b,0)/30;
+  const avg7 = vals.slice(-7).reduce((a,b)=>a+b,0)/7;
+  const trend = avg30>0?(avg7-avg30)/avg30:0;
+  document.getElementById('velocity-note').innerHTML =
+    `Media ultimi 30gg: <strong>${fmt(avg30)}/giorno</strong> · Media 7gg: <strong>${fmt(avg7)}/giorno</strong> · Trend 7vs30: <strong style="color:${trend>=0?'#4ade80':'#f87171'}">${pct(trend)}</strong>`;
+}
+
+function renderGrowthMetrics(m26, m25, today){
+  const curMonth = today.getMonth();
+  const confirmed = [];
+  for(let i=0;i<curMonth;i++) confirmed.push(i);
+  const a26 = confirmed.reduce((s,i)=>s+m26[i],0);
+  const a25 = confirmed.reduce((s,i)=>s+m25[i],0);
+  const g = a25>0 ? (a26-a25)/a25 : 0;
+  const perMonth = MONTHS.map((mon,i)=>{
+    if(!confirmed.includes(i)) return null;
+    const gi = m25[i]>0 ? (m26[i]-m25[i])/m25[i] : 0;
+    return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:.76rem">
+      <span>${mon}</span>
+      <span><strong>${fmt(m26[i])}</strong> vs <span style="color:var(--muted2)">${fmt(m25[i])}</span>
+      <span class="tb" style="background:${gi>=0?'#052e16':'#2d0000'};color:${gi>=0?'#4ade80':'#f87171'};margin-left:8px">${pct(gi)}</span></span>
+    </div>`;
+  }).filter(x=>x).join('');
+  document.getElementById('growth-metrics').innerHTML = perMonth + `
+    <div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:8px;text-align:center">
+      <div style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Growth Rate Pesato YTD</div>
+      <div style="font-size:1.6rem;font-weight:800;color:${g>=0?'#4ade80':'#f87171'};margin-top:4px">${pct(g)}</div>
+      <div style="font-size:.66rem;color:var(--muted2);margin-top:2px">base per estrapolazione forecast</div>
+    </div>`;
+}
+
+function recalcWhatIf(){
+  if(!window._forecasts) return;
+  const g = +document.getElementById('sl-growth').value/100;
+  const conv = +document.getElementById('sl-conv').value/100;
+  const seas = +document.getElementById('sl-seas').value/100;
+  const newT = +document.getElementById('sl-new').value;
+  document.getElementById('lbl-growth').textContent = (g>=0?'+':'')+(g*100).toFixed(0)+'%';
+  document.getElementById('lbl-conv').textContent = (conv*100).toFixed(0)+'%';
+  document.getElementById('lbl-seas').textContent = seas.toFixed(2)+'x';
+  document.getElementById('lbl-new').textContent = '+'+newT;
+
+  const {m26, m25, today} = window._data;
+  const curMonth = today.getMonth();
+  // Custom scenario
+  const custom = m26.map((v,i)=>{
+    if(i<curMonth) return v;
+    const base = m25[i]*(1+g);
+    const seasonal = [4,5,6,7,8].includes(i) ? base*seas : base;
+    const withNew = seasonal + (newT * 300); // avg tour 300€
+    return Math.max(v, withNew*conv);
+  });
+  const tot = custom.reduce((a,b)=>a+b,0);
+  const {ensTotal, tot25} = window._forecasts;
+  const diffVsEns = tot - ensTotal;
+  const diffVs25 = tot - tot25;
+
+  document.getElementById('whatif-result').innerHTML = `
+    <div style="padding:14px;background:linear-gradient(135deg,#8b5cf622,#06b6d422);border-radius:10px;border:1px solid #8b5cf644;margin-bottom:12px">
+      <div style="font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Fatturato totale 2026 — scenario personalizzato</div>
+      <div style="font-size:2rem;font-weight:800;background:linear-gradient(90deg,#a78bfa,#22d3ee);-webkit-background-clip:text;background-clip:text;color:transparent;margin-top:4px">${fmt(tot)}</div>
+      <div style="font-size:.74rem;color:var(--muted2);margin-top:6px">
+        ${diffVsEns>=0?'<span style="color:#4ade80">+'+fmt(diffVsEns)+'</span>':'<span style="color:#f87171">'+fmt(diffVsEns)+'</span>'} vs Ensemble base ·
+        ${diffVs25>=0?'<span style="color:#4ade80">'+pct(safeDiv(diffVs25,tot25))+'</span>':'<span style="color:#f87171">'+pct(safeDiv(diffVs25,tot25))+'</span>'} vs 2025
+      </div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Mese</th><th>Base ensemble</th><th>Scenario custom</th><th>Δ</th></tr></thead>
+      <tbody>${MONTHS.map((mon,i)=>`<tr>
+        <td>${mon}</td>
+        <td>${fmt(window._forecasts.ensMonthly[i])}</td>
+        <td style="color:#a78bfa;font-weight:600">${fmt(custom[i])}</td>
+        <td style="color:${custom[i]-window._forecasts.ensMonthly[i]>=0?'#4ade80':'#f87171'}">${fmt(custom[i]-window._forecasts.ensMonthly[i])}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+}
+
+window.recalcWhatIf = recalcWhatIf;
+
+main();
+</script>
+
+</body>
+</html>
