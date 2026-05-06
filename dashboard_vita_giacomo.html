@@ -24,18 +24,18 @@ header h1 .sub{font-size:.72rem;color:var(--muted2);font-weight:400;display:bloc
 .cornice-switch button{background:transparent;border:none;color:var(--muted2);padding:6px 12px;font-size:.75rem;border-radius:6px;cursor:pointer;font-weight:600}
 .cornice-switch button.active{background:var(--teal);color:#000}
 
-nav.tabs{display:flex;gap:4px;overflow-x:auto;max-width:1400px;margin:14px auto 0;padding-bottom:2px}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap;align-items:center;max-width:1400px;margin:14px auto 0;padding-bottom:2px;overflow:visible;position:relative}
 nav.tabs button{background:transparent;border:none;color:var(--muted2);padding:8px 14px;font-size:.78rem;border-radius:8px 8px 0 0;cursor:pointer;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent}
 nav.tabs button.active{color:var(--teal);border-bottom-color:var(--teal)}
 nav.tabs button:hover{color:#fff}
 nav.tabs .badge{background:var(--gold);color:#000;font-size:.65rem;font-weight:800;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:1px}
 nav.tabs .badge.zero{background:var(--surface2);color:var(--muted)}
 
-.dropdown{position:relative;display:inline-block}
+.dropdown{position:relative;display:inline-block;margin-left:auto}
 .dropdown-toggle{background:transparent;border:none;color:var(--muted2);padding:8px 14px;font-size:.78rem;border-radius:8px 8px 0 0;cursor:pointer;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent}
 .dropdown-toggle:hover,.dropdown.open .dropdown-toggle{color:#fff}
 .dropdown.open .dropdown-toggle{color:var(--teal);border-bottom-color:var(--teal)}
-.dropdown-menu{display:none;position:absolute;top:100%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:200px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.4);margin-top:2px}
+.dropdown-menu{display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:220px;z-index:9999;box-shadow:0 12px 32px rgba(0,0,0,.6)}
 .dropdown.open .dropdown-menu{display:block}
 .dropdown-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text);padding:8px 12px;font-size:.8rem;border-radius:6px;cursor:pointer;font-weight:500}
 .dropdown-menu button:hover{background:var(--surface2);color:var(--teal)}
@@ -841,13 +841,10 @@ function switchTab(name, btn){
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   if(btn) btn.classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
-  // Sync dropdown highlight if hidden tab
+  // Sync highlight + close dropdown
   const inDropdown = document.querySelector(`.dropdown-menu button[data-tab="${name}"]`);
-  if(inDropdown){
-    inDropdown.classList.add('active');
-    document.getElementById('more-dropdown').classList.add('open');
-    setTimeout(()=>document.getElementById('more-dropdown').classList.remove('open'), 0);
-  }
+  if(inDropdown) inDropdown.classList.add('active');
+  document.getElementById('more-dropdown').classList.remove('open');
   renderAll();
 }
 document.querySelectorAll('#tabs > button[data-tab], .dropdown-menu button[data-tab]').forEach(b=>{
