@@ -979,12 +979,7 @@ const FITNESS_QS = [
 // ============ STATE ============
 let state = load();
 
-function load(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw) return JSON.parse(raw);
-  }catch(e){}
-  return {
+function defaultState(){ return {
     cornice:'B',
     sessions:[],
     sleep:[],
@@ -1010,7 +1005,20 @@ function load(){
     contacts:[],
     contactFilter:'all',
     decisions:[]
-  };
+  };}
+
+function load(){
+  const def = defaultState();
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed = JSON.parse(raw);
+      // Migration: fill missing fields with defaults so old states stay compatible
+      Object.keys(def).forEach(k=>{ if(parsed[k]===undefined) parsed[k]=def[k]; });
+      return parsed;
+    }
+  }catch(e){}
+  return def;
 }
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
