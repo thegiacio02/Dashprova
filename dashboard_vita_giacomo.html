@@ -40,6 +40,64 @@ nav.tabs .badge.zero{background:var(--surface2);color:var(--muted)}
 .dropdown-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text);padding:8px 12px;font-size:.8rem;border-radius:6px;cursor:pointer;font-weight:500}
 .dropdown-menu button:hover{background:var(--surface2);color:var(--teal)}
 .dropdown-menu button.active{background:var(--teal);color:#000;font-weight:700}
+.dropdown-divider{height:1px;background:var(--border);margin:6px 4px}
+
+/* === ABITUDINI === */
+.habit-row{display:flex;align-items:center;gap:10px;background:var(--surface2);padding:10px;border-radius:8px;margin-bottom:10px}
+.habit-info{flex:0 0 200px;display:flex;align-items:center;gap:8px}
+.habit-info .h-icon{font-size:1.3rem}
+.habit-info .h-name{font-size:.85rem;color:#fff;font-weight:600}
+.habit-info .h-streak{font-size:.7rem;color:var(--gold);font-weight:700}
+.habit-grid{flex:1;display:grid;grid-template-columns:repeat(84,1fr);gap:2px;min-width:0}
+.habit-cell{aspect-ratio:1;background:var(--surface);border-radius:2px;cursor:pointer;border:1px solid transparent}
+.habit-cell.done{background:var(--green)}
+.habit-cell.today{border-color:var(--teal)}
+.habit-cell.future{opacity:.3;cursor:default}
+.habit-actions button{background:transparent;border:none;color:var(--muted);cursor:pointer;padding:4px}
+.habit-today-card{background:var(--surface2);padding:14px;border-radius:10px;margin-bottom:14px}
+.habit-today-list{display:flex;flex-wrap:wrap;gap:8px}
+.habit-today-btn{background:var(--surface);border:2px solid var(--border);color:var(--text);padding:10px 16px;border-radius:10px;cursor:pointer;font-size:.85rem;display:flex;align-items:center;gap:8px;font-weight:600;transition:all .15s}
+.habit-today-btn.done{background:var(--green);color:#000;border-color:var(--green)}
+.habit-today-btn:hover{border-color:var(--teal)}
+
+/* === OBIETTIVI === */
+.goal-card{background:var(--surface2);padding:16px;border-radius:10px;margin-bottom:12px;border-left:4px solid var(--teal)}
+.goal-card.done{border-left-color:var(--green)}
+.goal-card.late{border-left-color:var(--red)}
+.goal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
+.goal-head .title{font-size:1rem;color:#fff;font-weight:700}
+.goal-head .deadline{font-size:.72rem;color:var(--muted2);white-space:nowrap}
+.goal-desc{font-size:.78rem;color:var(--muted2);margin-bottom:10px}
+.goal-progress{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.goal-progress .vals{font-size:.85rem;font-weight:700;color:#fff;flex:0 0 auto}
+.goal-progress .pct{font-size:.72rem;color:var(--teal);font-weight:700;flex:0 0 auto;min-width:48px;text-align:right}
+.goal-progress .bar{flex:1}
+.goal-controls{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.goal-controls button{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:6px;font-size:.74rem;cursor:pointer;font-weight:600}
+.goal-controls button:hover{border-color:var(--teal);color:var(--teal)}
+
+/* === NETWORK === */
+.contact-card{background:var(--surface2);padding:12px;border-radius:8px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.contact-avatar{width:42px;height:42px;border-radius:50%;background:var(--teal);color:#000;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1rem;flex:0 0 auto}
+.contact-card.overdue .contact-avatar{background:var(--red);color:#fff}
+.contact-info{flex:1;min-width:0}
+.contact-info .c-name{font-size:.9rem;color:#fff;font-weight:700}
+.contact-info .c-group{font-size:.7rem;color:var(--muted2);margin-top:2px}
+.contact-info .c-notes{font-size:.78rem;color:var(--muted2);margin-top:6px;white-space:pre-wrap}
+.contact-info .c-status{font-size:.72rem;margin-top:6px}
+.contact-actions{display:flex;flex-direction:column;gap:4px;flex:0 0 auto}
+
+/* === DECISIONI === */
+.decision-card{background:var(--surface2);padding:14px;border-radius:10px;margin-bottom:10px;border-top:3px solid var(--purple)}
+.decision-card.review-due{border-top-color:var(--gold);background:rgba(245,158,11,.08)}
+.decision-card.reviewed{border-top-color:var(--green);opacity:.85}
+.decision-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;gap:10px}
+.decision-head .d-title{font-size:.95rem;color:#fff;font-weight:700}
+.decision-head .d-date{font-size:.72rem;color:var(--muted2);white-space:nowrap}
+.decision-section{margin-bottom:8px}
+.decision-section .lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-bottom:2px}
+.decision-section .txt{font-size:.82rem;color:var(--text);white-space:pre-wrap}
+.decision-review-form{margin-top:10px;padding:10px;background:var(--surface);border-radius:6px}
 
 main{max-width:1400px;margin:0 auto;padding:24px;padding-bottom:80px}
 .tab{display:none}
@@ -233,6 +291,11 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <div class="dropdown" id="more-dropdown">
       <button class="dropdown-toggle" type="button">Altro ▾</button>
       <div class="dropdown-menu">
+        <button data-tab="abitudini">🔥 Abitudini</button>
+        <button data-tab="obiettivi">🎯 Obiettivi 6 mesi</button>
+        <button data-tab="network">🤝 Network</button>
+        <button data-tab="decisioni">💭 Decisioni</button>
+        <div class="dropdown-divider"></div>
         <button data-tab="aree">📊 Aree di vita</button>
         <button data-tab="libri">📚 Libri</button>
         <button data-tab="francese">🇫🇷 Francese</button>
@@ -546,6 +609,133 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 </section>
 
+<!-- ============ ABITUDINI ============ -->
+<section class="tab" id="tab-abitudini">
+  <div class="card">
+    <h2><span class="ico">🔥</span> Tracker abitudini</h2>
+    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">"La coerenza batte l'intensità." Ogni casella verde = un giorno fatto. Vedi i pattern, costruisci streak.</p>
+
+    <div class="habit-today-card">
+      <h3>Oggi · spunta cosa hai fatto</h3>
+      <div class="habit-today-list" id="habit-today-list"></div>
+    </div>
+
+    <div class="row" style="margin-bottom:14px">
+      <input type="text" id="habit-name" placeholder="Nome abitudine (es. Sport, Francese 30min)" style="flex:2"/>
+      <input type="text" id="habit-icon" placeholder="🏋️" maxlength="2" style="flex:0 0 70px"/>
+      <button class="btn" onclick="addHabit()" style="flex:0 0 auto">+ Aggiungi</button>
+    </div>
+
+    <div id="habit-list"></div>
+    <div class="legend">Click su una casella passata per segnare/desegnare quel giorno. Mostro le ultime 12 settimane.</div>
+  </div>
+
+  <div class="grid grid-3" style="margin-top:16px">
+    <div class="card"><h3>Abitudini attive</h3><div class="kpi"><span class="v" id="hk-active">0</span><span class="t">tracciate</span></div></div>
+    <div class="card"><h3>Streak più lunga</h3><div class="kpi"><span class="v" id="hk-streak">0</span><span class="t">giorni</span></div><div class="kpi-sub" id="hk-streak-name">—</div></div>
+    <div class="card"><h3>Completamenti totali</h3><div class="kpi"><span class="v" id="hk-total">0</span><span class="t">check</span></div></div>
+  </div>
+</section>
+
+<!-- ============ OBIETTIVI ============ -->
+<section class="tab" id="tab-obiettivi">
+  <div class="card">
+    <h2><span class="ico">🎯</span> Obiettivi a 6 mesi</h2>
+    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">I tuoi grandi obiettivi misurabili (Maggio → Novembre 2026). Aggiorna il progresso ogni volta che fai un passo avanti.</p>
+
+    <div class="row" style="margin-bottom:8px">
+      <input type="text" id="goal-title" placeholder="Titolo (es. 12 libri letti)" style="flex:2"/>
+      <input type="number" id="goal-target" placeholder="Target" min="1" style="flex:0 0 100px"/>
+      <input type="text" id="goal-unit" placeholder="unità" style="flex:0 0 110px"/>
+      <input type="date" id="goal-deadline" style="flex:0 0 auto"/>
+    </div>
+    <div class="row" style="margin-bottom:14px">
+      <input type="text" id="goal-desc" placeholder="Descrizione / perché conta" style="flex:3"/>
+      <select id="goal-area" style="flex:0 0 160px">
+        <option value="">— Area —</option>
+        <option value="double">💼 Double</option>
+        <option value="como">⛵ Como</option>
+        <option value="francese">🇫🇷 Francese</option>
+        <option value="lettura">📚 Lettura</option>
+        <option value="sport">🏋️ Sport</option>
+        <option value="social">🤝 Social</option>
+        <option value="personale">👤 Personale</option>
+      </select>
+      <button class="btn" onclick="addGoal()" style="flex:0 0 auto">+ Obiettivo</button>
+    </div>
+
+    <button class="btn ghost sm" onclick="loadDefaultGoals()" style="margin-bottom:14px">📌 Carica obiettivi suggeriti dal documento</button>
+
+    <div id="goals-list"></div>
+  </div>
+</section>
+
+<!-- ============ NETWORK ============ -->
+<section class="tab" id="tab-network">
+  <div class="card">
+    <h2><span class="ico">🤝</span> Network · contatti da mantenere</h2>
+    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">"Mantenere una rete richiede solo cura, ricostruirla mesi." Aggiungi le persone che vuoi tenere vicine, definisci ogni quanto sentirti, e la dashboard ti dirà quando è ora.</p>
+
+    <div class="row" style="margin-bottom:8px">
+      <input type="text" id="ct-name" placeholder="Nome" style="flex:2"/>
+      <select id="ct-group" style="flex:0 0 160px">
+        <option value="parigi">🗼 Parigi</option>
+        <option value="audencia">🎓 Audencia / Nantes</option>
+        <option value="famiglia">👨‍👩‍👧 Famiglia</option>
+        <option value="milano">🏙️ Milano / Italia</option>
+        <option value="como">⛵ Como / business</option>
+        <option value="lavoro">💼 Lavoro Double</option>
+        <option value="altro">⭐ Altro</option>
+      </select>
+      <input type="number" id="ct-freq" placeholder="ogni N giorni" value="30" min="1" style="flex:0 0 130px"/>
+      <button class="btn" onclick="addContact()" style="flex:0 0 auto">+ Contatto</button>
+    </div>
+    <div class="row" style="margin-bottom:14px">
+      <input type="text" id="ct-notes" placeholder="Note (es. compagno Audencia, sposata, lavora a BNP)" style="flex:1"/>
+    </div>
+
+    <div class="todo-filters" id="ct-filters">
+      <button class="todo-filter active" data-cf="all">Tutti <span class="count" id="ct-cnt-all">0</span></button>
+      <button class="todo-filter" data-cf="due">⚠️ Da contattare <span class="count" id="ct-cnt-due">0</span></button>
+      <button class="todo-filter" data-cf="parigi">Parigi</button>
+      <button class="todo-filter" data-cf="audencia">Audencia</button>
+      <button class="todo-filter" data-cf="famiglia">Famiglia</button>
+      <button class="todo-filter" data-cf="milano">Milano</button>
+    </div>
+
+    <div id="contacts-list"></div>
+  </div>
+</section>
+
+<!-- ============ DECISIONI ============ -->
+<section class="tab" id="tab-decisioni">
+  <div class="card">
+    <h2><span class="ico">💭</span> Decision journal</h2>
+    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">Logga le decisioni importanti adesso. Tra 30 giorni ti chiediamo come è andata. È lo strumento più formativo per chi va in finance/consulenza.</p>
+
+    <div class="field"><label>Titolo decisione</label><input type="text" id="dec-title" placeholder="es. Accettare offerta Eurizon vs valutare altro stage"/></div>
+    <div class="field"><label>Contesto · perché stai decidendo</label><textarea id="dec-context" rows="2"></textarea></div>
+    <div class="field"><label>Opzioni considerate</label><textarea id="dec-options" rows="3" placeholder="A) ...&#10;B) ...&#10;C) ..."></textarea></div>
+    <div class="field"><label>Scelta + ragione principale</label><textarea id="dec-choice" rows="2"></textarea></div>
+    <div class="field"><label>Esito atteso (cosa pensi succederà)</label><textarea id="dec-expected" rows="2"></textarea></div>
+    <div class="row">
+      <div class="field"><label>Data decisione</label><input type="date" id="dec-date"/></div>
+      <div class="field"><label>Review tra (giorni)</label><input type="number" id="dec-review-days" value="30" min="7"/></div>
+    </div>
+    <button class="btn" onclick="addDecision()">+ Salva decisione</button>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2><span class="ico">⏰</span> Decisioni da rivedere</h2>
+    <div id="decisions-due"></div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h2><span class="ico">📜</span> Storico decisioni</h2>
+    <div id="decisions-history"></div>
+  </div>
+</section>
+
 <!-- ============ AREE ============ -->
 <section class="tab" id="tab-aree">
   <div class="grid grid-3" id="area-cards"></div>
@@ -813,7 +1003,13 @@ function load(){
     timeBlocks:{},
     shutdowns:[],
     todos:[],
-    todoFilter:'all'
+    todoFilter:'all',
+    habits:[],
+    habitLog:{},
+    goals:[],
+    contacts:[],
+    contactFilter:'all',
+    decisions:[]
   };
 }
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -1713,6 +1909,340 @@ function setTodoDueQuick(id, when){
   save(); renderTodos();
 }
 
+// ============ ABITUDINI ============
+function addHabit(){
+  const name = document.getElementById('habit-name').value.trim();
+  if(!name) return;
+  const icon = document.getElementById('habit-icon').value.trim() || '✓';
+  state.habits.push({id:uid(), name, icon, created:todayISO()});
+  document.getElementById('habit-name').value='';
+  document.getElementById('habit-icon').value='';
+  save(); renderHabits();
+}
+function delHabit(id){
+  if(!confirm('Eliminare abitudine e suoi dati?')) return;
+  state.habits = state.habits.filter(h=>h.id!==id);
+  delete state.habitLog[id];
+  save(); renderHabits();
+}
+function toggleHabit(habitId, date){
+  if(!state.habitLog[habitId]) state.habitLog[habitId]=[];
+  const arr = state.habitLog[habitId];
+  const i = arr.indexOf(date);
+  if(i>=0) arr.splice(i,1); else arr.push(date);
+  save(); renderHabits();
+}
+function habitStreak(habitId){
+  const log = new Set(state.habitLog[habitId]||[]);
+  let streak=0;
+  for(let i=0;i<365;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    if(log.has(k)) streak++; else if(i>0) break;
+  }
+  return streak;
+}
+function renderHabits(){
+  // Today checkboxes
+  const today = todayISO();
+  const todayList = document.getElementById('habit-today-list');
+  if(!state.habits.length){
+    todayList.innerHTML = '<p style="font-size:.78rem;color:var(--muted)">Aggiungi la tua prima abitudine ↓</p>';
+  } else {
+    todayList.innerHTML = state.habits.map(h=>{
+      const done = (state.habitLog[h.id]||[]).includes(today);
+      return `<button class="habit-today-btn ${done?'done':''}" onclick="toggleHabit('${h.id}','${today}')">
+        ${h.icon} ${escapeHtml(h.name)} ${done?'✓':''}
+      </button>`;
+    }).join('');
+  }
+
+  // Heatmap rows
+  const c = document.getElementById('habit-list');
+  if(!state.habits.length){ c.innerHTML=''; }
+  else {
+    const days=[];
+    for(let i=83;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(d.toISOString().slice(0,10)); }
+    c.innerHTML = state.habits.map(h=>{
+      const log = new Set(state.habitLog[h.id]||[]);
+      const streak = habitStreak(h.id);
+      const cells = days.map(d=>`<div class="habit-cell ${log.has(d)?'done':''} ${d===today?'today':''}" onclick="toggleHabit('${h.id}','${d}')" title="${d}"></div>`).join('');
+      return `<div class="habit-row">
+        <div class="habit-info">
+          <span class="h-icon">${h.icon}</span>
+          <div>
+            <div class="h-name">${escapeHtml(h.name)}</div>
+            <div class="h-streak">🔥 ${streak} giorni</div>
+          </div>
+        </div>
+        <div class="habit-grid">${cells}</div>
+        <div class="habit-actions"><button onclick="delHabit('${h.id}')" title="Elimina">🗑</button></div>
+      </div>`;
+    }).join('');
+  }
+
+  // KPIs
+  document.getElementById('hk-active').textContent = state.habits.length;
+  let maxStreak=0, maxName='—', total=0;
+  state.habits.forEach(h=>{
+    total += (state.habitLog[h.id]||[]).length;
+    const s = habitStreak(h.id);
+    if(s>maxStreak){ maxStreak=s; maxName=h.name; }
+  });
+  document.getElementById('hk-streak').textContent = maxStreak;
+  document.getElementById('hk-streak-name').textContent = maxName;
+  document.getElementById('hk-total').textContent = total;
+}
+
+// ============ OBIETTIVI ============
+function addGoal(){
+  const title = document.getElementById('goal-title').value.trim();
+  const target = parseFloat(document.getElementById('goal-target').value);
+  if(!title || !target) { alert('Titolo e target obbligatori'); return; }
+  state.goals.push({
+    id:uid(), title,
+    desc: document.getElementById('goal-desc').value.trim(),
+    target, current:0,
+    unit: document.getElementById('goal-unit').value.trim() || '',
+    deadline: document.getElementById('goal-deadline').value || null,
+    area: document.getElementById('goal-area').value || null,
+    created: todayISO()
+  });
+  ['goal-title','goal-desc','goal-target','goal-unit','goal-deadline'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('goal-area').value='';
+  save(); renderGoals();
+}
+function loadDefaultGoals(){
+  if(state.goals.length && !confirm('Aggiungere obiettivi suggeriti agli esistenti?')) return;
+  const defaults = [
+    {title:'12 libri letti', target:12, unit:'libri', area:'lettura', desc:'Bibliografia 6 mesi del documento'},
+    {title:'Fluenza francese professionale', target:100, unit:'%', area:'francese', desc:'Colloqui 1h, riunioni con madrelingua, vocabolario finance'},
+    {title:'Stage Double convertito in assunzione', target:1, unit:'offer', area:'double', desc:'Ottenere offerta a fine stage'},
+    {title:'Sport almeno 12 volte/mese', target:72, unit:'sessioni', area:'sport', desc:'3+ sessioni a settimana per 6 mesi'},
+    {title:'Pomodori focus completati', target:500, unit:'pomodori', area:'double', desc:'~20 pomodori/settimana per 6 mesi'},
+    {title:'Vocaboli francese attivi', target:300, unit:'termini', area:'francese', desc:'Glossario professionale finance'}
+  ];
+  const deadline = '2026-11-30';
+  defaults.forEach(d=>state.goals.push({id:uid(),...d,current:0,deadline,created:todayISO()}));
+  save(); renderGoals();
+}
+function updateGoalProgress(id, delta){
+  const g = state.goals.find(x=>x.id===id); if(!g) return;
+  g.current = Math.max(0, (g.current||0) + delta);
+  save(); renderGoals();
+}
+function setGoalProgress(id){
+  const g = state.goals.find(x=>x.id===id); if(!g) return;
+  const v = prompt(`Imposta progresso (target ${g.target} ${g.unit||''}):`, g.current);
+  if(v===null) return;
+  const n = parseFloat(v); if(!isNaN(n)){ g.current = Math.max(0,n); save(); renderGoals(); }
+}
+function delGoal(id){
+  if(!confirm('Eliminare obiettivo?')) return;
+  state.goals = state.goals.filter(g=>g.id!==id);
+  save(); renderGoals();
+}
+function renderGoals(){
+  const c = document.getElementById('goals-list');
+  if(!state.goals.length){
+    c.innerHTML = '<p style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px">Nessun obiettivo. Carica i suggeriti o aggiungi i tuoi.</p>';
+    return;
+  }
+  const today = todayISO();
+  c.innerHTML = state.goals.map(g=>{
+    const pct = Math.min(100, (g.current/g.target)*100);
+    const done = pct>=100;
+    const late = !done && g.deadline && g.deadline<today;
+    const cls = pct>=80?'green':pct>=40?'yellow':'red';
+    const area = g.area && AREAS[g.area];
+    return `<div class="goal-card ${done?'done':''} ${late?'late':''}">
+      <div class="goal-head">
+        <div>
+          <div class="title">${done?'✅ ':''}${escapeHtml(g.title)}</div>
+          ${area?`<span class="tag ${area.color}" style="margin-top:6px">${area.icon} ${area.name}</span>`:''}
+        </div>
+        <div class="deadline">${g.deadline?'📅 '+g.deadline+(late?' ⚠️':''):''}</div>
+      </div>
+      ${g.desc?`<div class="goal-desc">${escapeHtml(g.desc)}</div>`:''}
+      <div class="goal-progress">
+        <div class="vals">${g.current} / ${g.target} ${escapeHtml(g.unit||'')}</div>
+        <div class="bar"><div class="fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="pct">${pct.toFixed(0)}%</div>
+      </div>
+      <div class="goal-controls">
+        <button onclick="updateGoalProgress('${g.id}',-1)">−1</button>
+        <button onclick="updateGoalProgress('${g.id}',1)">+1</button>
+        <button onclick="setGoalProgress('${g.id}')">Imposta…</button>
+        <button onclick="delGoal('${g.id}')" style="color:var(--red);border-color:var(--red)">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============ NETWORK ============
+const CONTACT_GROUPS = {
+  parigi:'🗼 Parigi', audencia:'🎓 Audencia/Nantes', famiglia:'👨‍👩‍👧 Famiglia',
+  milano:'🏙️ Milano', como:'⛵ Como', lavoro:'💼 Lavoro', altro:'⭐ Altro'
+};
+function addContact(){
+  const name = document.getElementById('ct-name').value.trim();
+  if(!name) return;
+  state.contacts.push({
+    id:uid(), name,
+    group: document.getElementById('ct-group').value,
+    notes: document.getElementById('ct-notes').value.trim(),
+    frequencyDays: parseInt(document.getElementById('ct-freq').value)||30,
+    lastContact: null,
+    created: todayISO()
+  });
+  ['ct-name','ct-notes'].forEach(i=>document.getElementById(i).value='');
+  save(); renderContacts();
+}
+function markContacted(id){
+  const c = state.contacts.find(x=>x.id===id); if(!c) return;
+  c.lastContact = todayISO();
+  save(); renderContacts();
+}
+function delContact(id){
+  if(!confirm('Eliminare contatto?')) return;
+  state.contacts = state.contacts.filter(c=>c.id!==id);
+  save(); renderContacts();
+}
+function editContactNotes(id){
+  const c = state.contacts.find(x=>x.id===id); if(!c) return;
+  const v = prompt('Note:', c.notes||'');
+  if(v!==null){ c.notes=v; save(); renderContacts(); }
+}
+function daysSince(date){
+  if(!date) return null;
+  return Math.floor((Date.now() - new Date(date).getTime())/86400000);
+}
+function renderContacts(){
+  // Filter buttons
+  document.querySelectorAll('#ct-filters .todo-filter').forEach(b=>{
+    b.classList.toggle('active', b.dataset.cf===(state.contactFilter||'all'));
+    b.onclick = ()=>{ state.contactFilter=b.dataset.cf; save(); renderContacts(); };
+  });
+  const filter = state.contactFilter||'all';
+
+  // Counts
+  let allCnt=0, dueCnt=0;
+  state.contacts.forEach(c=>{
+    allCnt++;
+    const ds = daysSince(c.lastContact);
+    if(ds===null || ds>=c.frequencyDays) dueCnt++;
+  });
+  const all=document.getElementById('ct-cnt-all'); if(all) all.textContent=allCnt;
+  const due=document.getElementById('ct-cnt-due'); if(due) due.textContent=dueCnt;
+
+  let list = state.contacts.slice();
+  if(filter==='due') list = list.filter(c=>{ const ds=daysSince(c.lastContact); return ds===null || ds>=c.frequencyDays; });
+  else if(filter!=='all') list = list.filter(c=>c.group===filter);
+
+  // Sort: most overdue first, then by name
+  list.sort((a,b)=>{
+    const da=daysSince(a.lastContact), db=daysSince(b.lastContact);
+    const oa = da===null ? 999 : da-a.frequencyDays;
+    const ob = db===null ? 999 : db-b.frequencyDays;
+    if(ob!==oa) return ob-oa;
+    return a.name.localeCompare(b.name);
+  });
+
+  const c = document.getElementById('contacts-list');
+  if(!list.length){
+    c.innerHTML = '<p style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px">Nessun contatto in questa vista.</p>';
+    return;
+  }
+  c.innerHTML = list.map(ct=>{
+    const initial = ct.name[0].toUpperCase();
+    const ds = daysSince(ct.lastContact);
+    const overdue = ds===null || ds>=ct.frequencyDays;
+    let status;
+    if(ds===null) status = `<span class="tag red">Mai contattato</span>`;
+    else if(overdue) status = `<span class="tag red">⚠️ ${ds-ct.frequencyDays}gg in ritardo (ultimo: ${ct.lastContact})</span>`;
+    else status = `<span class="tag green">✓ Sentito ${ds}gg fa · prossimo tra ${ct.frequencyDays-ds}gg</span>`;
+    return `<div class="contact-card ${overdue?'overdue':''}">
+      <div class="contact-avatar">${initial}</div>
+      <div class="contact-info">
+        <div class="c-name">${escapeHtml(ct.name)}</div>
+        <div class="c-group">${CONTACT_GROUPS[ct.group]||ct.group} · ogni ${ct.frequencyDays}gg</div>
+        ${ct.notes?`<div class="c-notes">${escapeHtml(ct.notes)}</div>`:''}
+        <div class="c-status">${status}</div>
+      </div>
+      <div class="contact-actions">
+        <button class="btn sm" onclick="markContacted('${ct.id}')">✓ Sentito</button>
+        <button class="btn ghost sm" onclick="editContactNotes('${ct.id}')">📝</button>
+        <button class="btn ghost sm" onclick="delContact('${ct.id}')" style="color:var(--red);border-color:var(--red)">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ============ DECISIONI ============
+function addDecision(){
+  const title = document.getElementById('dec-title').value.trim();
+  if(!title){ alert('Titolo obbligatorio'); return; }
+  const date = document.getElementById('dec-date').value || todayISO();
+  const days = parseInt(document.getElementById('dec-review-days').value)||30;
+  const reviewDate = new Date(date); reviewDate.setDate(reviewDate.getDate()+days);
+  state.decisions.push({
+    id:uid(), date, title,
+    context: document.getElementById('dec-context').value,
+    options: document.getElementById('dec-options').value,
+    choice: document.getElementById('dec-choice').value,
+    expected: document.getElementById('dec-expected').value,
+    reviewDate: reviewDate.toISOString().slice(0,10),
+    reviewNotes: null
+  });
+  ['dec-title','dec-context','dec-options','dec-choice','dec-expected'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('dec-date').value = todayISO();
+  document.getElementById('dec-review-days').value = 30;
+  save(); renderDecisions();
+}
+function reviewDecision(id){
+  const d = state.decisions.find(x=>x.id===id); if(!d) return;
+  const v = prompt('Come è andata? Risultato vs aspettativa, cosa hai imparato:', d.reviewNotes||'');
+  if(v===null) return;
+  d.reviewNotes = v;
+  d.reviewedAt = todayISO();
+  save(); renderDecisions();
+}
+function delDecision(id){
+  if(!confirm('Eliminare decisione?')) return;
+  state.decisions = state.decisions.filter(d=>d.id!==id);
+  save(); renderDecisions();
+}
+function renderDecisions(){
+  const today = todayISO();
+  const dueList = state.decisions.filter(d=>!d.reviewNotes && d.reviewDate<=today);
+  const dueC = document.getElementById('decisions-due');
+  if(!dueList.length){ dueC.innerHTML = '<p style="color:var(--muted);font-size:.78rem">Nessuna decisione da rivedere.</p>'; }
+  else dueC.innerHTML = dueList.map(d=>renderDecisionCard(d, true)).join('');
+
+  const histList = state.decisions.filter(d=>!(!d.reviewNotes && d.reviewDate<=today)).sort((a,b)=>b.date.localeCompare(a.date));
+  const histC = document.getElementById('decisions-history');
+  if(!histList.length){ histC.innerHTML = '<p style="color:var(--muted);font-size:.78rem">Nessuna decisione registrata.</p>'; }
+  else histC.innerHTML = histList.map(d=>renderDecisionCard(d, false)).join('');
+}
+function renderDecisionCard(d, isDue){
+  const reviewed = !!d.reviewNotes;
+  return `<div class="decision-card ${isDue?'review-due':''} ${reviewed?'reviewed':''}">
+    <div class="decision-head">
+      <div class="d-title">${reviewed?'✅ ':''}${escapeHtml(d.title)}</div>
+      <div class="d-date">📅 ${d.date} · review ${d.reviewDate}</div>
+    </div>
+    ${d.context?`<div class="decision-section"><div class="lbl">Contesto</div><div class="txt">${escapeHtml(d.context)}</div></div>`:''}
+    ${d.options?`<div class="decision-section"><div class="lbl">Opzioni</div><div class="txt">${escapeHtml(d.options)}</div></div>`:''}
+    ${d.choice?`<div class="decision-section"><div class="lbl">Scelta</div><div class="txt">${escapeHtml(d.choice)}</div></div>`:''}
+    ${d.expected?`<div class="decision-section"><div class="lbl">Esito atteso</div><div class="txt">${escapeHtml(d.expected)}</div></div>`:''}
+    ${reviewed?`<div class="decision-section"><div class="lbl">📊 Review (${d.reviewedAt})</div><div class="txt">${escapeHtml(d.reviewNotes)}</div></div>`:''}
+    <div style="margin-top:10px;display:flex;gap:6px">
+      ${!reviewed?`<button class="btn sm" onclick="reviewDecision('${d.id}')">${isDue?'⏰ Fai review':'Aggiungi review'}</button>`:''}
+      <button class="btn ghost sm" onclick="delDecision('${d.id}')" style="color:var(--red);border-color:var(--red)">🗑</button>
+    </div>
+  </div>`;
+}
+
 // ============ MASTER RENDER ============
 function renderAll(){
   paintCornice();
@@ -1731,6 +2261,10 @@ function renderAll(){
   renderCheckHistory();
   renderDataSummary();
   renderTodos();
+  renderHabits();
+  renderGoals();
+  renderContacts();
+  renderDecisions();
   pomoRender();
   renderMIT();
   renderEnergy();
@@ -1747,6 +2281,8 @@ document.getElementById('sleep-date').value = todayISO();
 document.getElementById('rev-date').value = todayISO();
 document.getElementById('ck-month').value = todayISO().slice(0,7);
 document.getElementById('todo-due').value = todayISO();
+document.getElementById('dec-date').value = todayISO();
+document.getElementById('goal-deadline').value = '2026-11-30';
 
 renderAll();
 </script>
