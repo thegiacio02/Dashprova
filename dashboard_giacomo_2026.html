@@ -287,7 +287,14 @@ canvas{max-width:100%}
 
 <!-- ── OVERVIEW ── -->
 <div class="section" id="overview">
-  <div class="section-title">Overview · Live da Google Sheets</div>
+  <!-- Weather panel (Como) - più grande, interattivo -->
+  <div id="weather-panel" style="background:linear-gradient(135deg,rgba(59,130,246,.10),rgba(6,182,212,.08));border:1px solid var(--border);border-radius:14px;margin-bottom:18px;overflow:hidden">
+    <div id="weather-strip" style="display:flex;align-items:stretch;gap:0;padding:14px 14px;overflow-x:auto;font-size:.85rem">
+      <div style="display:flex;align-items:center;color:var(--muted);font-size:.8rem;padding:20px 8px">Caricamento meteo…</div>
+    </div>
+    <div id="weather-detail" style="display:none;padding:14px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,.18);font-size:.8rem"></div>
+  </div>
+  <div class="section-title" style="margin-top:0">Overview · Live da Google Sheets</div>
   <div class="kpi-grid" id="kpi-grid"></div>
 </div>
 
@@ -804,21 +811,6 @@ canvas{max-width:100%}
   </div>
 </div>
 
-<!-- Closed tours recap modal -->
-<div id="closed-tours-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:var(--surface);border:1px solid #334155;border-radius:14px;max-width:760px;width:100%;max-height:90vh;overflow-y:auto;padding:24px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <h2 style="margin:0;font-size:1rem;color:#fff">📋 Tour Chiusi — <span id="closed-modal-date" style="color:var(--teal)">—</span></h2>
-      <button onclick="document.getElementById('closed-tours-modal').style.display='none'" style="background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer">×</button>
-    </div>
-    <div id="closed-modal-summary" style="display:flex;gap:24px;margin-bottom:18px;padding:14px 16px;background:var(--surface2);border-radius:8px;border-left:3px solid var(--green)"></div>
-    <div id="closed-modal-list"></div>
-    <div style="margin-top:18px;text-align:right">
-      <button onclick="document.getElementById('closed-tours-modal').style.display='none'" style="background:var(--surface2);color:var(--muted2);border:1px solid #334155;border-radius:8px;padding:10px 16px;font-size:.82rem;cursor:pointer;font-family:inherit">Chiudi</button>
-    </div>
-  </div>
-</div>
-
 <!-- Outlook briefing modal -->
 <div id="outlook-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;align-items:center;justify-content:center;padding:20px">
   <div style="background:var(--surface);border:1px solid #334155;border-radius:14px;max-width:720px;width:100%;max-height:90vh;overflow-y:auto;padding:24px">
@@ -1014,7 +1006,7 @@ function resetKey(){
    FETCH  (with localStorage cache, TTL 5 min — evita quota exceeded)
 ═══════════════════════════════════════════════════════════════════ */
 const CACHE_TTL_MS = 5*60*1000;
-const CACHE_VERSION = 'v4'; // bump to invalidate stale caches (e.g. after parsing fix)
+const CACHE_VERSION = 'v6'; // bump to invalidate stale caches (e.g. after parsing fix)
 function cacheGet(key){
   try{
     const raw = localStorage.getItem('cob_cache_'+CACHE_VERSION+'_'+key);
@@ -1516,7 +1508,7 @@ function parseBoats(allSheets){
 
     // Find header row: scan first 8 rows for DATA + BARCA combo.
     // Prefer EXACT 'data' over 'data richiamo'/'data tour' etc.
-    let dataCol=-1, priceCol=-1, boatCol=-1, chanCol=-1, bookCol=-1, headerRow=-1;
+    let dataCol=-1, priceCol=-1, boatCol=-1, chanCol=-1, bookCol=-1, commCol=-1, headerRow=-1;
     for(let r=0;r<Math.min(8,rows.length);r++){
       const row = (rows[r]||[]).map(v=>String(v??'').toLowerCase().trim());
       // Exact match first (data del tour) — escludi "data prenotazione"/"data richiamo"
@@ -1527,7 +1519,9 @@ function parseBoats(allSheets){
       const ci = row.findIndex(v=>v==='provenienza'||v==='channel'||v==='fonte'||v==='canale');
       // Data prenotazione (booking date)
       const bki = row.findIndex(v=>v.includes('prenotaz')||v.includes('booking date')||v==='prenotato il'||v.includes('data ordine'));
-      if(di>=0 && bi>=0){ dataCol=di; priceCol=pi; boatCol=bi; chanCol=ci; bookCol=bki; headerRow=r; break; }
+      // Commissione (stipendio operatore)
+      const cmi = row.findIndex(v=>v==='commissione'||v==='commission'||v==='commissioni');
+      if(di>=0 && bi>=0){ dataCol=di; priceCol=pi; boatCol=bi; chanCol=ci; bookCol=bki; commCol=cmi; headerRow=r; break; }
     }
     if(headerRow<0){ console.log('[CoB] parseBoats skip sheet:', sheetName, '(no header)'); continue; }
 
@@ -1552,7 +1546,8 @@ function parseBoats(allSheets){
         const bd = parseD(row[bookCol]);
         if(bd && !isNaN(bd)) bookIso = toIso(bd);
       }
-      tours.push({date:iso, price, boat, channel, owned:isOwnedBoat(boat), year:yr, bookDate:bookIso});
+      const commission = commCol>=0 ? parseNum(row[commCol]) : 0;
+      tours.push({date:iso, price, boat, channel, owned:isOwnedBoat(boat), year:yr, bookDate:bookIso, commission});
       added++;
     }
     console.log('[CoB] parseBoats sheet', sheetName, '→', added, 'tour (headerRow='+headerRow+', dataCol='+dataCol+', boatCol='+boatCol+')');
@@ -2721,55 +2716,44 @@ function renderDashboard(data){
     {lbl:'Tour Chiusi Oggi',val:fmt(chiusiOggiRev),sub:chiusiOggi.length+(chiusiOggi.length===1?' tour prenotato':' tour prenotati'),
      acc:'linear-gradient(90deg,#22c55e,#06b6d4)',trend:'Booking entrati nelle ultime 24h',up:chiusiOggi.length>0,
      closed:true},
-    {lbl:'Quarter 2026',val:fmt(y26[0]||0),sub:'vs Q1 2025: '+fmt(SCENARIOS.y2025[0]),
+    {lbl:'Commissione',val:'—',sub:'—',
      acc:'linear-gradient(90deg,#22c55e,#06b6d4)',
-     trend:`+${Math.round(((y26[0]||0)/SCENARIOS.y2025[0]-1)*100)}% YoY`,up:true,
-     quarter:true},
-    {lbl:'Mese 2026',val:fmt(aprilAct),sub:'vs Aprile 2025: '+fmt(SCENARIOS.y2025[1]),
+     trend:'—',up:true,
+     commission:true},
+    {lbl:'Settimana',val:'—',sub:'—',
      acc:'linear-gradient(90deg,#f59e0b,#ef4444)',
-     trend:`+${Math.round((aprilAct/SCENARIOS.y2025[1]-1)*100)}% YoY`,up:true,
-     month:true},
+     trend:'—',up:true,
+     week:true},
     {lbl:'Fatturato YTD Confermato',val:fmt(ytdActual),sub:'Gen–Apr 2026 (confermato)',
      acc:'linear-gradient(90deg,#3b82f6,#06b6d4)',
      trend:`+${Math.round((ytdActual/ytd2025-1)*100)}% vs stesso periodo 2025`,up:true},
   ];
   const grid = document.getElementById('kpi-grid');
   grid.innerHTML = kpiData.map(k=>{
-    if(k.month){
+    if(k.week){
       return `
     <div class="kpi" style="--accent:${k.acc};position:relative">
       <div class="lbl" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <span>Mese 2026</span>
-        <select id="month-picker"
-          style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:.65rem;padding:3px 6px;border-radius:5px;cursor:pointer">
-          <option value="1" selected>Aprile</option>
-          <option value="2">Maggio</option>
-          <option value="3">Giugno</option>
-          <option value="4">Luglio</option>
-          <option value="5">Agosto</option>
-          <option value="6">Settembre</option>
-        </select>
+        <span>Settimana</span>
+        <select id="week-picker"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:.65rem;padding:3px 6px;border-radius:5px;cursor:pointer;max-width:170px"></select>
       </div>
-      <div class="val" id="month-val">${k.val}</div>
-      <div class="sub" id="month-sub">${k.sub}</div>
-      <span class="trend ${k.up?'up':'down'}" id="month-trend">${k.trend}</span>
+      <div class="val" id="week-val">${k.val}</div>
+      <div class="sub" id="week-sub">${k.sub}</div>
+      <span class="trend ${k.up?'up':'down'}" id="week-trend">${k.trend}</span>
     </div>`;
     }
-    if(k.quarter){
+    if(k.commission){
       return `
     <div class="kpi" style="--accent:${k.acc};position:relative">
       <div class="lbl" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <span>Quarter 2026</span>
-        <select id="quarter-picker"
-          style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:.65rem;padding:3px 6px;border-radius:5px;cursor:pointer">
-          <option value="0">Q1 (Gen–Mar)</option>
-          <option value="1">Q2 (Apr–Giu)</option>
-          <option value="2">Q3 (Lug–Set)</option>
-        </select>
+        <span>Commissione</span>
+        <select id="commission-picker"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:.65rem;padding:3px 6px;border-radius:5px;cursor:pointer"></select>
       </div>
-      <div class="val" id="quarter-val">${k.val}</div>
-      <div class="sub" id="quarter-sub">${k.sub}</div>
-      <span class="trend ${k.up?'up':'down'}" id="quarter-trend">${k.trend}</span>
+      <div class="val" id="commission-val">${k.val}</div>
+      <div class="sub" id="commission-sub">${k.sub}</div>
+      <span class="trend ${k.up?'up':'down'}" id="commission-trend">${k.trend}</span>
     </div>`;
     }
     if(k.closed){
@@ -2783,12 +2767,6 @@ function renderDashboard(data){
       <div class="val" id="closed-val">${k.val}</div>
       <div class="sub" id="closed-sub">${k.sub}</div>
       <span class="trend ${k.up?'up':'down'}" id="closed-trend">${k.trend}</span>
-      <button id="closed-details-btn" onclick="window.openClosedToursModal()"
-        style="margin-top:10px;width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--muted2);font-size:.7rem;padding:6px 10px;border-radius:6px;cursor:pointer;transition:.15s;font-family:inherit"
-        onmouseover="this.style.borderColor='var(--teal)';this.style.color='var(--teal)'"
-        onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted2)'">
-        📋 Vedi dettagli
-      </button>
     </div>`;
     }
     if(k.daily){
@@ -2813,119 +2791,99 @@ function renderDashboard(data){
     </div>`;
   }).join('');
 
-  // Wire up month picker
-  const mpick = document.getElementById('month-picker');
-  if(mpick){
-    const M_LABELS = ['','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre'];
-    mpick.addEventListener('change', (e)=>{
-      const i = parseInt(e.target.value,10);
-      const v26 = y26[i]||0, v25 = SCENARIOS.y2025[i]||0;
-      const yoy = v25>0 ? Math.round((v26/v25-1)*100) : 0;
-      document.getElementById('month-val').textContent = fmt(v26);
-      document.getElementById('month-sub').textContent = `vs ${M_LABELS[i]} 2025: `+fmt(v25);
-      const tr = document.getElementById('month-trend');
-      tr.textContent = (yoy>=0?'+':'')+yoy+'% YoY';
-      tr.classList.toggle('up', yoy>=0);
-      tr.classList.toggle('down', yoy<0);
-    });
+  // Wire up week picker (settimane 2026: lun 29 dic 2025 → dom 3 gen 2027)
+  const wpick = document.getElementById('week-picker');
+  if(wpick){
+    const toIsoW = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const MESI_SHORT = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+    // Build all weeks starting Mon 29 Dec 2025, generate 53 to cover all 2026
+    const weeks = [];
+    let cur = new Date(2025,11,29); // Mon 29 Dec 2025
+    for(let i=0;i<53;i++){
+      const start = new Date(cur);
+      const end = new Date(cur); end.setDate(end.getDate()+6);
+      weeks.push({start, end, startIso:toIsoW(start), endIso:toIsoW(end)});
+      cur.setDate(cur.getDate()+7);
+    }
+    // Compute revenue per week from all tours
+    const allTours = (window._allDailyTours && window._allDailyTours.length) ? window._allDailyTours : (allToday||[]);
+    function weekRev(w){
+      return allTours
+        .filter(t => t.date >= w.startIso && t.date <= w.endIso)
+        .reduce((s,t)=>s+(t.price||0),0);
+    }
+    function weekCount(w){
+      return allTours.filter(t => t.date >= w.startIso && t.date <= w.endIso).length;
+    }
+    function weekLabel(w){
+      const s=w.start, e=w.end;
+      const sStr = s.getDate()+' '+MESI_SHORT[s.getMonth()];
+      const eStr = e.getDate()+' '+MESI_SHORT[e.getMonth()];
+      return `${sStr} – ${eStr}`;
+    }
+    // Find current week index
+    const todayIsoW = toIsoW(new Date());
+    let curIdx = weeks.findIndex(w => todayIsoW >= w.startIso && todayIsoW <= w.endIso);
+    if(curIdx<0) curIdx = 0;
+    // Populate dropdown
+    wpick.innerHTML = weeks.map((w,i)=>{
+      const lbl = weekLabel(w);
+      const tag = i===curIdx ? ' (corrente)' : (w.endIso < todayIsoW ? '' : (w.startIso > todayIsoW ? ' (futura)' : ''));
+      return `<option value="${i}"${i===curIdx?' selected':''}>${lbl}${tag}</option>`;
+    }).join('');
+
+    function renderWeek(i){
+      const w = weeks[i];
+      const rev = weekRev(w);
+      const cnt = weekCount(w);
+      const prevRev = i>0 ? weekRev(weeks[i-1]) : 0;
+      const delta = prevRev>0 ? Math.round((rev/prevRev-1)*100) : (rev>0?100:0);
+      document.getElementById('week-val').textContent = fmt(rev);
+      const isCur = i===curIdx;
+      const isFut = w.startIso > todayIsoW;
+      const subTxt = `${weekLabel(w)} · ${cnt} tour` + (isFut ? ' a libro' : (isCur ? ' (in corso)' : ''));
+      document.getElementById('week-sub').textContent = subTxt;
+      const tr = document.getElementById('week-trend');
+      tr.textContent = (delta>=0?'+':'')+delta+'% vs sett. prec.';
+      tr.classList.toggle('up', delta>=0);
+      tr.classList.toggle('down', delta<0);
+    }
+    wpick.addEventListener('change', (e)=> renderWeek(parseInt(e.target.value,10)));
+    renderWeek(curIdx);
   }
 
-  // Wire up quarter picker
-  const qpick = document.getElementById('quarter-picker');
-  if(qpick){
-    const Q_LABELS = ['Q1 (Gen–Mar)','Q2 (Apr–Giu)','Q3 (Lug–Set)'];
-    const q26 = [
-      (y26[0]||0),
-      (y26[1]||0)+(y26[2]||0)+(y26[3]||0),
-      (y26[4]||0)+(y26[5]||0)+(y26[6]||0)
-    ];
-    const q25 = [
-      SCENARIOS.y2025[0],
-      SCENARIOS.y2025[1]+SCENARIOS.y2025[2]+SCENARIOS.y2025[3],
-      SCENARIOS.y2025[4]+SCENARIOS.y2025[5]+SCENARIOS.y2025[6]
-    ];
-    qpick.addEventListener('change', (e)=>{
-      const i = parseInt(e.target.value,10);
-      const v26 = q26[i], v25 = q25[i];
-      const yoy = v25>0 ? Math.round((v26/v25-1)*100) : 0;
-      document.getElementById('quarter-val').textContent = fmt(v26);
-      document.getElementById('quarter-sub').textContent = `vs ${Q_LABELS[i].split(' ')[0]} 2025: `+fmt(v25);
-      const tr = document.getElementById('quarter-trend');
-      tr.textContent = (yoy>=0?'+':'')+yoy+'% YoY';
-      tr.classList.toggle('up', yoy>=0);
-      tr.classList.toggle('down', yoy<0);
-    });
+  // Wire up commission picker (stipendio operatore per mese)
+  const cmpick = document.getElementById('commission-picker');
+  if(cmpick){
+    const M_FULL = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+    const cmTours = (window._allDailyTours && window._allDailyTours.length) ? window._allDailyTours : (allToday||[]);
+    const curMonth = today.getMonth();
+    cmpick.innerHTML = M_FULL.map((n,i)=>`<option value="${i}"${i===curMonth?' selected':''}>${n}</option>`).join('');
+    function renderCommission(monthIdx){
+      const monthTours = cmTours.filter(t=>{
+        if(!t.date) return false;
+        const [yy,mm] = t.date.split('-').map(Number);
+        return yy===2026 && (mm-1)===monthIdx;
+      });
+      const totalComm = monthTours.reduce((s,t)=>s+(t.commission||0),0);
+      const daysWithTours = new Set(monthTours.filter(t=>(t.commission||0)>0).map(t=>t.date)).size;
+      const daysInMonth = new Date(2026, monthIdx+1, 0).getDate();
+      // Media giornaliera = totale / giorni del mese (non solo giorni operativi)
+      const dailyAvg = daysInMonth>0 ? totalComm/daysInMonth : 0;
+      const valEl = document.getElementById('commission-val');
+      const subEl = document.getElementById('commission-sub');
+      const trEl  = document.getElementById('commission-trend');
+      valEl.textContent = fmt(totalComm);
+      subEl.innerHTML = `<span style="color:var(--muted);font-size:.78rem">${M_FULL[monthIdx]} · ~${fmt(Math.round(dailyAvg))}/giorno</span>`;
+      trEl.textContent = `${monthTours.length} tour · ${daysWithTours} gg attivi`;
+      trEl.classList.toggle('up', totalComm>0);
+      trEl.classList.toggle('down', totalComm<=0);
+    }
+    cmpick.addEventListener('change', (e)=> renderCommission(parseInt(e.target.value,10)));
+    renderCommission(curMonth);
   }
 
   window._allDailyTours = allToday;
-
-  // Open closed-tours recap modal for the date currently selected in the picker
-  window.openClosedToursModal = function(){
-    const iso = document.getElementById('closed-date-picker')?.value || todayIso;
-    const tours = (window._allDailyTours||[]).filter(t=>t.bookDate===iso);
-    const rev = tours.reduce((s,t)=>s+(t.price||0),0);
-    const [yy,mm,dd] = iso.split('-').map(Number);
-    const dObj = new Date(yy,mm-1,dd);
-    const dateLabel = dObj.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-
-    document.getElementById('closed-modal-date').textContent = dateLabel;
-    document.getElementById('closed-modal-summary').innerHTML = `
-      <div>
-        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Fatturato chiuso</div>
-        <div style="font-size:1.5rem;font-weight:800;color:#fff;line-height:1">${fmt(rev)}</div>
-      </div>
-      <div>
-        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Prenotazioni</div>
-        <div style="font-size:1.5rem;font-weight:800;color:#fff;line-height:1">${tours.length}</div>
-      </div>
-      <div>
-        <div style="font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px">Ticket medio</div>
-        <div style="font-size:1.5rem;font-weight:800;color:#fff;line-height:1">${tours.length?fmt(rev/tours.length):'—'}</div>
-      </div>
-    `;
-
-    const listEl = document.getElementById('closed-modal-list');
-    if(tours.length===0){
-      listEl.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--muted2);font-size:.85rem;background:var(--surface2);border-radius:8px;border:1px dashed var(--border)">Nessun tour chiuso in questa data.</div>`;
-    } else {
-      const sorted = [...tours].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-      listEl.innerHTML = `
-        <table style="width:100%;border-collapse:collapse;font-size:.82rem">
-          <thead>
-            <tr style="color:var(--muted);text-transform:uppercase;font-size:.62rem;letter-spacing:.08em">
-              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)">#</th>
-              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)">Data Tour</th>
-              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)">Servizio</th>
-              <th style="text-align:left;padding:8px 10px;border-bottom:1px solid var(--border)">Canale</th>
-              <th style="text-align:right;padding:8px 10px;border-bottom:1px solid var(--border)">Prezzo</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${sorted.map((t,i)=>{
-              const parts = (t.date||'').split('-').map(Number);
-              const tourDateLbl = (parts.length===3 && parts[0])
-                ? new Date(parts[0],parts[1]-1,parts[2]).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short',year:'numeric'})
-                : '—';
-              const isCasa = !!t.platform;
-              const service = isCasa ? `🏠 Casa` : `⛵ ${t.boat||'Tour'}`;
-              const channel = isCasa ? (t.platform||'—') : (t.channel||'—');
-              return `
-                <tr style="border-bottom:1px solid var(--border)">
-                  <td style="padding:10px;color:var(--muted)">${i+1}</td>
-                  <td style="padding:10px;color:var(--text)">${tourDateLbl}</td>
-                  <td style="padding:10px;color:var(--text);font-weight:600">${service}</td>
-                  <td style="padding:10px;color:var(--muted2)">${channel}</td>
-                  <td style="padding:10px;text-align:right;color:#22c55e;font-weight:700">${fmt(t.price||0)}</td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      `;
-    }
-
-    document.getElementById('closed-tours-modal').style.display = 'flex';
-  };
 
   // Wire up closed-tours date picker
   const cpick = document.getElementById('closed-date-picker');
@@ -3486,9 +3444,208 @@ function renderDashboard(data){
   /* ── Month Detail Section ── */
   initMonthDetail();
 
+  /* ── Weather Strip (Como) ── */
+  loadWeather();
+
   /* ── Timestamp ── */
   document.getElementById('last-updated').textContent =
     'Aggiornato: '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   WEATHER — Open-Meteo, Como (45.81, 9.08), 7-day forecast
+═══════════════════════════════════════════════════════════════════ */
+async function loadWeather(){
+  const strip = document.getElementById('weather-strip');
+  if(!strip) return;
+  // WMO weather code → emoji + short label
+  const WMO = {
+    0:['☀️','Sereno'], 1:['🌤️','Poco nuv.'], 2:['⛅','Var.'], 3:['☁️','Nuvoloso'],
+    45:['🌫️','Nebbia'], 48:['🌫️','Nebbia'],
+    51:['🌦️','Pioviggine'], 53:['🌦️','Pioviggine'], 55:['🌦️','Pioviggine'],
+    56:['🌧️','Piog. gel.'], 57:['🌧️','Piog. gel.'],
+    61:['🌧️','Pioggia'], 63:['🌧️','Pioggia'], 65:['🌧️','Pioggia f.'],
+    66:['🌧️','Piog. gel.'], 67:['🌧️','Piog. gel.'],
+    71:['🌨️','Neve'], 73:['🌨️','Neve'], 75:['🌨️','Neve f.'],
+    77:['🌨️','Granelli'],
+    80:['🌦️','Rovesci'], 81:['🌧️','Rovesci'], 82:['⛈️','Rovesci f.'],
+    85:['🌨️','Rovesci nv.'], 86:['🌨️','Rovesci nv.'],
+    95:['⛈️','Temporale'], 96:['⛈️','Temp. grand.'], 99:['⛈️','Temp. grand.']
+  };
+  const wIcon = c => (WMO[c]||['❔','—'])[0];
+  const wLbl  = c => (WMO[c]||['❔','—'])[1];
+  const cacheKey = 'cob_weather_v2';
+  // Cache TTL 30 min
+  try{
+    const cached = JSON.parse(localStorage.getItem(cacheKey)||'null');
+    if(cached && (Date.now()-cached.t) < 30*60*1000){
+      renderWeather(cached.v);
+      return;
+    }
+  }catch(e){}
+  try{
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=45.81&longitude=9.08'
+      +'&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m,is_day'
+      +'&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,wind_speed_10m_max,sunrise,sunset,uv_index_max'
+      +'&hourly=temperature_2m,precipitation_probability,weather_code'
+      +'&timezone=Europe%2FRome&forecast_days=7';
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    try{ localStorage.setItem(cacheKey, JSON.stringify({t:Date.now(), v:data})); }catch(e){}
+    renderWeather(data);
+  }catch(err){
+    console.warn('[CoB] weather fetch failed:', err.message);
+    strip.innerHTML = `<div style="color:var(--muted);font-size:.75rem;padding:4px 8px">⚠️ Meteo non disponibile (${err.message})</div>`;
+  }
+  function renderWeather(data){
+    const cur = data.current||{};
+    const d = data.daily||{};
+    const h = data.hourly||{};
+    const days = (d.time||[]).slice(0,7);
+    const DOW_FULL = ['Domenica','Lunedì','Martedì','Mercoledì','Giovedì','Venerdì','Sabato'];
+    const DOW = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
+    const windDir = deg => {
+      const dirs=['N','NE','E','SE','S','SW','O','NO'];
+      return dirs[Math.round(((deg||0)%360)/45)%8];
+    };
+    const fmtTime = iso => {
+      try { return new Date(iso).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}); }
+      catch(e){ return iso; }
+    };
+    const detail = document.getElementById('weather-detail');
+
+    // ─ Current panel (large) ─
+    const curHtml = `
+      <div style="display:flex;align-items:center;gap:16px;padding:6px 18px 6px 6px;border-right:1px solid var(--border);min-width:230px;flex-shrink:0">
+        <div style="font-size:3.5rem;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))">${wIcon(cur.weather_code)}</div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700">📍 Como · Adesso</div>
+          <div style="font-size:2.2rem;font-weight:800;color:#fff;line-height:1">${Math.round(cur.temperature_2m)}°<span style="font-size:.8rem;color:var(--muted);font-weight:500;margin-left:8px">perc. ${Math.round(cur.apparent_temperature)}°</span></div>
+          <div style="font-size:.85rem;color:#cbd5e1;font-weight:500">${wLbl(cur.weather_code)}</div>
+          <div style="font-size:.72rem;color:var(--muted);display:flex;gap:10px;margin-top:2px">
+            <span>💨 ${Math.round(cur.wind_speed_10m)} km/h ${windDir(cur.wind_direction_10m)}</span>
+            <span>💧 ${cur.relative_humidity_2m}%</span>
+          </div>
+        </div>
+      </div>`;
+
+    // ─ Daily cards (clickable) ─
+    const dayHtml = days.map((iso,i)=>{
+      const dt = new Date(iso+'T00:00:00');
+      const dow = i===0 ? 'OGGI' : DOW[dt.getDay()].toUpperCase();
+      const dnum = dt.getDate();
+      const code = d.weather_code[i];
+      const tmin = Math.round(d.temperature_2m_min[i]);
+      const tmax = Math.round(d.temperature_2m_max[i]);
+      const pop  = d.precipitation_probability_max[i] ?? 0;
+      const popColor = pop>=60?'#ef4444':pop>=30?'#f59e0b':'#22c55e';
+      const isFirst = i===0;
+      return `
+        <div class="weather-day" data-idx="${i}" role="button" tabindex="0"
+             style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 14px;min-width:96px;border-right:1px solid var(--border);flex-shrink:0;cursor:pointer;transition:all .18s ease;border-radius:0;${isFirst?'background:rgba(6,182,212,.08);':''}"
+             onmouseover="this.style.background='rgba(6,182,212,.14)';this.style.transform='translateY(-2px)'"
+             onmouseout="this.style.background='${isFirst?'rgba(6,182,212,.08)':'transparent'}';this.style.transform='translateY(0)'">
+          <div style="font-size:.7rem;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.5px">${dow}<span style="margin-left:4px;color:#fff;font-weight:800">${dnum}</span></div>
+          <div style="font-size:2rem;line-height:1.05;filter:drop-shadow(0 1px 4px rgba(0,0,0,.3))" title="${wLbl(code)}">${wIcon(code)}</div>
+          <div style="font-size:.95rem;color:#fff;font-weight:700;line-height:1.1">${tmax}°<span style="color:var(--muted);font-weight:500;margin-left:4px;font-size:.78rem">${tmin}°</span></div>
+          <div style="font-size:.7rem;color:${popColor};font-weight:700;display:flex;align-items:center;gap:2px">💧 ${pop}%</div>
+          <div style="font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600;margin-top:1px">${i===0?'tap':'dettagli'}</div>
+        </div>`;
+    }).join('');
+
+    strip.innerHTML = curHtml + dayHtml + `
+      <div style="display:flex;align-items:flex-end;justify-content:center;padding:6px 10px;font-size:.6rem;color:var(--muted);flex-shrink:0">
+        <a href="https://open-meteo.com" target="_blank" style="color:var(--muted);text-decoration:none">Open-Meteo</a>
+      </div>`;
+
+    // ─ Click handlers ─
+    let activeIdx = -1;
+    function selectDay(i){
+      // toggle
+      if(activeIdx===i){
+        detail.style.display = 'none';
+        activeIdx = -1;
+        document.querySelectorAll('.weather-day').forEach((el,j)=>{
+          el.style.background = j===0 ? 'rgba(6,182,212,.08)' : 'transparent';
+        });
+        return;
+      }
+      activeIdx = i;
+      document.querySelectorAll('.weather-day').forEach((el,j)=>{
+        el.style.background = j===i ? 'rgba(6,182,212,.18)' : (j===0 && i!==0 ? 'rgba(6,182,212,.08)' : 'transparent');
+      });
+      // Build detail panel
+      const dt = new Date(days[i]+'T00:00:00');
+      const dowF = DOW_FULL[dt.getDay()];
+      const dateLbl = `${dowF} ${dt.getDate()} ${['gennaio','febbraio','marzo','aprile','maggio','giugno','luglio','agosto','settembre','ottobre','novembre','dicembre'][dt.getMonth()]}`;
+      const code = d.weather_code[i];
+      const tmin = Math.round(d.temperature_2m_min[i]);
+      const tmax = Math.round(d.temperature_2m_max[i]);
+      const pop  = d.precipitation_probability_max[i] ?? 0;
+      const psum = (d.precipitation_sum[i] ?? 0).toFixed(1);
+      const wmax = Math.round(d.wind_speed_10m_max[i]||0);
+      const uv   = (d.uv_index_max[i] ?? 0).toFixed(1);
+      const sr   = fmtTime(d.sunrise[i]);
+      const ss   = fmtTime(d.sunset[i]);
+      // Hourly bars (24h slice for this day)
+      const dayKey = days[i];
+      const hourlyIdxs = (h.time||[]).map((t,k)=>t.startsWith(dayKey)?k:-1).filter(k=>k>=0);
+      const hours = hourlyIdxs.map(k=>({
+        t: h.time[k].slice(11,16),
+        temp: Math.round(h.temperature_2m[k]),
+        pop: h.precipitation_probability[k]||0,
+        code: h.weather_code[k]
+      }));
+      // Show 8 strategic hours (every 3h)
+      const slot = hours.filter((_,k)=>k%3===0).slice(0,8);
+      const hourlyHtml = slot.map(s=>{
+        const popC = s.pop>=60?'#ef4444':s.pop>=30?'#f59e0b':'#22c55e';
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:55px">
+          <div style="font-size:.65rem;color:var(--muted);font-weight:600">${s.t}</div>
+          <div style="font-size:1.15rem">${wIcon(s.code)}</div>
+          <div style="font-size:.78rem;color:#fff;font-weight:700">${s.temp}°</div>
+          <div style="font-size:.6rem;color:${popC};font-weight:600">💧${s.pop}%</div>
+        </div>`;
+      }).join('');
+      const uvLevel = uv>=8?'Molto alto':uv>=6?'Alto':uv>=3?'Moderato':'Basso';
+      const uvColor = uv>=8?'#dc2626':uv>=6?'#f59e0b':uv>=3?'#facc15':'#22c55e';
+      // Boating advice
+      let advice = '';
+      if(pop>=70 || code>=80){ advice = '⚠️ <b>Sconsigliato</b> per tour barca: alta probabilità di precipitazioni.'; }
+      else if(wmax>=35){ advice = '⚠️ <b>Vento forte</b> ('+wmax+' km/h max): valuta rotte protette.'; }
+      else if(pop<=20 && tmax>=18){ advice = '✅ <b>Ottimo per tour barca</b>: cielo favorevole e temperatura piacevole.'; }
+      else if(pop<=40){ advice = '🟡 <b>Condizioni accettabili</b>: tieni d\'occhio l\'evoluzione.'; }
+      else { advice = '🟠 <b>Possibili rovesci</b>: porta cerata, preferisci tour brevi.'; }
+
+      detail.innerHTML = `
+        <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div>
+            <div style="font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;font-weight:700">Dettaglio giornata</div>
+            <div style="font-size:1.05rem;color:#fff;font-weight:700;text-transform:capitalize;margin-top:2px">${dateLbl}</div>
+            <div style="font-size:.85rem;color:#cbd5e1;margin-top:2px">${wIcon(code)} ${wLbl(code)} · ${tmax}° / ${tmin}°</div>
+          </div>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem">
+            <div><div style="color:var(--muted);font-size:.65rem;text-transform:uppercase;font-weight:600">💧 Precipit.</div><div style="color:#fff;font-weight:700">${pop}% · ${psum}mm</div></div>
+            <div><div style="color:var(--muted);font-size:.65rem;text-transform:uppercase;font-weight:600">💨 Vento max</div><div style="color:#fff;font-weight:700">${wmax} km/h</div></div>
+            <div><div style="color:var(--muted);font-size:.65rem;text-transform:uppercase;font-weight:600">☀️ UV max</div><div style="color:${uvColor};font-weight:700">${uv} · ${uvLevel}</div></div>
+            <div><div style="color:var(--muted);font-size:.65rem;text-transform:uppercase;font-weight:600">🌅 Alba</div><div style="color:#fff;font-weight:700">${sr}</div></div>
+            <div><div style="color:var(--muted);font-size:.65rem;text-transform:uppercase;font-weight:600">🌇 Tramonto</div><div style="color:#fff;font-weight:700">${ss}</div></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;background:rgba(0,0,0,.18);padding:10px 8px;border-radius:8px;border:1px solid var(--border)">${hourlyHtml}</div>
+        <div style="margin-top:12px;font-size:.82rem;color:#e2e8f0;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:9px 12px">⛵ ${advice}</div>
+      `;
+      detail.style.display = 'block';
+      detail.scrollIntoView({behavior:'smooth', block:'nearest'});
+    }
+    document.querySelectorAll('.weather-day').forEach(el=>{
+      el.addEventListener('click', ()=> selectDay(parseInt(el.dataset.idx,10)));
+      el.addEventListener('keydown', e=>{
+        if(e.key==='Enter'||e.key===' '){ e.preventDefault(); selectDay(parseInt(el.dataset.idx,10)); }
+      });
+    });
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -3554,20 +3711,74 @@ function renderMonthDetail(monthIdx){
   const leadAvg = leadDays.length ? Math.round(leadDays.reduce((s,x)=>s+x,0)/leadDays.length) : null;
 
   const kpis = [
-    {lbl:'Tour Eseguiti',val:totalTours+' tour',sub:totalCasa>0?(totalCasa+' casa Booking/Airbnb'):'solo barche',
-     acc:'linear-gradient(90deg,#3b82f6,#06b6d4)',trend:monthName+' 2026',up:totalTours>0},
+    {lbl:'Fatturato Mese',val:fmt(totalRev),sub:'da '+all.length+' transazioni',
+     acc:'linear-gradient(90deg,#f59e0b,#ef4444)',trend:'Tour + Casa',up:totalRev>0},
     {lbl:'Prenotazioni Entrate',val:bookings.length+(bookings.length===1?' booking':' bookings'),
      sub:fmt(bookingsRev)+' valore prenotato',
      acc:'linear-gradient(90deg,#22c55e,#06b6d4)',
      trend:leadAvg!==null?`Lead time medio: ${leadAvg}gg`:'Bookings creati nel mese',up:bookings.length>0},
-    {lbl:'Fatturato Mese',val:fmt(totalRev),sub:'da '+all.length+' transazioni',
-     acc:'linear-gradient(90deg,#f59e0b,#ef4444)',trend:'Tour + Casa',up:totalRev>0},
+    {lbl:'Tour Eseguiti',val:totalTours+' tour',sub:totalCasa>0?(totalCasa+' casa Booking/Airbnb'):'solo barche',
+     acc:'linear-gradient(90deg,#3b82f6,#06b6d4)',trend:monthName+' 2026',up:totalTours>0},
     {lbl:'Ticket Medio',val:fmt(ticketMedio),sub:totalRev>0?'per transazione':'—',
      acc:'linear-gradient(90deg,#8b5cf6,#ec4899)',trend:'€/transazione',up:ticketMedio>0},
-    {lbl:'Barche Attive',val:uniqueBoats.size+(uniqueBoats.size===1?' barca':' barche'),
-     sub:totalTours>0?(totalTours/Math.max(uniqueBoats.size,1)).toFixed(1)+' tour/barca':'—',
-     acc:'linear-gradient(90deg,#10b981,#06b6d4)',trend:'Distinte usate nel mese',up:uniqueBoats.size>0},
   ];
+
+  /* ── Forecast fine mese: velocity × remaining days + on-books future, con growth MoM ── */
+  const todayD = new Date();
+  const todayIso = todayD.getFullYear()+'-'+String(todayD.getMonth()+1).padStart(2,'0')+'-'+String(todayD.getDate()).padStart(2,'0');
+  const daysInM = new Date(2026, monthIdx+1, 0).getDate();
+  const isCurrent = todayD.getFullYear()===2026 && todayD.getMonth()===monthIdx;
+  const isFuture  = (2026>todayD.getFullYear()) || (2026===todayD.getFullYear() && monthIdx>todayD.getMonth());
+  const isPast    = !isCurrent && !isFuture;
+
+  // Mese precedente (stesso anno) per crescita MoM
+  const prevIdx = monthIdx-1;
+  let prevMonthRev = 0;
+  if(prevIdx>=0){
+    prevMonthRev = allCombined.filter(t=>{
+      if(!t.date) return false;
+      const [y,m] = t.date.split('-').map(Number);
+      return y===2026 && (m-1)===prevIdx;
+    }).reduce((s,t)=>s+(t.price||0),0);
+  }
+
+  let forecastVal = totalRev, forecastLabel = '—', forecastSub = '—';
+  if(isPast){
+    forecastVal = totalRev;
+    forecastLabel = 'Consuntivo';
+    forecastSub = `${totalRev>0?fmt(totalRev):'—'} chiuso · ${all.length} transazioni`;
+  } else if(isFuture){
+    // Solo on-the-books, proiettato con stagionalità (growth MoM applicata)
+    const growth = prevMonthRev>0 ? Math.max(0, (totalRev/prevMonthRev)) : 1;
+    forecastVal = totalRev; // on the books
+    forecastLabel = 'On the books';
+    forecastSub = `${all.length} prenotazioni · pickup ancora aperto`;
+  } else {
+    // Mese corrente: velocity × giorni rimanenti + libro futuro
+    const dayToday = todayD.getDate();
+    const elapsed = Math.min(dayToday, daysInM);
+    const remaining = Math.max(0, daysInM - elapsed);
+    const executed = all.filter(t=>t.date && t.date<=todayIso).reduce((s,t)=>s+(t.price||0),0);
+    const futureBooked = all.filter(t=>t.date && t.date>todayIso).reduce((s,t)=>s+(t.price||0),0);
+    const velocity = elapsed>0 ? executed/elapsed : 0;
+    const linearRest = velocity * remaining;
+    // Forecast resto = max(quello già a libro per i giorni rimanenti, velocity-based)
+    const restForecast = Math.max(futureBooked, linearRest);
+    forecastVal = executed + restForecast;
+    forecastLabel = 'Forecast fine mese';
+    const growthPct = prevMonthRev>0 ? Math.round((forecastVal/prevMonthRev-1)*100) : null;
+    const growthTxt = growthPct!==null ? ` · ${growthPct>=0?'+':''}${growthPct}% vs mese prec.` : '';
+    forecastSub = `${fmt(Math.round(executed))} fatti · ~${fmt(Math.round(linearRest))} dai prossimi ${remaining}gg${growthTxt}`;
+  }
+
+  kpis.push({
+    lbl:'Previsione Mese',
+    val: fmt(Math.round(forecastVal)),
+    sub: forecastSub,
+    acc:'linear-gradient(90deg,#10b981,#06b6d4)',
+    trend: forecastLabel,
+    up: forecastVal>0
+  });
   document.getElementById('month-detail-kpis').innerHTML = kpis.map(k=>`
     <div class="kpi" style="--accent:${k.acc}">
       <div class="lbl">${k.lbl}</div>
@@ -3931,14 +4142,15 @@ function parseCasa(allSheets){
     if(!rows||rows.length<2) continue;
 
     // Find header row: needs DATA + PREZZO at minimum
-    let dataCol=-1, priceCol=-1, bookCol=-1, headerRow=-1;
+    let dataCol=-1, priceCol=-1, bookCol=-1, commCol=-1, headerRow=-1;
     for(let r=0;r<Math.min(6,rows.length);r++){
       const row=(rows[r]||[]).map(v=>String(v??'').toLowerCase().trim());
       let di=row.findIndex(v=>v==='data'||v==='date');
       if(di<0) di=row.findIndex(v=>(v.startsWith('data ')||v==='data') && !v.includes('richiamo') && !v.includes('nascita') && !v.includes('prenotaz'));
       const pi=row.findIndex(v=>v==='prezzo'||v==='price'||v==='importo');
       const bki=row.findIndex(v=>v.includes('prenotaz')||v.includes('booking date')||v==='prenotato il'||v.includes('data ordine'));
-      if(di>=0 && pi>=0){ dataCol=di; priceCol=pi; bookCol=bki; headerRow=r; break; }
+      const cmi=row.findIndex(v=>v==='commissione'||v==='commission'||v==='commissioni');
+      if(di>=0 && pi>=0){ dataCol=di; priceCol=pi; bookCol=bki; commCol=cmi; headerRow=r; break; }
     }
     if(headerRow<0) continue;
 
@@ -3979,12 +4191,14 @@ function parseCasa(allSheets){
         if(bd && !isNaN(bd)) bookIso = toIsoC(bd);
       }
 
+      const commission = commCol>=0 ? parseNum(row[commCol]) : 0;
       bookings.push({
         date:iso, price, platform, year:yr,
         month: d.getMonth(),
         label: d.toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}),
         sheet: sheetName,
-        bookDate: bookIso
+        bookDate: bookIso,
+        commission
       });
     }
   }
@@ -4378,11 +4592,6 @@ function renderTodos(){
   // Close outlook modal on background click
   document.getElementById('outlook-modal')?.addEventListener('click',e=>{
     if(e.target.id==='outlook-modal') e.target.style.display='none';
-  });
-
-  // Close closed-tours modal on background click
-  document.getElementById('closed-tours-modal')?.addEventListener('click',e=>{
-    if(e.target.id==='closed-tours-modal') e.target.style.display='none';
   });
 })();
 </script>
