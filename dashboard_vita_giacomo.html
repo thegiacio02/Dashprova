@@ -28,6 +28,18 @@ nav.tabs{display:flex;gap:4px;overflow-x:auto;max-width:1400px;margin:14px auto 
 nav.tabs button{background:transparent;border:none;color:var(--muted2);padding:8px 14px;font-size:.78rem;border-radius:8px 8px 0 0;cursor:pointer;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent}
 nav.tabs button.active{color:var(--teal);border-bottom-color:var(--teal)}
 nav.tabs button:hover{color:#fff}
+nav.tabs .badge{background:var(--gold);color:#000;font-size:.65rem;font-weight:800;padding:1px 6px;border-radius:8px;margin-left:4px;vertical-align:1px}
+nav.tabs .badge.zero{background:var(--surface2);color:var(--muted)}
+
+.dropdown{position:relative;display:inline-block}
+.dropdown-toggle{background:transparent;border:none;color:var(--muted2);padding:8px 14px;font-size:.78rem;border-radius:8px 8px 0 0;cursor:pointer;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent}
+.dropdown-toggle:hover,.dropdown.open .dropdown-toggle{color:#fff}
+.dropdown.open .dropdown-toggle{color:var(--teal);border-bottom-color:var(--teal)}
+.dropdown-menu{display:none;position:absolute;top:100%;right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:200px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.4);margin-top:2px}
+.dropdown.open .dropdown-menu{display:block}
+.dropdown-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text);padding:8px 12px;font-size:.8rem;border-radius:6px;cursor:pointer;font-weight:500}
+.dropdown-menu button:hover{background:var(--surface2);color:var(--teal)}
+.dropdown-menu button.active{background:var(--teal);color:#000;font-weight:700}
 
 main{max-width:1400px;margin:0 auto;padding:24px;padding-bottom:80px}
 .tab{display:none}
@@ -124,6 +136,33 @@ ul.clean li:last-child{border-bottom:none}
 
 footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
+/* === COSE DA FARE === */
+.todo-input-bar{display:flex;gap:8px;flex-wrap:wrap;background:var(--surface2);padding:12px;border-radius:10px;margin-bottom:14px}
+.todo-input-bar input.todo-text{flex:1 1 280px;font-size:.9rem;padding:10px 12px;background:var(--surface);border:1px solid var(--border)}
+.todo-input-bar select,.todo-input-bar input[type=date]{flex:0 0 auto;width:auto}
+.todo-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.todo-filter{background:var(--surface2);border:1px solid var(--border);color:var(--muted2);padding:6px 12px;border-radius:20px;font-size:.74rem;cursor:pointer;font-weight:600}
+.todo-filter.active{background:var(--teal);color:#000;border-color:var(--teal)}
+.todo-filter .count{margin-left:4px;font-weight:700}
+.todo-item{display:flex;align-items:flex-start;gap:10px;padding:12px;background:var(--surface2);border-radius:8px;margin-bottom:6px;border-left:3px solid var(--border)}
+.todo-item.p-high{border-left-color:var(--red)}
+.todo-item.p-med{border-left-color:var(--yellow)}
+.todo-item.p-low{border-left-color:var(--blue)}
+.todo-item.done{opacity:.55}
+.todo-item.done .todo-content .text{text-decoration:line-through;color:var(--muted)}
+.todo-item.overdue:not(.done){background:rgba(239,68,68,.08);border-left-color:var(--red)}
+.todo-item input[type=checkbox]{width:18px;height:18px;cursor:pointer;flex:0 0 auto;margin-top:2px}
+.todo-content{flex:1;min-width:0}
+.todo-content .text{font-size:.88rem;color:#fff;line-height:1.4;word-break:break-word}
+.todo-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;font-size:.7rem}
+.todo-meta .tag{margin:0}
+.todo-actions{display:flex;gap:4px;flex:0 0 auto}
+.todo-actions button{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.95rem;padding:2px 6px;border-radius:4px}
+.todo-actions button:hover{background:var(--surface);color:var(--text)}
+.todo-section{margin-bottom:24px}
+.todo-section h3{margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.todo-section h3 .count{background:var(--surface2);color:var(--muted2);font-size:.7rem;padding:2px 8px;border-radius:10px}
+
 /* === PRODUTTIVITÀ === */
 .pomodoro-hero{text-align:center;background:linear-gradient(135deg,#0f172a,#1a2236)}
 .pomo-modes{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px}
@@ -188,15 +227,21 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
   <nav class="tabs" id="tabs">
     <button data-tab="oggi" class="active">Oggi</button>
+    <button data-tab="todo">📝 Cose da fare <span class="badge" id="todo-badge">0</span></button>
     <button data-tab="produttivita">⚡ Produttività</button>
     <button data-tab="settimana">Settimana</button>
-    <button data-tab="aree">Aree di vita</button>
-    <button data-tab="libri">Libri</button>
-    <button data-tab="francese">Francese</button>
-    <button data-tab="benessere">Sonno & Benessere</button>
-    <button data-tab="check">Check Mensile</button>
-    <button data-tab="riferimenti">Riferimenti</button>
-    <button data-tab="dati">Dati</button>
+    <div class="dropdown" id="more-dropdown">
+      <button class="dropdown-toggle" type="button">Altro ▾</button>
+      <div class="dropdown-menu">
+        <button data-tab="aree">📊 Aree di vita</button>
+        <button data-tab="libri">📚 Libri</button>
+        <button data-tab="francese">🇫🇷 Francese</button>
+        <button data-tab="benessere">😴 Sonno &amp; Benessere</button>
+        <button data-tab="check">🔍 Check Mensile</button>
+        <button data-tab="riferimenti">📅 Riferimenti</button>
+        <button data-tab="dati">💾 Dati</button>
+      </div>
+    </div>
   </nav>
 </header>
 
@@ -249,6 +294,69 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <div class="card" style="margin-top:16px">
     <h2><span class="ico">📅</span> Ultime 10 attività</h2>
     <ul class="clean" id="recent-sessions"></ul>
+  </div>
+</section>
+
+<!-- ============ COSE DA FARE ============ -->
+<section class="tab" id="tab-todo">
+  <div class="card">
+    <h2><span class="ico">📝</span> Cose da fare</h2>
+    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">Tutto quello che devi ricordarti. Fuori dalla testa, dentro la dashboard.</p>
+
+    <div class="todo-input-bar">
+      <input type="text" class="todo-text" id="todo-text" placeholder="Cosa devi fare? (premi Invio per aggiungere)" onkeydown="if(event.key==='Enter')addTodo()"/>
+      <select id="todo-area" title="Area di vita">
+        <option value="">— Area —</option>
+        <option value="double">💼 Double</option>
+        <option value="como">⛵ Como</option>
+        <option value="francese">🇫🇷 Francese</option>
+        <option value="lettura">📚 Lettura</option>
+        <option value="sport">🏋️ Sport</option>
+        <option value="social">🤝 Social</option>
+        <option value="personale">👤 Personale</option>
+      </select>
+      <select id="todo-prio" title="Priorità">
+        <option value="med">⚡ Media</option>
+        <option value="high">🔴 Alta</option>
+        <option value="low">🔵 Bassa</option>
+      </select>
+      <input type="date" id="todo-due" title="Scadenza"/>
+      <button class="btn" onclick="addTodo()">+ Aggiungi</button>
+    </div>
+
+    <div class="todo-filters" id="todo-filters">
+      <button class="todo-filter active" data-filter="all">Tutte <span class="count" id="cnt-all">0</span></button>
+      <button class="todo-filter" data-filter="today">Oggi <span class="count" id="cnt-today">0</span></button>
+      <button class="todo-filter" data-filter="week">Settimana <span class="count" id="cnt-week">0</span></button>
+      <button class="todo-filter" data-filter="overdue">⚠️ Scadute <span class="count" id="cnt-overdue">0</span></button>
+      <button class="todo-filter" data-filter="nodate">Senza data <span class="count" id="cnt-nodate">0</span></button>
+      <button class="todo-filter" data-filter="done">✓ Fatte <span class="count" id="cnt-done">0</span></button>
+    </div>
+
+    <div id="todo-list"></div>
+  </div>
+
+  <div class="grid grid-3" style="margin-top:16px">
+    <div class="card">
+      <h3>Aperte totali</h3>
+      <div class="kpi"><span class="v" id="todo-kpi-open">0</span><span class="t">task</span></div>
+    </div>
+    <div class="card">
+      <h3>Completate questa settimana</h3>
+      <div class="kpi"><span class="v" id="todo-kpi-done-week">0</span><span class="t">✓</span></div>
+    </div>
+    <div class="card">
+      <h3>Tasso completamento (30gg)</h3>
+      <div class="kpi"><span class="v" id="todo-kpi-rate">—</span><span class="t">%</span></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <h3>Pulizia</h3>
+    <div class="row">
+      <button class="btn ghost sm" onclick="clearDoneTodos()">🗑 Elimina completate</button>
+      <button class="btn ghost sm" onclick="rolloverTodos()">📅 Sposta scadute → oggi</button>
+    </div>
   </div>
 </section>
 
@@ -703,7 +811,9 @@ function load(){
     inbox:[],
     distractions:{},
     timeBlocks:{},
-    shutdowns:[]
+    shutdowns:[],
+    todos:[],
+    todoFilter:'all'
   };
 }
 function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -725,15 +835,28 @@ function hoursPerArea(sessions){
 }
 
 // ============ TAB SWITCH ============
-document.querySelectorAll('#tabs button').forEach(b=>{
-  b.onclick = ()=>{
-    document.querySelectorAll('#tabs button').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    b.classList.add('active');
-    document.getElementById('tab-'+b.dataset.tab).classList.add('active');
-    renderAll();
-  };
+function switchTab(name, btn){
+  document.querySelectorAll('#tabs button[data-tab]').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.dropdown-menu button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+  // Sync dropdown highlight if hidden tab
+  const inDropdown = document.querySelector(`.dropdown-menu button[data-tab="${name}"]`);
+  if(inDropdown){
+    inDropdown.classList.add('active');
+    document.getElementById('more-dropdown').classList.add('open');
+    setTimeout(()=>document.getElementById('more-dropdown').classList.remove('open'), 0);
+  }
+  renderAll();
+}
+document.querySelectorAll('#tabs > button[data-tab], .dropdown-menu button[data-tab]').forEach(b=>{
+  b.onclick = (e)=>{ e.stopPropagation(); switchTab(b.dataset.tab, b); };
 });
+// Dropdown toggle
+const dd = document.getElementById('more-dropdown');
+dd.querySelector('.dropdown-toggle').onclick = (e)=>{ e.stopPropagation(); dd.classList.toggle('open'); };
+document.addEventListener('click', e=>{ if(!dd.contains(e.target)) dd.classList.remove('open'); });
 
 // ============ CORNICE ============
 document.querySelectorAll('#corniceSwitch button').forEach(b=>{
@@ -1421,6 +1544,164 @@ if('Notification' in window && Notification.permission==='default'){
   setTimeout(()=>Notification.requestPermission(), 2000);
 }
 
+// ============ TODO ============
+const TODO_AREAS = {
+  double:{name:'Double',color:'blue',icon:'💼'},
+  como:{name:'Como',color:'teal',icon:'⛵'},
+  francese:{name:'Francese',color:'pink',icon:'🇫🇷'},
+  lettura:{name:'Lettura',color:'gold',icon:'📚'},
+  sport:{name:'Sport',color:'green',icon:'🏋️'},
+  social:{name:'Social',color:'purple',icon:'🤝'},
+  personale:{name:'Personale',color:'yellow',icon:'👤'}
+};
+const TODO_PRIO = {high:{lbl:'Alta',cls:'red'},med:{lbl:'Media',cls:'yellow'},low:{lbl:'Bassa',cls:'blue'}};
+
+function addTodo(){
+  const text = document.getElementById('todo-text').value.trim();
+  if(!text) return;
+  state.todos.push({
+    id:uid(), text, done:false,
+    area: document.getElementById('todo-area').value || null,
+    prio: document.getElementById('todo-prio').value || 'med',
+    due: document.getElementById('todo-due').value || null,
+    created: new Date().toISOString()
+  });
+  document.getElementById('todo-text').value='';
+  document.getElementById('todo-due').value='';
+  save(); renderTodos();
+}
+function toggleTodo(id){
+  const t=state.todos.find(x=>x.id===id);
+  if(!t) return;
+  t.done=!t.done;
+  t.completedAt = t.done ? new Date().toISOString() : null;
+  save(); renderTodos();
+}
+function delTodo(id){ state.todos = state.todos.filter(t=>t.id!==id); save(); renderTodos(); }
+function editTodoText(id, text){ const t=state.todos.find(x=>x.id===id); if(t){t.text=text;save();} }
+function editTodoDue(id, due){ const t=state.todos.find(x=>x.id===id); if(t){t.due=due||null;save();renderTodos();} }
+function cycleTodoPrio(id){
+  const t=state.todos.find(x=>x.id===id); if(!t) return;
+  t.prio = t.prio==='high' ? 'med' : t.prio==='med' ? 'low' : 'high';
+  save(); renderTodos();
+}
+function clearDoneTodos(){
+  if(!confirm('Eliminare tutte le task completate?')) return;
+  state.todos = state.todos.filter(t=>!t.done);
+  save(); renderTodos();
+}
+function rolloverTodos(){
+  const today=todayISO();
+  let n=0;
+  state.todos.forEach(t=>{ if(!t.done && t.due && t.due<today){ t.due=today; n++; } });
+  save(); renderTodos();
+  alert(`${n} task spostate a oggi.`);
+}
+
+function todoMatchesFilter(t, filter){
+  const today=todayISO();
+  const ws=weekStart(new Date()), we=new Date(ws); we.setDate(we.getDate()+7);
+  if(filter==='done') return t.done;
+  if(t.done) return false;
+  if(filter==='all') return true;
+  if(filter==='today') return t.due===today;
+  if(filter==='week'){ if(!t.due) return false; const d=new Date(t.due); return d>=ws && d<we; }
+  if(filter==='overdue') return t.due && t.due<today;
+  if(filter==='nodate') return !t.due;
+  return true;
+}
+
+function renderTodos(){
+  const today=todayISO();
+  const filter = state.todoFilter || 'all';
+
+  // Counts
+  const counts = {all:0, today:0, week:0, overdue:0, nodate:0, done:0};
+  state.todos.forEach(t=>{
+    Object.keys(counts).forEach(f=>{ if(todoMatchesFilter(t,f)) counts[f]++; });
+  });
+  Object.entries(counts).forEach(([k,v])=>{
+    const el=document.getElementById('cnt-'+k); if(el) el.textContent=v;
+  });
+
+  // Badge in header
+  const badge = document.getElementById('todo-badge');
+  badge.textContent = counts.all;
+  badge.classList.toggle('zero', counts.all===0);
+
+  // Filter buttons active state
+  document.querySelectorAll('.todo-filter').forEach(b=>{
+    b.classList.toggle('active', b.dataset.filter===filter);
+    b.onclick = ()=>{ state.todoFilter=b.dataset.filter; save(); renderTodos(); };
+  });
+
+  // Filter & sort
+  let list = state.todos.filter(t=>todoMatchesFilter(t,filter));
+  const prioOrder = {high:0,med:1,low:2};
+  list.sort((a,b)=>{
+    if(a.done!==b.done) return a.done?1:-1;
+    if(a.due&&b.due&&a.due!==b.due) return a.due.localeCompare(b.due);
+    if(a.due&&!b.due) return -1;
+    if(!a.due&&b.due) return 1;
+    if(prioOrder[a.prio]!==prioOrder[b.prio]) return prioOrder[a.prio]-prioOrder[b.prio];
+    return (b.created||'').localeCompare(a.created||'');
+  });
+
+  // KPIs
+  document.getElementById('todo-kpi-open').textContent = state.todos.filter(t=>!t.done).length;
+  const ws=weekStart(new Date()), we=new Date(ws); we.setDate(we.getDate()+7);
+  const doneWeek = state.todos.filter(t=>t.done && t.completedAt && new Date(t.completedAt)>=ws && new Date(t.completedAt)<we).length;
+  document.getElementById('todo-kpi-done-week').textContent = doneWeek;
+  const ago30 = new Date(); ago30.setDate(ago30.getDate()-30);
+  const created30 = state.todos.filter(t=>t.created && new Date(t.created)>=ago30).length;
+  const done30 = state.todos.filter(t=>t.done && t.completedAt && new Date(t.completedAt)>=ago30).length;
+  document.getElementById('todo-kpi-rate').textContent = created30 ? Math.round(done30/created30*100) : '—';
+
+  // Render list
+  const c = document.getElementById('todo-list');
+  if(!list.length){
+    const msgs = {
+      all:'Nessuna task. ✨ Aggiungine una!',
+      today:'Niente in scadenza oggi.',
+      week:'Niente in scadenza questa settimana.',
+      overdue:'Nessuna task scaduta. 🎯',
+      nodate:'Tutte le task hanno una data.',
+      done:'Niente di completato ancora.'
+    };
+    c.innerHTML = `<p style="color:var(--muted);font-size:.85rem;text-align:center;padding:30px">${msgs[filter]}</p>`;
+    return;
+  }
+  c.innerHTML = list.map(t=>{
+    const overdue = !t.done && t.due && t.due<today;
+    const area = t.area ? TODO_AREAS[t.area] : null;
+    const prio = TODO_PRIO[t.prio||'med'];
+    const dueLabel = t.due ? (t.due===today?'oggi':t.due===tomorrowISO()?'domani':t.due) : '';
+    return `<div class="todo-item p-${t.prio||'med'} ${t.done?'done':''} ${overdue?'overdue':''}">
+      <input type="checkbox" ${t.done?'checked':''} onchange="toggleTodo('${t.id}')"/>
+      <div class="todo-content">
+        <div class="text" contenteditable="true" onblur="editTodoText('${t.id}', this.textContent)">${escapeHtml(t.text)}</div>
+        <div class="todo-meta">
+          ${area?`<span class="tag ${area.color}">${area.icon} ${area.name}</span>`:''}
+          <span class="tag ${prio.cls}" onclick="cycleTodoPrio('${t.id}')" style="cursor:pointer" title="Click per cambiare">${prio.lbl}</span>
+          ${t.due?`<span class="tag ${overdue?'red':'teal'}">📅 ${dueLabel}</span>`:''}
+        </div>
+      </div>
+      <div class="todo-actions">
+        <button onclick="setTodoDueQuick('${t.id}','today')" title="Sposta a oggi">📅</button>
+        <button onclick="delTodo('${t.id}')" title="Elimina">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function tomorrowISO(){ const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().slice(0,10); }
+function setTodoDueQuick(id, when){
+  const t=state.todos.find(x=>x.id===id); if(!t) return;
+  if(when==='today') t.due=todayISO();
+  else if(when==='tomorrow') t.due=tomorrowISO();
+  save(); renderTodos();
+}
+
 // ============ MASTER RENDER ============
 function renderAll(){
   paintCornice();
@@ -1438,6 +1719,7 @@ function renderAll(){
   renderFitness();
   renderCheckHistory();
   renderDataSummary();
+  renderTodos();
   pomoRender();
   renderMIT();
   renderEnergy();
