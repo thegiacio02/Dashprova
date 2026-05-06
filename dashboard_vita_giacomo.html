@@ -1578,7 +1578,7 @@ function addTodo(){
     created: new Date().toISOString()
   });
   document.getElementById('todo-text').value='';
-  document.getElementById('todo-due').value='';
+  document.getElementById('todo-due').value=todayISO();
   save(); renderTodos();
 }
 function toggleTodo(id){
@@ -1746,6 +1746,7 @@ document.getElementById('log-date').value = todayISO();
 document.getElementById('sleep-date').value = todayISO();
 document.getElementById('rev-date').value = todayISO();
 document.getElementById('ck-month').value = todayISO().slice(0,7);
+document.getElementById('todo-due').value = todayISO();
 
 renderAll();
 </script>
