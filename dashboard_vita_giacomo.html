@@ -35,7 +35,7 @@ nav.tabs .badge.zero{background:var(--surface2);color:var(--muted)}
 .dropdown-toggle{background:transparent;border:none;color:var(--muted2);padding:8px 14px;font-size:.78rem;border-radius:8px 8px 0 0;cursor:pointer;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent}
 .dropdown-toggle:hover,.dropdown.open .dropdown-toggle{color:#fff}
 .dropdown.open .dropdown-toggle{color:var(--teal);border-bottom-color:var(--teal)}
-.dropdown-menu{display:none;position:absolute;top:calc(100% + 4px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:220px;z-index:9999;box-shadow:0 12px 32px rgba(0,0,0,.6)}
+.dropdown-menu{display:none;position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:220px;z-index:99999;box-shadow:0 12px 32px rgba(0,0,0,.6)}
 .dropdown.open .dropdown-menu{display:block}
 .dropdown-menu button{display:block;width:100%;text-align:left;background:transparent;border:none;color:var(--text);padding:8px 12px;font-size:.8rem;border-radius:6px;cursor:pointer;font-weight:500}
 .dropdown-menu button:hover{background:var(--surface2);color:var(--teal)}
@@ -850,10 +850,24 @@ function switchTab(name, btn){
 document.querySelectorAll('#tabs > button[data-tab], .dropdown-menu button[data-tab]').forEach(b=>{
   b.onclick = (e)=>{ e.stopPropagation(); switchTab(b.dataset.tab, b); };
 });
-// Dropdown toggle
+// Dropdown toggle (position:fixed menu, computed from toggle rect)
 const dd = document.getElementById('more-dropdown');
-dd.querySelector('.dropdown-toggle').onclick = (e)=>{ e.stopPropagation(); dd.classList.toggle('open'); };
+const ddToggle = dd.querySelector('.dropdown-toggle');
+const ddMenu = dd.querySelector('.dropdown-menu');
+function positionDropdown(){
+  const r = ddToggle.getBoundingClientRect();
+  ddMenu.style.top = (r.bottom + 6) + 'px';
+  ddMenu.style.right = (window.innerWidth - r.right) + 'px';
+}
+ddToggle.onclick = (e)=>{
+  e.stopPropagation();
+  const willOpen = !dd.classList.contains('open');
+  dd.classList.toggle('open');
+  if(willOpen) positionDropdown();
+};
 document.addEventListener('click', e=>{ if(!dd.contains(e.target)) dd.classList.remove('open'); });
+window.addEventListener('resize', ()=>{ if(dd.classList.contains('open')) positionDropdown(); });
+window.addEventListener('scroll', ()=>{ if(dd.classList.contains('open')) positionDropdown(); }, true);
 
 // ============ CORNICE ============
 document.querySelectorAll('#corniceSwitch button').forEach(b=>{
