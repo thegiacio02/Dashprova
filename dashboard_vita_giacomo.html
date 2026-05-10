@@ -23,6 +23,11 @@ header h1 .sub{font-size:.72rem;color:var(--muted2);font-weight:400;display:bloc
 .cornice-switch{display:flex;gap:6px;background:var(--surface);padding:4px;border-radius:8px;border:1px solid var(--border)}
 .cornice-switch button{background:transparent;border:none;color:var(--muted2);padding:6px 12px;font-size:.75rem;border-radius:6px;cursor:pointer;font-weight:600}
 .cornice-switch button.active{background:var(--teal);color:#000}
+.sync-badge{font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:10px;cursor:default;white-space:nowrap}
+.sync-idle{color:var(--muted2)}
+.sync-saving{color:var(--yellow);animation:pulse 1s infinite}
+.sync-ok{color:var(--green)}
+.sync-error{color:var(--red)}
 
 nav.tabs{display:flex;gap:4px;flex-wrap:wrap;align-items:center;max-width:1400px;margin:14px auto 0;padding-bottom:2px;overflow:visible;position:relative}
 nav.tabs button{background:transparent;border:none;color:var(--muted2);padding:8px 14px;font-size:.78rem;border-radius:8px 8px 0 0;cursor:pointer;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent}
@@ -277,10 +282,13 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <h1>📊 Il mio sistema personale
       <span class="sub">Giacomo · Maggio 2026 → Novembre 2026</span>
     </h1>
-    <div class="cornice-switch" id="corniceSwitch">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div id="sync-status" class="sync-badge sync-idle" title="Stato sincronizzazione Firebase">⬤ —</div>
+      <div class="cornice-switch" id="corniceSwitch">
       <button data-c="A" title="Bassa stagione (nov-mar)">A · Bassa</button>
       <button data-c="B" title="Media stagione (apr/ott)">B · Media</button>
       <button data-c="C" title="Alta stagione (giu-set)">C · Alta</button>
+    </div>
     </div>
   </div>
   <nav class="tabs" id="tabs">
@@ -917,6 +925,57 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 <script>
 // ============ DATA MODEL ============
 const STORAGE_KEY = 'giacomo_life_dashboard_v1';
+const FB_URL = 'https://dashboard-vita-c9599-default-rtdb.europe-west1.firebasedatabase.app/data.json';
+let saveTimer = null;
+let lastSavedHash = null;
+
+function setSyncStatus(s, msg){
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  el.className = 'sync-badge sync-'+s;
+  el.textContent = {saving:'⬤ Salvataggio…', ok:'⬤ Sincronizzato', error:'⬤ Offline', idle:'⬤ —'}[s]||msg;
+  if(s==='ok') setTimeout(()=>setSyncStatus('idle'), 3000);
+}
+
+async function pushToFirebase(){
+  try {
+    setSyncStatus('saving');
+    const res = await fetch(FB_URL, {
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(state)
+    });
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    lastSavedHash = JSON.stringify(state);
+    setSyncStatus('ok');
+  } catch(e){
+    setSyncStatus('error');
+    console.warn('Firebase save failed, data safe in localStorage:', e.message);
+  }
+}
+
+async function pullFromFirebase(){
+  try {
+    setSyncStatus('saving');
+    const res = await fetch(FB_URL);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const remote = await res.json();
+    if(remote && typeof remote === 'object'){
+      const def = defaultState();
+      Object.keys(def).forEach(k=>{ if(remote[k]===undefined) remote[k]=def[k]; });
+      state = remote;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      setSyncStatus('ok');
+      return true;
+    }
+    setSyncStatus('idle');
+    return false;
+  } catch(e){
+    setSyncStatus('error');
+    console.warn('Firebase load failed, using localStorage:', e.message);
+    return false;
+  }
+}
 
 const CORNICI = {
   A: {name:'Bassa stagione', desc:'Nov - Mar', targets:{double:52, como:4, francese:4.5, lettura:5.5, sport:4.5, social:11}},
@@ -1021,10 +1080,14 @@ function load(){
   return def;
 }
 function save(){
-  // Defensive: ensure all expected fields exist before persisting
+  // Ensure all fields exist (migration safety)
   const def = defaultState();
   Object.keys(def).forEach(k=>{ if(state[k]===undefined) state[k]=def[k]; });
+  // Always write to localStorage immediately (offline cache)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  // Debounce Firebase push: wait 1.5s after last change to avoid flooding
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{ pushToFirebase(); }, 1500);
 }
 function ensureState(){
   const def = defaultState();
@@ -2301,15 +2364,30 @@ function renderAll(){
 }
 
 // ============ INIT ============
-document.getElementById('log-date').value = todayISO();
-document.getElementById('sleep-date').value = todayISO();
-document.getElementById('rev-date').value = todayISO();
-document.getElementById('ck-month').value = todayISO().slice(0,7);
-document.getElementById('todo-due').value = todayISO();
-document.getElementById('dec-date').value = todayISO();
-document.getElementById('goal-deadline').value = '2026-11-30';
+function initDateFields(){
+  document.getElementById('log-date').value = todayISO();
+  document.getElementById('sleep-date').value = todayISO();
+  document.getElementById('rev-date').value = todayISO();
+  document.getElementById('ck-month').value = todayISO().slice(0,7);
+  document.getElementById('todo-due').value = todayISO();
+  document.getElementById('dec-date').value = todayISO();
+  document.getElementById('goal-deadline').value = '2026-11-30';
+}
 
+// Load localStorage immediately so UI appears fast
+initDateFields();
 renderAll();
+
+// Then try to pull fresher data from Firebase in background
+pullFromFirebase().then(loaded => {
+  if(loaded) renderAll();
+});
+
+// Auto-refresh from Firebase every 60s (keeps other devices in sync)
+setInterval(async ()=>{
+  const loaded = await pullFromFirebase();
+  if(loaded) renderAll();
+}, 60000);
 </script>
 </body>
 </html>
