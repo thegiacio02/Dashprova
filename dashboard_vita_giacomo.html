@@ -1545,7 +1545,7 @@ function renderRecent(){
   }).join('');
 }
 
-function escapeHtml(s){ return (s||'').replace(/[<>&"']/g, c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
 let chartWeek, chartTrend, chartSleep;
 
@@ -1686,8 +1686,8 @@ function renderFrancese(){
   document.getElementById('fr-goals').innerHTML = FR_GOALS.map(g=>
     `<div class="checkbox"><input type="checkbox"/> ${g}</div>`).join('');
 
-  renderFrDaily();
-  loadFrNews();
+  try { renderFrDaily(); } catch(e){ console.error('renderFrDaily error:', e); }
+  try { loadFrNews(); } catch(e){ console.error('loadFrNews error:', e); }
 }
 
 function renderSleepChart(){
@@ -2643,16 +2643,14 @@ function renderAll(){
   renderTimeBlocks();
   renderShutdown();
   renderProductivityStats();
-  renderReminders();
-  renderInsights();
+  try { renderReminders(); } catch(e){ console.error('renderReminders error:', e); }
+  try { renderInsights(); } catch(e){ console.error('renderInsights error:', e); }
 }
 
 // ============ PROMEMORIA + INSIGHTS AI ============
 const CLAUDE_TIPS = [
   // { text:'<consiglio>', date:'YYYY-MM-DD', from:'Claude' }
 ];
-
-function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
 function renderReminders(){
   const list = document.getElementById('reminders-list');
