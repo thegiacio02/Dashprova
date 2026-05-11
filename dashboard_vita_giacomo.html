@@ -129,6 +129,22 @@ main{max-width:1400px;margin:0 auto;padding:24px;padding-bottom:80px}
 .news-skeleton.short{width:45%}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .news-error{font-size:.78rem;color:var(--muted2);padding:12px 0;text-align:center}
+.weather-main{display:flex;align-items:center;gap:14px}
+.weather-icon{font-size:2.6rem;line-height:1}
+.weather-temp{font-size:2rem;font-weight:800;color:#fff;line-height:1}
+.weather-cond{font-size:.85rem;color:var(--muted2);margin-top:4px}
+.weather-meta{display:flex;gap:14px;margin-top:10px;font-size:.72rem;color:var(--muted2);flex-wrap:wrap}
+.weather-meta strong{color:#fff;font-weight:600}
+.quote-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);gap:10px}
+.quote-row:last-child{border-bottom:none}
+.quote-label{font-size:.85rem;font-weight:700;color:#fff;display:flex;flex-direction:column;gap:2px}
+.quote-sub{font-size:.68rem;color:var(--muted2);font-weight:500}
+.quote-price-wrap{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.quote-price{font-size:1rem;font-weight:700;color:#fff;font-variant-numeric:tabular-nums}
+.quote-change{font-size:.72rem;font-weight:600;font-variant-numeric:tabular-nums}
+.quote-change.up{color:#22c55e}
+.quote-change.down{color:#ef4444}
+.quote-change.flat{color:var(--muted2)}
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
 .card h2{font-size:.95rem;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:8px;font-weight:700}
@@ -330,6 +346,21 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
 <!-- ============ OGGI ============ -->
 <section class="tab active" id="tab-oggi">
+  <div class="grid grid-2" style="margin-bottom:16px">
+    <div class="card" id="weather-card">
+      <h2 style="margin-bottom:10px"><span class="ico">🌤️</span> Meteo Milano</h2>
+      <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
+    </div>
+    <div class="card" id="quotes-card">
+      <h2 style="margin-bottom:10px"><span class="ico">📈</span> Mercati</h2>
+      <div id="quotes-content">
+        <div class="quote-row" data-sym="QQQ"><span class="quote-label">QQQ <span class="quote-sub">Nasdaq 100 ETF</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+        <div class="quote-row" data-sym="FTSEMIB.MI"><span class="quote-label">FTSE MIB <span class="quote-sub">Milano</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+        <div class="quote-row" data-sym="EURUSD=X"><span class="quote-label">EUR/USD <span class="quote-sub">Forex</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+      </div>
+    </div>
+  </div>
+
   <div class="grid grid-4" style="margin-bottom:16px">
     <div class="card"><h3>Cornice attiva</h3><div class="kpi"><span class="v" id="kpi-cornice">B</span><span class="t" id="kpi-cornice-name">Media</span></div><div class="kpi-sub" id="kpi-cornice-desc">Apr / Ott</div></div>
     <div class="card"><h3>Settimana #</h3><div class="kpi"><span class="v" id="kpi-week">-</span><span class="t">/52</span></div><div class="kpi-sub" id="kpi-week-date">—</div></div>
@@ -2524,6 +2555,91 @@ document.querySelectorAll('[data-tab]').forEach(btn=>{
   btn.addEventListener('click',()=>{ if(btn.dataset.tab==='oggi') loadNews(); });
 });
 loadNews();
+
+// ============ METEO MILANO (Open-Meteo, no key) ============
+const WCODES = {
+  0:['☀️','Sereno'], 1:['🌤️','Poco nuvoloso'], 2:['⛅','Parz. nuvoloso'], 3:['☁️','Coperto'],
+  45:['🌫️','Nebbia'], 48:['🌫️','Nebbia con brina'],
+  51:['🌦️','Pioviggine lieve'], 53:['🌦️','Pioviggine'], 55:['🌦️','Pioviggine intensa'],
+  61:['🌧️','Pioggia lieve'], 63:['🌧️','Pioggia'], 65:['🌧️','Pioggia intensa'],
+  71:['🌨️','Neve lieve'], 73:['🌨️','Neve'], 75:['❄️','Neve intensa'], 77:['🌨️','Granuli di neve'],
+  80:['🌦️','Rovesci lievi'], 81:['🌧️','Rovesci'], 82:['⛈️','Rovesci violenti'],
+  85:['🌨️','Rovesci di neve'], 86:['🌨️','Rovesci di neve forti'],
+  95:['⛈️','Temporale'], 96:['⛈️','Temporale + grandine'], 99:['⛈️','Temporale forte']
+};
+async function loadWeather(){
+  const el = document.getElementById('weather-content');
+  try{
+    const url = 'https://api.open-meteo.com/v1/forecast?latitude=45.4642&longitude=9.1900&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&daily=temperature_2m_max,temperature_2m_min&timezone=Europe%2FRome&forecast_days=1';
+    const res = await fetch(url);
+    const d = await res.json();
+    const t = Math.round(d.current.temperature_2m);
+    const [icon,cond] = WCODES[d.current.weather_code] || ['🌡️','—'];
+    const tmax = Math.round(d.daily.temperature_2m_max[0]);
+    const tmin = Math.round(d.daily.temperature_2m_min[0]);
+    const wind = Math.round(d.current.wind_speed_10m);
+    const hum  = Math.round(d.current.relative_humidity_2m);
+    el.innerHTML = `
+      <div class="weather-main">
+        <div class="weather-icon">${icon}</div>
+        <div>
+          <div class="weather-temp">${t}°<span style="font-size:1rem;color:var(--muted2);font-weight:500;margin-left:4px">C</span></div>
+          <div class="weather-cond">${cond}</div>
+        </div>
+      </div>
+      <div class="weather-meta">
+        <span>Min <strong>${tmin}°</strong></span>
+        <span>Max <strong>${tmax}°</strong></span>
+        <span>Vento <strong>${wind} km/h</strong></span>
+        <span>Umidità <strong>${hum}%</strong></span>
+      </div>`;
+  }catch(e){
+    el.innerHTML = '<div class="news-error">Meteo non disponibile</div>';
+  }
+}
+
+// ============ QUOTAZIONI (Yahoo Finance via CORS proxy) ============
+async function fetchQuote(sym){
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=2d`;
+  for(const proxy of CORS_PROXIES){
+    try{
+      const res = await fetch(proxy(url), {cache:'no-store'});
+      if(!res.ok) continue;
+      const text = await res.text();
+      const data = JSON.parse(text);
+      const m = data?.chart?.result?.[0]?.meta;
+      if(!m || typeof m.regularMarketPrice!=='number') continue;
+      return { price: m.regularMarketPrice, prev: m.chartPreviousClose ?? m.previousClose, currency: m.currency };
+    }catch(e){ /* next proxy */ }
+  }
+  return null;
+}
+function fmtPrice(v, sym){
+  if(sym.includes('EURUSD')) return v.toFixed(4);
+  if(v>=1000) return v.toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:0});
+  return v.toFixed(2);
+}
+async function loadQuotes(){
+  const rows = document.querySelectorAll('#quotes-content .quote-row');
+  await Promise.all(Array.from(rows).map(async row=>{
+    const sym = row.dataset.sym;
+    const q = await fetchQuote(sym);
+    const pEl = row.querySelector('.quote-price');
+    const cEl = row.querySelector('.quote-change');
+    if(!q){ pEl.textContent='n/d'; cEl.textContent=''; cEl.className='quote-change flat'; return; }
+    const diff = q.price - q.prev;
+    const pct  = (diff / q.prev) * 100;
+    pEl.textContent = fmtPrice(q.price, sym);
+    const sign = diff>0?'+':'';
+    cEl.textContent = `${sign}${fmtPrice(diff, sym)} (${sign}${pct.toFixed(2)}%)`;
+    cEl.className = 'quote-change ' + (diff>0?'up':diff<0?'down':'flat');
+  }));
+}
+
+loadWeather();
+loadQuotes();
+setInterval(loadWeather, 15*60*1000);   // ogni 15min
+setInterval(loadQuotes,  5*60*1000);    // ogni 5min
 </script>
 </body>
 </html>
