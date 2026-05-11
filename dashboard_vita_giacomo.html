@@ -114,6 +114,21 @@ main{max-width:1400px;margin:0 auto;padding:24px;padding-bottom:80px}
 .grid-3{grid-template-columns:repeat(3,1fr)}
 .grid-4{grid-template-columns:repeat(4,1fr)}
 @media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
+.news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.news-grid{grid-template-columns:1fr}}
+.news-source-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;margin-bottom:12px;border-bottom-width:2px;border-bottom-style:solid}
+.news-source-name{font-weight:700;font-size:.82rem;letter-spacing:.3px}
+.news-count{font-size:.68rem;color:var(--muted2)}
+.news-article{display:block;padding:9px 0;border-bottom:1px solid var(--border);text-decoration:none;transition:opacity .15s}
+.news-article:last-child{border-bottom:none}
+.news-article:hover{opacity:.8}
+.news-article:hover .news-title{color:var(--teal)}
+.news-title{font-size:.81rem;color:var(--text);line-height:1.45;margin-bottom:4px;font-weight:500}
+.news-meta{font-size:.69rem;color:var(--muted2)}
+.news-skeleton{height:.75rem;background:var(--surface2);border-radius:4px;margin-bottom:8px;animation:pulse 1.4s ease-in-out infinite}
+.news-skeleton.short{width:45%}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
+.news-error{font-size:.78rem;color:var(--muted2);padding:12px 0;text-align:center}
 
 .card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
 .card h2{font-size:.95rem;color:#fff;margin-bottom:14px;display:flex;align-items:center;gap:8px;font-weight:700}
@@ -359,6 +374,18 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div class="field"><label>Qualità (1-5)</label><input type="number" id="sleep-q" value="4" min="1" max="5"/></div>
       <button class="btn" onclick="addSleep()">+ Salva</button>
       <div class="legend">Target: 7-8h notte. Sotto 6h cronico = problema.</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px" id="news-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="margin:0"><span class="ico">📰</span> Rassegna stampa</h2>
+      <button class="btn ghost sm" onclick="loadNews(true)" id="news-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
+    </div>
+    <div class="news-grid" id="news-grid">
+      <div id="news-bloomberg"></div>
+      <div id="news-ft"></div>
+      <div id="news-sole24"></div>
     </div>
   </div>
 
@@ -2393,6 +2420,71 @@ setInterval(async ()=>{
   const loaded = await pullFromFirebase();
   if(loaded) renderAll();
 }, 60000);
+
+// ============ RASSEGNA STAMPA ============
+const NEWS_SOURCES = [
+  { id:'bloomberg', name:'Bloomberg',       color:'#FF6600', rss:'https://feeds.bloomberg.com/markets/news.rss' },
+  { id:'ft',        name:'Financial Times', color:'#FCD0B1', rss:'https://www.ft.com/rss/home/uk' },
+  { id:'sole24',    name:'Il Sole 24 Ore',  color:'#0057A8', rss:'https://www.ilsole24ore.com/rss/home.xml' }
+];
+let newsLoaded = false;
+
+function newsSkeletons(col){
+  col.innerHTML = [1,2,3,4,5].map(()=>`
+    <div style="padding:9px 0;border-bottom:1px solid var(--border)">
+      <div class="news-skeleton" style="width:${70+Math.random()*25|0}%"></div>
+      <div class="news-skeleton short"></div>
+    </div>`).join('');
+}
+
+function renderNewsCol(col, src, items){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const header = `<div class="news-source-header" style="border-bottom-color:${src.color}">
+    <span class="news-source-name" style="color:${src.color}">${src.name}</span>
+    <span class="news-count">${items.length} articoli</span>
+  </div>`;
+  const arts = items.slice(0,5).map(item=>{
+    const d = new Date(item.pubDate);
+    const isToday = (dt=>{dt.setHours(0,0,0,0);return dt.getTime()===today.getTime()})(new Date(d));
+    const when = isToday
+      ? d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})
+      : d.toLocaleDateString('it-IT',{day:'2-digit',month:'short'});
+    const title = item.title.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<a class="news-article" href="${item.link}" target="_blank" rel="noopener noreferrer">
+      <div class="news-title">${title}</div>
+      <div class="news-meta">${when}</div>
+    </a>`;
+  }).join('');
+  col.innerHTML = header + arts;
+}
+
+async function loadNews(force=false){
+  if(newsLoaded && !force) return;
+  const btn = document.getElementById('news-refresh-btn');
+  if(btn){ btn.textContent='↻ Carico…'; btn.disabled=true; }
+  await Promise.all(NEWS_SOURCES.map(async src=>{
+    const col = document.getElementById('news-'+src.id);
+    if(!col) return;
+    newsSkeletons(col);
+    try{
+      const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(src.rss)}&count=5`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if(data.status!=='ok'||!data.items?.length) throw new Error();
+      renderNewsCol(col, src, data.items);
+    }catch{
+      col.innerHTML=`<div class="news-source-header" style="border-bottom-color:${src.color}"><span class="news-source-name" style="color:${src.color}">${src.name}</span></div><div class="news-error">Feed non disponibile</div>`;
+    }
+  }));
+  newsLoaded = true;
+  if(btn){ btn.textContent='↻ Aggiorna'; btn.disabled=false; }
+}
+
+// Load news when Oggi tab is visible
+document.querySelectorAll('[data-tab]').forEach(btn=>{
+  btn.addEventListener('click',()=>{ if(btn.dataset.tab==='oggi') loadNews(); });
+});
+loadNews();
 </script>
 </body>
 </html>
