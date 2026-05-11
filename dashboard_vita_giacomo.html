@@ -2423,9 +2423,9 @@ setInterval(async ()=>{
 
 // ============ RASSEGNA STAMPA ============
 const NEWS_SOURCES = [
-  { id:'bloomberg', name:'Bloomberg',       color:'#FF6600', rss:'https://feeds.bloomberg.com/markets/news.rss' },
-  { id:'ft',        name:'Financial Times', color:'#FCD0B1', rss:'https://www.ft.com/rss/home/uk' },
-  { id:'sole24',    name:'Il Sole 24 Ore',  color:'#0057A8', rss:'https://www.ilsole24ore.com/rss/home.xml' }
+  { id:'bloomberg', name:'Bloomberg',       color:'#FF6600', rss:'https://news.google.com/rss/search?q=when:1d+site:bloomberg.com&hl=en-US&gl=US&ceid=US:en' },
+  { id:'ft',        name:'Financial Times', color:'#FCD0B1', rss:'https://news.google.com/rss/search?q=when:1d+site:ft.com&hl=en-US&gl=US&ceid=US:en' },
+  { id:'sole24',    name:'Il Sole 24 Ore',  color:'#0057A8', rss:'https://news.google.com/rss/search?q=when:1d+site:ilsole24ore.com&hl=it-IT&gl=IT&ceid=IT:it' }
 ];
 let newsLoaded = false;
 
@@ -2449,7 +2449,7 @@ function renderNewsCol(col, src, items){
     const when = isToday
       ? d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})
       : d.toLocaleDateString('it-IT',{day:'2-digit',month:'short'});
-    const title = item.title.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const title = item.title.replace(/\s+-\s+(Bloomberg|Bloomberg\.com|Financial Times|FT|Il Sole 24 ORE|Il Sole 24 Ore|Sole 24 Ore).*$/i,'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     return `<a class="news-article" href="${item.link}" target="_blank" rel="noopener noreferrer">
       <div class="news-title">${title}</div>
       <div class="news-meta">${when}</div>
@@ -2470,9 +2470,10 @@ async function loadNews(force=false){
       const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(src.rss)}&count=5`;
       const res = await fetch(url);
       const data = await res.json();
-      if(data.status!=='ok'||!data.items?.length) throw new Error();
+      if(data.status!=='ok'||!data.items?.length) throw new Error(data.message||'no items');
       renderNewsCol(col, src, data.items);
-    }catch{
+    }catch(err){
+      console.error('News fetch error for '+src.id, err);
       col.innerHTML=`<div class="news-source-header" style="border-bottom-color:${src.color}"><span class="news-source-name" style="color:${src.color}">${src.name}</span></div><div class="news-error">Feed non disponibile</div>`;
     }
   }));
