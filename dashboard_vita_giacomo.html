@@ -2418,11 +2418,57 @@ setInterval(async ()=>{
 
 // ============ RASSEGNA STAMPA ============
 const NEWS_SOURCES = [
-  { id:'bloomberg', name:'Bloomberg',       color:'#FF6600', rss:'https://news.google.com/rss/search?q=when:1d+site:bloomberg.com&hl=en-US&gl=US&ceid=US:en' },
-  { id:'ft',        name:'Financial Times', color:'#FCD0B1', rss:'https://news.google.com/rss/search?q=when:1d+site:ft.com&hl=en-US&gl=US&ceid=US:en' },
-  { id:'sole24',    name:'Il Sole 24 Ore',  color:'#0057A8', rss:'https://news.google.com/rss/search?q=when:1d+site:ilsole24ore.com&hl=it-IT&gl=IT&ceid=IT:it' }
+  { id:'bloomberg', name:'Bloomberg',       color:'#FF6600', feeds:[
+      'https://feeds.bloomberg.com/markets/news.rss',
+      'https://feeds.bloomberg.com/business/news.rss',
+      'https://news.google.com/rss/search?q=when:1d+site:bloomberg.com&hl=en-US&gl=US&ceid=US:en'
+  ]},
+  { id:'ft', name:'Financial Times', color:'#FCD0B1', feeds:[
+      'https://www.ft.com/?format=rss',
+      'https://www.ft.com/rss/home/uk',
+      'https://news.google.com/rss/search?q=when:1d+site:ft.com&hl=en-US&gl=US&ceid=US:en'
+  ]},
+  { id:'sole24', name:'Il Sole 24 Ore', color:'#0057A8', feeds:[
+      'https://www.ilsole24ore.com/rss/notizie.xml',
+      'https://www.ilsole24ore.com/rss/economia.xml',
+      'https://news.google.com/rss/search?q=when:1d+site:ilsole24ore.com&hl=it-IT&gl=IT&ceid=IT:it'
+  ]}
+];
+const CORS_PROXIES = [
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+  u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u)
 ];
 let newsLoaded = false;
+
+async function fetchFeedXML(rssUrl){
+  for(const proxy of CORS_PROXIES){
+    try{
+      const res = await fetch(proxy(rssUrl), {cache:'no-store'});
+      if(!res.ok) continue;
+      const text = await res.text();
+      if(!text || text.length<100) continue;
+      const xml = new DOMParser().parseFromString(text,'text/xml');
+      if(xml.querySelector('parsererror')) continue;
+      const nodes = xml.querySelectorAll('item, entry');
+      if(!nodes.length) continue;
+      return Array.from(nodes).map(n=>({
+        title: (n.querySelector('title')?.textContent||'').trim(),
+        link:  (n.querySelector('link')?.getAttribute('href') || n.querySelector('link')?.textContent || '').trim(),
+        pubDate: (n.querySelector('pubDate')?.textContent || n.querySelector('updated')?.textContent || n.querySelector('published')?.textContent || new Date().toISOString()).trim()
+      })).filter(i=>i.title);
+    }catch(e){ /* try next proxy */ }
+  }
+  return null;
+}
+
+async function fetchSource(src){
+  for(const feed of src.feeds){
+    const items = await fetchFeedXML(feed);
+    if(items && items.length) return items;
+  }
+  return null;
+}
 
 function newsSkeletons(col){
   col.innerHTML = [1,2,3,4,5].map(()=>`
@@ -2461,14 +2507,11 @@ async function loadNews(force=false){
     const col = document.getElementById('news-'+src.id);
     if(!col) return;
     newsSkeletons(col);
-    try{
-      const url = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(src.rss)}&count=5`;
-      const res = await fetch(url);
-      const data = await res.json();
-      if(data.status!=='ok'||!data.items?.length) throw new Error(data.message||'no items');
-      renderNewsCol(col, src, data.items);
-    }catch(err){
-      console.error('News fetch error for '+src.id, err);
+    const items = await fetchSource(src);
+    if(items && items.length){
+      renderNewsCol(col, src, items);
+    } else {
+      console.error('News fetch failed for '+src.id);
       col.innerHTML=`<div class="news-source-header" style="border-bottom-color:${src.color}"><span class="news-source-name" style="color:${src.color}">${src.name}</span></div><div class="news-error">Feed non disponibile</div>`;
     }
   }));
