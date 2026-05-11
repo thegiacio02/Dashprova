@@ -387,6 +387,61 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .tb-item.past{opacity:.5}
 .tb-item.now{border-left:3px solid var(--gold);background:rgba(245,158,11,.08)}
 .tb-item button{background:transparent;border:none;color:var(--muted);cursor:pointer}
+
+/* ===== FRANCESE DAILY ===== */
+.fr-daily { }
+.fr-section { margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.fr-section:last-child { border-bottom: none; margin-bottom: 0; }
+.fr-section-title { font-size:.68rem; text-transform:uppercase; letter-spacing:1.2px; color:var(--muted2); font-weight:700; margin-bottom:12px; font-family:var(--mono); }
+/* Mot du jour */
+.mot-word { font-size:2.2rem; font-weight:800; color:#fff; letter-spacing:-1px; }
+.mot-genre { font-size:.75rem; color:var(--accent); font-family:var(--mono); margin-left:8px; }
+.mot-ipa { font-size:.78rem; color:var(--muted2); font-family:var(--mono); margin:4px 0 10px; }
+.mot-it { font-size:1rem; color:var(--text); font-weight:600; margin-bottom:10px; }
+.mot-sentence { font-size:.85rem; background:rgba(0,229,255,.05); border-left:2px solid var(--accent); padding:10px 14px; border-radius:0 6px 6px 0; margin-bottom:8px; line-height:1.5; }
+.mot-sentence em { display:block; font-style:italic; color:var(--muted2); font-size:.78rem; margin-top:4px; }
+.mot-fact { font-size:.75rem; color:var(--gold); padding:6px 10px; background:rgba(255,184,0,.06); border-radius:5px; border:1px solid rgba(255,184,0,.15); }
+/* Vocab cards */
+.fr-vocab-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+@media(max-width:700px){ .fr-vocab-grid { grid-template-columns:repeat(2,1fr); gap:8px; } }
+.fr-vcard { background:rgba(20,29,51,.6); border:1px solid var(--border); border-radius:8px; padding:12px 10px; cursor:pointer; text-align:center; transition:all .2s; min-height:80px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
+.fr-vcard:hover,.fr-vcard.revealed { border-color:var(--accent); background:rgba(0,229,255,.06); }
+.fr-vcard .vc-word { font-size:.92rem; font-weight:700; color:#fff; }
+.fr-vcard .vc-cat { font-size:.6rem; color:var(--muted2); text-transform:uppercase; letter-spacing:.5px; font-family:var(--mono); }
+.fr-vcard .vc-it { font-size:.78rem; color:var(--accent); margin-top:4px; display:none; }
+.fr-vcard.revealed .vc-it { display:block; }
+.fr-vcard .vc-hint { font-size:.65rem; color:var(--muted); }
+/* Exercise */
+.fr-ex-question { font-size:1.05rem; font-weight:700; color:#fff; margin-bottom:16px; line-height:1.4; }
+.fr-ex-options { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media(max-width:500px){ .fr-ex-options { grid-template-columns:1fr; } }
+.fr-ex-btn { background:rgba(20,29,51,.7); border:1px solid var(--border); color:var(--text); padding:14px 16px; border-radius:8px; font-size:.85rem; font-weight:600; cursor:pointer; text-align:left; transition:all .15s; line-height:1.3; }
+.fr-ex-btn:hover { border-color:var(--accent); background:rgba(0,229,255,.07); }
+.fr-ex-btn.correct { border-color:var(--green); background:rgba(0,255,157,.1); color:var(--green); }
+.fr-ex-btn.wrong { border-color:var(--red); background:rgba(255,77,109,.1); color:var(--red); }
+.fr-ex-progress { display:flex; gap:6px; margin-bottom:16px; }
+.fr-ex-dot { width:8px; height:8px; border-radius:50%; background:var(--border); transition:all .2s; }
+.fr-ex-dot.done { background:var(--green); }
+.fr-ex-dot.active { background:var(--accent); }
+.fr-ex-score { text-align:center; padding:20px; }
+.fr-ex-score .score-num { font-size:2.5rem; font-weight:800; font-family:var(--mono); }
+/* Citation */
+.fr-citation { font-size:1rem; font-style:italic; color:var(--text); line-height:1.6; padding:12px 16px; border-left:3px solid var(--gold); margin-bottom:8px; }
+.fr-citation-author { font-size:.72rem; color:var(--gold); font-weight:700; text-transform:uppercase; letter-spacing:.5px; font-family:var(--mono); }
+.fr-citation-it { font-size:.78rem; color:var(--muted2); margin-top:6px; font-style:italic; }
+/* Conseil */
+.fr-tip-box { background:linear-gradient(135deg,rgba(0,229,255,.05),rgba(168,85,247,.04)); border:1px solid var(--border); border-radius:8px; padding:14px 16px; font-size:.85rem; line-height:1.55; }
+/* News FR */
+.fr-news-item { padding:10px 0; border-bottom:1px solid var(--border); }
+.fr-news-item:last-child { border-bottom:none; }
+.fr-news-title { font-size:.82rem; color:var(--text); font-weight:600; line-height:1.4; margin-bottom:3px; }
+.fr-news-title a { text-decoration:none; color:inherit; }
+.fr-news-title a:hover { color:var(--accent); }
+.fr-news-time { font-size:.65rem; color:var(--muted2); font-family:var(--mono); }
+/* Header strip */
+.fr-header-strip { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:10px; }
+.fr-date-label { font-size:.75rem; color:var(--muted2); font-family:var(--mono); letter-spacing:.5px; }
+.fr-streak { font-size:.78rem; font-weight:700; color:var(--gold); font-family:var(--mono); }
 </style>
 </head>
 <body>
@@ -921,6 +976,75 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
 <!-- ============ FRANCESE ============ -->
 <section class="tab" id="tab-francese">
+
+  <!-- === ALLENAMENTO QUOTIDIANO === -->
+  <div class="card fr-daily" id="fr-daily" style="margin-bottom:16px">
+    <!-- Header strip -->
+    <div class="fr-header-strip">
+      <div>
+        <div style="font-size:1.1rem;font-weight:800;color:#fff;margin-bottom:4px">Allenamento quotidiano</div>
+        <div class="fr-date-label" id="fr-date-label">—</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <span class="fr-streak" id="fr-streak-badge">🔥 0 jours</span>
+        <span id="fr-level-badge" style="font-size:.7rem;font-weight:800;padding:3px 10px;border-radius:6px;background:rgba(0,229,255,.12);color:var(--accent);font-family:var(--mono)">B1</span>
+      </div>
+    </div>
+
+    <!-- 1 · Mot du Jour -->
+    <div class="fr-section">
+      <div class="fr-section-title">✨ Mot du Jour</div>
+      <div id="fr-mot-content">
+        <div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;margin-bottom:4px">
+          <span class="mot-word" id="fr-mot-word">—</span>
+          <span class="mot-genre" id="fr-mot-genre"></span>
+        </div>
+        <div class="mot-ipa" id="fr-mot-ipa"></div>
+        <div class="mot-it" id="fr-mot-it"></div>
+        <div class="mot-sentence" id="fr-mot-sentence"><em id="fr-mot-sentence-it"></em></div>
+        <div class="mot-fact" id="fr-mot-fact"></div>
+      </div>
+    </div>
+
+    <!-- 2 · 5 Vocaboli del giorno -->
+    <div class="fr-section">
+      <div class="fr-section-title">📚 5 Vocaboli del giorno <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:.63rem">— clicca per rivelare</span></div>
+      <div class="fr-vocab-grid" id="fr-vocab-grid"></div>
+    </div>
+
+    <!-- 3 · Esercizio rapido -->
+    <div class="fr-section">
+      <div class="fr-section-title">🎯 Esercizio rapido</div>
+      <div id="fr-exercise-area">
+        <div class="fr-ex-progress" id="fr-ex-dots"></div>
+        <div class="fr-ex-question" id="fr-ex-question">Caricamento…</div>
+        <div class="fr-ex-options" id="fr-ex-options"></div>
+        <div id="fr-ex-feedback" style="margin-top:10px;font-size:.82rem;min-height:22px"></div>
+      </div>
+    </div>
+
+    <!-- 4 · Citation du Jour -->
+    <div class="fr-section">
+      <div class="fr-section-title">💬 Citation du Jour</div>
+      <div class="fr-citation" id="fr-citation-text"></div>
+      <div class="fr-citation-author" id="fr-citation-author"></div>
+      <div class="fr-citation-it" id="fr-citation-it"></div>
+    </div>
+
+    <!-- 5 · Conseil du Jour -->
+    <div class="fr-section">
+      <div class="fr-section-title">💡 Conseil du Jour</div>
+      <div class="fr-tip-box" id="fr-tip-box"></div>
+    </div>
+
+    <!-- 6 · En ce moment (RFI news) -->
+    <div class="fr-section">
+      <div class="fr-section-title">📰 En ce moment <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:.63rem">— RFI / France24</span></div>
+      <div id="fr-news-list"><div style="color:var(--muted2);font-size:.78rem">Carico notizie…</div></div>
+    </div>
+  </div>
+
+  <!-- === STATISTICHE / FORM / GLOSSARIO ===  -->
   <div class="grid grid-3" style="margin-bottom:16px">
     <div class="card"><h3>Sessioni mese</h3><div class="kpi"><span class="v" id="fr-sess">0</span><span class="t">sessioni</span></div></div>
     <div class="card"><h3>Ore mese</h3><div class="kpi"><span class="v" id="fr-hrs">0</span><span class="t">h</span></div><div class="kpi-sub">target ~16-20h/mese</div></div>
@@ -1211,7 +1335,8 @@ function defaultState(){ return {
     goals:[],
     contacts:[],
     contactFilter:'all',
-    decisions:[]
+    decisions:[],
+    frStreak:{lastDate:'',count:0}
   };}
 
 function load(){
@@ -1560,6 +1685,9 @@ function renderFrancese(){
 
   document.getElementById('fr-goals').innerHTML = FR_GOALS.map(g=>
     `<div class="checkbox"><input type="checkbox"/> ${g}</div>`).join('');
+
+  renderFrDaily();
+  loadFrNews();
 }
 
 function renderSleepChart(){
@@ -2947,6 +3075,452 @@ loadWeather();
 loadQuotes();
 setInterval(loadWeather, 15*60*1000);   // ogni 15min
 setInterval(loadQuotes,  5*60*1000);    // ogni 5min
+
+// ============ FRANCESE – ALLENAMENTO QUOTIDIANO ============
+
+const FR_WORDS = [
+  // --- ÉMOTIONS ---
+  { word:'dépaysement', genre:'n.m.', ipa:'de.pɛi.zmɑ̃', it:'smarrimento piacevole altrove', sentence:'Ce voyage lui a donné un sentiment de dépaysement total.', sentenceIt:'Questo viaggio gli ha dato una sensazione di totale spaesamento piacevole.', fact:'Intraducibile: il disorientamento dolce di trovarsi lontano da casa.', level:'B2', cat:'émotions' },
+  { word:'flâner', genre:'v.', ipa:'flɑ.ne', it:'bighellonare senza meta', sentence:'Le dimanche, j\'aime flâner dans les rues de Paris.', sentenceIt:'La domenica, mi piace bighellonare per le strade di Parigi.', fact:'Baudelaire ha immortalato il "flâneur" come figura del poeta urbano.', level:'B1', cat:'émotions' },
+  { word:'saudade', genre:'n.f.', ipa:'so.dad', it:'nostalgia malinconica (prestito portoghese)', sentence:'Elle ressentait une saudade inexplicable pour des lieux qu\'elle n\'avait jamais visités.', sentenceIt:'Provava una saudade inspiegabile per luoghi che non aveva mai visitato.', fact:'Usato in francese come prestito poetico, denota nostalgia mista a desiderio.', level:'C1', cat:'émotions' },
+  { word:'mélancolie', genre:'n.f.', ipa:'me.lɑ̃.kɔ.li', it:'malinconia', sentence:'Une douce mélancolie envahissait ses pensées en automne.', sentenceIt:'Una dolce malinconia invadeva i suoi pensieri in autunno.', fact:'Dal greco "melas" (nero) + "kholé" (bile): si credeva causata dalla bile nera.', level:'B1', cat:'émotions' },
+  { word:'fébrilité', genre:'n.f.', ipa:'fe.bʁi.li.te', it:'agitazione febbrile, eccitazione', sentence:'La fébrilité des marchés avant la publication des chiffres était palpable.', sentenceIt:'L\'agitazione febbrile dei mercati prima della pubblicazione dei dati era palpabile.', fact:'Molto usato in contesti finanziari e politici.', level:'B2', cat:'émotions' },
+  { word:'épanouissement', genre:'n.m.', ipa:'e.pa.nu.is.mɑ̃', it:'fioritura personale, realizzazione', sentence:'Son épanouissement professionnel est une source de satisfaction.', sentenceIt:'La sua realizzazione professionale è fonte di soddisfazione.', fact:'Dalla botanica: indica il modo in cui un fiore si apre.', level:'B2', cat:'émotions' },
+  { word:'nostalgie', genre:'n.f.', ipa:'nɔs.tal.ʒi', it:'nostalgia', sentence:'La nostalgie du passé peut freiner l\'innovation.', sentenceIt:'La nostalgia del passato può frenare l\'innovazione.', fact:'Dal greco "nostos" (ritorno) + "algos" (dolore): dolore per il ritorno.', level:'A2', cat:'émotions' },
+  { word:'émerveillement', genre:'n.m.', ipa:'e.mɛʁ.vɛj.mɑ̃', it:'meraviglia, stupore gioioso', sentence:'L\'émerveillement des enfants devant la neige est contagieux.', sentenceIt:'Lo stupore dei bambini davanti alla neve è contagioso.', fact:'Deriva da "merveille" (meraviglia), a sua volta dal latino "mirabilia".', level:'B2', cat:'émotions' },
+  // --- FINANCE ---
+  { word:'liquidité', genre:'n.f.', ipa:'li.ki.di.te', it:'liquidità', sentence:'La liquidité du marché obligataire s\'est resserrée après la hausse des taux.', sentenceIt:'La liquidità del mercato obbligazionario si è ridotta dopo l\'aumento dei tassi.', fact:'Termine fondamentale in finanza: capacità di convertire un asset in cash rapidamente.', level:'B2', cat:'finance' },
+  { word:'rendement', genre:'n.m.', ipa:'ʁɑ̃d.mɑ̃', it:'rendimento, resa', sentence:'Le rendement des obligations d\'État a atteint un nouveau sommet.', sentenceIt:'Il rendimento dei titoli di Stato ha raggiunto un nuovo massimo.', fact:'Usato sia in finanza (rendimento) che in agricoltura (resa del raccolto).', level:'B1', cat:'finance' },
+  { word:'endettement', genre:'n.m.', ipa:'ɑ̃.dɛt.mɑ̃', it:'indebitamento', sentence:'Le taux d\'endettement des ménages a augmenté de 3 points.', sentenceIt:'Il tasso di indebitamento delle famiglie è aumentato di 3 punti.', fact:'Indicatore chiave per valutare la salute finanziaria di un Paese.', level:'B2', cat:'finance' },
+  { word:'valorisation', genre:'n.f.', ipa:'va.lɔ.ʁi.za.sjɔ̃', it:'valorizzazione, valutazione', sentence:'La valorisation boursière de cette startup dépasse dix milliards.', sentenceIt:'La valorizzazione borsistica di questa startup supera i dieci miliardi.', fact:'Sinonimo di "valuation" nell\'accezione anglofona, usato nei deal di M&A.', level:'B2', cat:'finance' },
+  { word:'dépréciation', genre:'n.f.', ipa:'de.pʁe.sja.sjɔ̃', it:'deprezzamento, svalutazione', sentence:'La dépréciation de l\'euro face au dollar pénalise les importations.', sentenceIt:'Il deprezzamento dell\'euro rispetto al dollaro penalizza le importazioni.', fact:'Da non confondere con "amortissement" (ammortamento) che è contabile.', level:'B2', cat:'finance' },
+  { word:'bénéfice', genre:'n.m.', ipa:'be.ne.fis', it:'profitto, utile', sentence:'Les bénéfices du troisième trimestre ont dépassé les attentes.', sentenceIt:'Gli utili del terzo trimestre hanno superato le aspettative.', fact:'Dal latino "beneficium": azione buona. In finanza diventa il risultato netto.', level:'A2', cat:'finance' },
+  { word:'actionnaire', genre:'n.m./f.', ipa:'ak.sjɔ.nɛʁ', it:'azionista', sentence:'Les actionnaires ont approuvé le rachat d\'actions en assemblée générale.', sentenceIt:'Gli azionisti hanno approvato il riacquisto di azioni in assemblea generale.', fact:'"Actionnaire minoritaire" è il socio di minoranza, spesso al centro di controversie societarie.', level:'B1', cat:'finance' },
+  { word:'fonds propres', genre:'n.m.pl.', ipa:'fɔ̃ pʁɔpʁ', it:'patrimonio netto, capitale proprio', sentence:'Les fonds propres de la banque ont été renforcés après la crise.', sentenceIt:'Il patrimonio netto della banca è stato rafforzato dopo la crisi.', fact:'Equivalente al "equity" anglosassone: la differenza tra attivo e passivo.', level:'B2', cat:'finance' },
+  { word:'levier', genre:'n.m.', ipa:'lə.vje', it:'leva (finanziaria)', sentence:'Un fort levier amplifie à la fois les gains et les pertes.', sentenceIt:'Un forte effetto leva amplifica sia i guadagni che le perdite.', fact:'Dal latino "levarium": strumento per sollevare. In finanza, moltiplica l\'esposizione.', level:'B2', cat:'finance' },
+  { word:'flux de trésorerie', genre:'n.m.', ipa:'fly də tʁe.zɔ.ʁi', it:'flusso di cassa', sentence:'Le flux de trésorerie disponible est l\'indicateur préféré des analystes value.', sentenceIt:'Il flusso di cassa disponibile è l\'indicatore preferito degli analisti value.', fact:'Il "free cash flow" in francese: la liquidità generata dopo gli investimenti.', level:'B2', cat:'finance' },
+  { word:'covenant', genre:'n.m.', ipa:'kɔ.ve.nɑ̃t', it:'clausola finanziaria restrittiva', sentence:'Le non-respect d\'un covenant peut entraîner le remboursement anticipé de la dette.', sentenceIt:'La violazione di un covenant può comportare il rimborso anticipato del debito.', fact:'Termine inglese entrato nel lessico finanziario francese, indica vincoli nei contratti di prestito.', level:'C1', cat:'finance' },
+  { word:'mise en demeure', genre:'n.f.', ipa:'miz ɑ̃ də.mœʁ', it:'diffida formale', sentence:'La société a reçu une mise en demeure pour non-paiement.', sentenceIt:'La società ha ricevuto una diffida per mancato pagamento.', fact:'Atto legale che precede spesso un contenzioso; frequente nei contratti finanziari.', level:'C1', cat:'finance' },
+  { word:'due diligence', genre:'n.f.', ipa:'dju di.li.dʒɑ̃s', it:'due diligence, verifica preliminare', sentence:'L\'équipe a mené une due diligence approfondie avant la signature.', sentenceIt:'Il team ha condotto una due diligence approfondita prima della firma.', fact:'Anglicismo ormai standard nel lessico M&A francese.', level:'B2', cat:'finance' },
+  { word:'provision', genre:'n.f.', ipa:'pʁɔ.vi.zjɔ̃', it:'accantonamento, riserva', sentence:'La banque a constitué des provisions pour créances douteuses.', sentenceIt:'La banca ha costituito accantonamenti per crediti dubbi.', fact:'In contabilità: importo messo da parte per coprire un rischio futuro.', level:'B2', cat:'finance' },
+  { word:'arbitrage', genre:'n.m.', ipa:'aʁ.bi.tʁaʒ', it:'arbitraggio', sentence:'L\'arbitrage réglementaire permet d\'exploiter les différences entre juridictions.', sentenceIt:'L\'arbitraggio regolamentare permette di sfruttare le differenze tra giurisdizioni.', fact:'Sfruttamento di differenziali di prezzo o regolamentazione tra mercati diversi.', level:'B2', cat:'finance' },
+  { word:'conjoncture', genre:'n.f.', ipa:'kɔ̃.ʒɔ̃k.tyʁ', it:'congiuntura economica', sentence:'La conjoncture actuelle favorise les investissements défensifs.', sentenceIt:'La congiuntura attuale favorisce gli investimenti difensivi.', fact:'Usatissimo nelle analisi macroeconomiche francesi; indica il ciclo economico corrente.', level:'B2', cat:'finance' },
+  { word:'parité', genre:'n.f.', ipa:'pa.ʁi.te', it:'parità (cambio)', sentence:'La parité euro-dollar a des implications majeures pour le commerce extérieur.', sentenceIt:'La parità euro-dollaro ha implicazioni importanti per il commercio estero.', fact:'In forex: tasso di cambio tra due valute; "parité de pouvoir d\'achat" = PPP.', level:'B2', cat:'finance' },
+  // --- QUOTIDIEN ---
+  { word:'flemmard', genre:'adj./n.m.', ipa:'flɛ.maʁ', it:'pigrone, sfaticato', sentence:'Il est tellement flemmard qu\'il n\'a pas bougé du canapé de tout le week-end.', sentenceIt:'È così pigrone che non si è mosso dal divano per tutto il weekend.', fact:'Dal registro familiare, molto usato nella vita quotidiana.', level:'A2', cat:'quotidien' },
+  { word:'bricoler', genre:'v.', ipa:'bʁi.kɔ.le', it:'fare lavori manuali in casa', sentence:'Le week-end, il préfère bricoler dans son garage plutôt que sortir.', sentenceIt:'Il weekend, preferisce fare lavoretti nel suo garage piuttosto che uscire.', fact:'"Le bricolage" è una passione nazionale francese: molti supermercati hanno reparti enormi dedicati.', level:'A2', cat:'quotidien' },
+  { word:'débrouillard', genre:'adj.', ipa:'de.bʁu.jaʁ', it:'arrangiarsi, ingegnoso', sentence:'Elle est très débrouillarde, elle trouve toujours une solution.', sentenceIt:'È molto ingegnosa, trova sempre una soluzione.', fact:'"Se débrouiller" (arrangiarsi) è un concetto culturalmente importante in Francia.', level:'A2', cat:'quotidien' },
+  { word:'quotidien', genre:'n.m./adj.', ipa:'kɔ.ti.djɛ̃', it:'quotidiano, di ogni giorno', sentence:'Le quotidien d\'un analyste financier est rythmé par les données de marché.', sentenceIt:'Il quotidiano di un analista finanziario è scandito dai dati di mercato.', fact:'Come sostantivo indica anche un giornale quotidiano ("un quotidien national").', level:'A2', cat:'quotidien' },
+  { word:'boulot', genre:'n.m.', ipa:'bu.lo', it:'lavoro (registro familiare)', sentence:'J\'ai beaucoup de boulot cette semaine, je rentre tard.', sentenceIt:'Ho molto lavoro questa settimana, torno tardi.', fact:'Registro familiare per "travail". "Métro, boulot, dodo" è un\'espressione iconica della routine urbana.', level:'A1', cat:'quotidien' },
+  { word:'s\'en ficher', genre:'v.pron.', ipa:'sɑ̃ fi.ʃe', it:'fregarsene', sentence:'Il s\'en fiche complètement des critiques des analystes.', sentenceIt:'Se ne frega completamente delle critiche degli analisti.', fact:'Versione più gentile di "s\'en foutre"; entrambe molto comuni nel parlato.', level:'A2', cat:'quotidien' },
+  { word:'flemme', genre:'n.f.', ipa:'flɛm', it:'pigrizia, voglia zero', sentence:'J\'ai la flemme de préparer le dîner ce soir.', sentenceIt:'Non ho voglia di preparare la cena stasera.', fact:'"Avoir la flemme" è un\'espressione colloquiale fondamentale.', level:'A2', cat:'quotidien' },
+  { word:'éplucher', genre:'v.', ipa:'e.ply.ʃe', it:'sbucciare; scrutinare (un testo)', sentence:'Les analystes ont épluché le rapport annuel ligne par ligne.', sentenceIt:'Gli analisti hanno esaminato il rapporto annuale riga per riga.', fact:'Usato metaforicamente per "analizzare minuziosamente": éplucher un contrat.', level:'B1', cat:'quotidien' },
+  // --- CULTURE ---
+  { word:'terroir', genre:'n.m.', ipa:'tɛ.ʁwaʁ', it:'territorio, tipicità locale', sentence:'Le terroir bourguignon produit des vins d\'une complexité remarquable.', sentenceIt:'Il terroir della Borgogna produce vini di complessità notevole.', fact:'Intraducibile: indica l\'insieme di fattori geografici e umani che conferiscono unicità a un prodotto.', level:'B2', cat:'culture' },
+  { word:'laïcité', genre:'n.f.', ipa:'la.i.si.te', it:'laicità', sentence:'La laïcité est un principe fondamental de la République française.', sentenceIt:'La laicità è un principio fondamentale della Repubblica francese.', fact:'Principio introdotto con la legge del 1905: separazione di Stato e Chiesa.', level:'B2', cat:'culture' },
+  { word:'baguette', genre:'n.f.', ipa:'ba.gɛt', it:'baguette (pane); bacchetta', sentence:'Acheter une baguette bien cuite est un rituel quotidien en France.', sentenceIt:'Comprare una baguette ben cotta è un rituale quotidiano in Francia.', fact:'Dal 2022 patrimonio UNESCO: i francesi consumano 12 miliardi di baguette l\'anno.', level:'A1', cat:'culture' },
+  { word:'patrimoine', genre:'n.m.', ipa:'pa.tʁi.mwan', it:'patrimonio (culturale/finanziario)', sentence:'Le patrimoine immobilier représente 60 % de la richesse des ménages français.', sentenceIt:'Il patrimonio immobiliare rappresenta il 60% della ricchezza delle famiglie francesi.', fact:'Usato sia per il patrimonio culturale (Journées du Patrimoine) che per quello finanziario.', level:'B1', cat:'culture' },
+  { word:'raison d\'être', genre:'n.f.', ipa:'ʁɛ.zɔ̃ dɛtʁ', it:'ragione di essere', sentence:'L\'innovation est la raison d\'être de cette entreprise technologique.', sentenceIt:'L\'innovazione è la ragione di essere di questa impresa tecnologica.', fact:'Espressione filosofica usata globalmente, spesso nelle mission statement aziendali.', level:'B1', cat:'culture' },
+  { word:'engagement', genre:'n.m.', ipa:'ɑ̃.gaʒ.mɑ̃', it:'impegno, coinvolgimento', sentence:'L\'engagement des collaborateurs est au cœur de la stratégie RH.', sentenceIt:'Il coinvolgimento dei collaboratori è al centro della strategia HR.', fact:'In finanza, "engagement" può indicare anche garanzia o obbligo contrattuale.', level:'B1', cat:'culture' },
+  { word:'savoir-faire', genre:'n.m.', ipa:'sa.vwaʁ fɛʁ', it:'saper fare, know-how', sentence:'Le savoir-faire des artisans français est reconnu dans le monde entier.', sentenceIt:'Il saper fare degli artigiani francesi è riconosciuto in tutto il mondo.', fact:'Esportato globalmente: in inglese, "savoir-faire" è usato senza traduzione.', level:'A2', cat:'culture' },
+  { word:'esprit de corps', genre:'n.m.', ipa:'ɛs.pʁi də kɔʁ', it:'spirito di corpo, coesione di gruppo', sentence:'L\'esprit de corps de cette équipe est la clé de leur succès.', sentenceIt:'Lo spirito di corpo di questo team è la chiave del loro successo.', fact:'Usato in tutto il mondo, spesso nei contesti militari e aziendali.', level:'B1', cat:'culture' },
+  { word:'bien-être', genre:'n.m.', ipa:'bjɛ̃.nɛtʁ', it:'benessere', sentence:'Les entreprises investissent de plus en plus dans le bien-être au travail.', sentenceIt:'Le aziende investono sempre di più nel benessere sul lavoro.', fact:'"Bien-être" è diventato un indicatore economico alternativo al PIL in alcuni report OCSE.', level:'A2', cat:'culture' },
+  // --- NATURE ---
+  { word:'crépuscule', genre:'n.m.', ipa:'kʁe.pys.kyl', it:'crepuscolo', sentence:'Le crépuscule sur la Seine teinte le ciel de nuances dorées.', sentenceIt:'Il crepuscolo sulla Senna tinge il cielo di sfumature dorate.', fact:'Dal latino "crepusculum": la luce ambigua. Sia all\'alba che al tramonto.', level:'B1', cat:'nature' },
+  { word:'bruine', genre:'n.f.', ipa:'bʁɥin', it:'pioggerellina, acquerugiola', sentence:'Une légère bruine tombait sur Paris ce matin-là.', sentenceIt:'Una leggera acquerugiola cadeva su Parigi quella mattina.', fact:'Pioggia finissima tipica del Nord della Francia e della Bretagna.', level:'B1', cat:'nature' },
+  { word:'frondaison', genre:'n.f.', ipa:'fʁɔ̃.dɛ.zɔ̃', it:'fogliame, chioma degli alberi', sentence:'La frondaison des châtaigniers offre une ombre bienfaisante en été.', sentenceIt:'Il fogliame dei castagni offre una piacevole ombra d\'estate.', fact:'Termine poetico e letterario per indicare l\'insieme delle fronde.', level:'C1', cat:'nature' },
+  { word:'paysage', genre:'n.m.', ipa:'pe.i.zaʒ', it:'paesaggio', sentence:'Le paysage financier européen a été profondément reconfiguré.', sentenceIt:'Il paesaggio finanziario europeo è stato profondamente riconfigurato.', fact:'Usato metaforicamente nel linguaggio economico: "paysage concurrentiel".', level:'A2', cat:'nature' },
+  { word:'aube', genre:'n.f.', ipa:'ob', it:'alba', sentence:'Les marchés asiatiques ouvrent à l\'aube pour les traders européens.', sentenceIt:'I mercati asiatici aprono all\'alba per i trader europei.', fact:'"À l\'aube de" (all\'alba di) è usato figurativamente: "à l\'aube d\'une nouvelle ère".', level:'A2', cat:'nature' },
+  // --- EXTRA FINANCE ---
+  { word:'restructuration', genre:'n.f.', ipa:'ʁəs.tʁyk.ty.ʁa.sjɔ̃', it:'ristrutturazione', sentence:'La restructuration du groupe a entraîné la suppression de 2 000 postes.', sentenceIt:'La ristrutturazione del gruppo ha comportato la soppressione di 2.000 posti.', fact:'Termine chiave nei processi di turnaround aziendale.', level:'B2', cat:'finance' },
+  { word:'placement', genre:'n.m.', ipa:'plas.mɑ̃', it:'investimento finanziario', sentence:'Un placement en obligations indexées offre une protection contre l\'inflation.', sentenceIt:'Un investimento in obbligazioni indicizzate offre protezione contro l\'inflazione.', fact:'Più ampio di "investissement": include conti deposito, assicurazioni vita, ecc.', level:'B1', cat:'finance' },
+  { word:'taux directeur', genre:'n.m.', ipa:'to di.ʁɛk.tœʁ', it:'tasso di interesse di riferimento', sentence:'La BCE a relevé son taux directeur pour la huitième fois consécutive.', sentenceIt:'La BCE ha alzato il suo tasso di riferimento per l\'ottava volta consecutiva.', fact:'"Taux directeur" = policy rate: il tasso con cui la banca centrale orienta il costo del denaro.', level:'B2', cat:'finance' },
+  { word:'inflation', genre:'n.f.', ipa:'ɛ̃.fla.sjɔ̃', it:'inflazione', sentence:'L\'inflation sous-jacente reste supérieure à la cible de 2 %.', sentenceIt:'L\'inflazione di fondo rimane superiore all\'obiettivo del 2%.', fact:'"Inflation sous-jacente" = core inflation, esclude energia e alimentari freschi.', level:'A2', cat:'finance' },
+  { word:'récession', genre:'n.f.', ipa:'ʁe.sɛ.sjɔ̃', it:'recessione', sentence:'Deux trimestres consécutifs de contraction définissent techniquement une récession.', sentenceIt:'Due trimestri consecutivi di contrazione definiscono tecnicamente una recessione.', fact:'Definizione tecnica universale: due trimestri consecutivi di PIL negativo.', level:'B1', cat:'finance' },
+  { word:'hedge', genre:'n.m.', ipa:'ɛdʒ', it:'copertura (del rischio)', sentence:'L\'entreprise a mis en place un hedge sur le risque de change.', sentenceIt:'L\'azienda ha messo in atto una copertura sul rischio di cambio.', fact:'Anglicismo usato direttamente; alternativa francese: "couverture de risque".', level:'B2', cat:'finance' },
+  { word:'spread', genre:'n.m.', ipa:'spʁɛd', it:'differenziale di rendimento', sentence:'Le spread entre les OAT françaises et les Bunds allemands s\'est élargi.', sentenceIt:'Il differenziale tra i titoli francesi OAT e i Bund tedeschi si è allargato.', fact:'In francese si usa direttamente "spread" o "écart de taux"; indicatore chiave della fiducia degli investitori.', level:'B2', cat:'finance' },
+  { word:'dette souveraine', genre:'n.f.', ipa:'dɛt su.vʁɛn', it:'debito sovrano', sentence:'La dette souveraine de la zone euro reste sous surveillance des marchés.', sentenceIt:'Il debito sovrano dell\'eurozona rimane sotto la sorveglianza dei mercati.', fact:'Debito emesso dagli stati: obbligazioni governative, BTP, OAT, Bund, ecc.', level:'B2', cat:'finance' },
+  { word:'notation de crédit', genre:'n.f.', ipa:'nɔ.ta.sjɔ̃ də kʁe.di', it:'rating del credito', sentence:'S&P a maintenu la notation de crédit de la France à AA−.', sentenceIt:'S&P ha mantenuto il rating creditizio della Francia ad AA−.', fact:'Emessa da agenzie come S&P, Moody\'s, Fitch; influenza il costo del debito.', level:'B2', cat:'finance' },
+  { word:'capitalisation boursière', genre:'n.f.', ipa:'ka.pi.ta.li.za.sjɔ̃ buʁ.sjɛʁ', it:'capitalizzazione di mercato', sentence:'LVMH a atteint une capitalisation boursière de 400 milliards d\'euros.', sentenceIt:'LVMH ha raggiunto una capitalizzazione di mercato di 400 miliardi di euro.', fact:'Prezzo dell\'azione × numero di azioni: misura del valore di mercato di una società.', level:'B2', cat:'finance' },
+  { word:'marge nette', genre:'n.f.', ipa:'maʁʒ nɛt', it:'margine netto', sentence:'La marge nette du secteur bancaire a progressé grâce aux taux élevés.', sentenceIt:'Il margine netto del settore bancario è migliorato grazie ai tassi elevati.', fact:'Utile netto / ricavi: misura dell\'efficienza finale dell\'azienda.', level:'B2', cat:'finance' },
+  // --- PAROLE BELLE/INSOLITE ---
+  { word:'ineffable', genre:'adj.', ipa:'i.ne.fabl', it:'ineffabile, inesprimibile', sentence:'Une joie ineffable l\'envahit au moment de la signature du contrat.', sentenceIt:'Una gioia ineffabile lo invase nel momento della firma del contratto.', fact:'Dal latino "ineffabilis": ciò che non può essere espresso a parole.', level:'C1', cat:'émotions' },
+  { word:'apocryphe', genre:'adj.', ipa:'a.pɔ.kʁif', it:'apocrifo, di dubbia autenticità', sentence:'Cette citation apocryphe est attribuée à tort à Voltaire.', sentenceIt:'Questa citazione apocrifa è erroneamente attribuita a Voltaire.', fact:'Dal greco "apokryphos" (nascosto): testi esclusi dal canone ufficiale.', level:'C1', cat:'culture' },
+  { word:'quintessence', genre:'n.f.', ipa:'kwɛ̃.te.sɑ̃s', it:'quintessenza', sentence:'Ce fonds représente la quintessence de la gestion value européenne.', sentenceIt:'Questo fondo rappresenta la quintessenza della gestione value europea.', fact:'Quinta essenza degli alchimisti medievali: l\'elemento puro al di là dei quattro classici.', level:'C1', cat:'culture' },
+  { word:'ubiquité', genre:'n.f.', ipa:'y.bi.kwi.te', it:'ubiquità', sentence:'L\'ubiquité des données numériques transforme les modèles d\'affaires.', sentenceIt:'L\'ubiquità dei dati digitali trasforma i modelli di business.', fact:'Dal latino "ubique" (ovunque): essere in più luoghi contemporaneamente.', level:'C1', cat:'quotidien' },
+  { word:'paradoxe', genre:'n.m.', ipa:'pa.ʁa.dɔks', it:'paradosso', sentence:'Le paradoxe de l\'épargne illustre les limites de la rationalité individuelle.', sentenceIt:'Il paradosso del risparmio illustra i limiti della razionalità individuale.', fact:'Il "paradoxe de l\'épargne" di Keynes: se tutti risparmiano, tutti si impoveriscono.', level:'B1', cat:'finance' },
+  { word:'résilience', genre:'n.f.', ipa:'ʁe.zi.ljɑ̃s', it:'resilienza', sentence:'La résilience du marché de l\'emploi français a surpris les économistes.', sentenceIt:'La resilienza del mercato del lavoro francese ha sorpreso gli economisti.', fact:'Termine della fisica (capacità di un materiale di tornare alla forma originale) entrato nel linguaggio economico.', level:'B2', cat:'finance' },
+  { word:'nuance', genre:'n.f.', ipa:'nɥɑ̃s', it:'sfumatura', sentence:'Il faut nuancer l\'analyse: les chiffres bruts masquent des disparités importantes.', sentenceIt:'Bisogna sfumare l\'analisi: i dati grezzi nascondono disparità importanti.', fact:'"Nuance" è considerata una parola profondamente francese, rappresenta la mentalità del "ni l\'un ni l\'autre".', level:'B1', cat:'culture' },
+  { word:'perspicace', genre:'adj.', ipa:'pɛʁs.pi.kas', it:'perspicace, acuto', sentence:'Un investisseur perspicace avait anticipé la correction bien avant les marchés.', sentenceIt:'Un investitore perspicace aveva anticipato la correzione ben prima dei mercati.', fact:'Dal latino "perspicax": chi vede attraverso, chi ha uno sguardo penetrante.', level:'B2', cat:'émotions' },
+  { word:'voltige', genre:'n.f.', ipa:'vɔl.tiʒ', it:'acrobazia; volteggio', sentence:'La voltige des taux de change exige une gestion active des risques.', sentenceIt:'L\'acrobazia dei tassi di cambio richiede una gestione attiva dei rischi.', fact:'Usato metaforicamente per movimenti rapidi e imprevedibili sui mercati.', level:'B2', cat:'finance' },
+  { word:'clairvoyance', genre:'n.f.', ipa:'klɛʁ.vwa.jɑ̃s', it:'lungimiranza, chiaroveggenza', sentence:'La clairvoyance de ce gestionnaire lui a permis d\'éviter la crise.', sentenceIt:'La lungimiranza di questo gestore gli ha permesso di evitare la crisi.', fact:'"Voir clair" (vedere chiaro): qualità essenziale per un buon analista finanziario.', level:'B2', cat:'émotions' },
+  { word:'dénouement', genre:'n.m.', ipa:'de.nu.mɑ̃', it:'epilogo, scioglimento', sentence:'Le dénouement des négociations a surpris tous les acteurs du marché.', sentenceIt:'L\'epilogo dei negoziati ha sorpreso tutti gli operatori di mercato.', fact:'In finanza, "dénouement d\'une opération" = regolamento di una transazione.', level:'B2', cat:'finance' },
+  { word:'assainissement', genre:'n.m.', ipa:'a.sɛ.nis.mɑ̃', it:'risanamento (finanziario/ambientale)', sentence:'L\'assainissement des finances publiques est une priorité pour Bruxelles.', sentenceIt:'Il risanamento delle finanze pubbliche è una priorità per Bruxelles.', fact:'In finance: processo di riduzione del deficit; in urbanistica: sistemazione igienica.', level:'B2', cat:'finance' },
+  { word:'consensus', genre:'n.m.', ipa:'kɔ̃.sɛ̃.sys', it:'consenso (degli analisti)', sentence:'Les résultats ont largement battu le consensus des analystes.', sentenceIt:'I risultati hanno ampiamente battuto il consenso degli analisti.', fact:'In finanza, "consensus" = media delle stime degli analisti su un titolo.', level:'B2', cat:'finance' },
+  { word:'catalyseur', genre:'n.m.', ipa:'ka.ta.li.zœʁ', it:'catalizzatore', sentence:'La hausse des taux a été le catalyseur principal de la correction boursière.', sentenceIt:'Il rialzo dei tassi è stato il principale catalizzatore della correzione borsistica.', fact:'Dalla chimica: sostanza che accelera una reazione. In finanza: evento che innesca un movimento.', level:'B2', cat:'finance' },
+  { word:'volatilité', genre:'n.f.', ipa:'vɔ.la.ti.li.te', it:'volatilità', sentence:'Le VIX mesure la volatilité implicite du marché américain.', sentenceIt:'Il VIX misura la volatilità implicita del mercato americano.', fact:'"Fear index": il VIX alto indica incertezza, basso indica compiacenza dei mercati.', level:'B2', cat:'finance' },
+  { word:'décote', genre:'n.f.', ipa:'de.kɔt', it:'sconto, discount', sentence:'Cette action se négocie avec une décote de 30 % par rapport à ses pairs.', sentenceIt:'Questo titolo quota con uno sconto del 30% rispetto ai pari.', fact:'Contrario di "prime": quando un asset vale meno del suo fair value teorico.', level:'B2', cat:'finance' },
+];
+
+const FR_QUOTES = [
+  { text:'La vie, c\'est comme une bicyclette, il faut avancer pour ne pas perdre l\'équilibre.', author:'Albert Einstein', it:'La vita è come una bicicletta: bisogna andare avanti per non perdere l\'equilibrio.' },
+  { text:'Le seul vrai voyage, ce serait de ne pas aller vers de nouveaux paysages, mais d\'avoir d\'autres yeux.', author:'Marcel Proust', it:'L\'unico vero viaggio non consiste nel cercare nuovi paesaggi, ma nell\'avere nuovi occhi.' },
+  { text:'On ne voit bien qu\'avec le cœur. L\'essentiel est invisible pour les yeux.', author:'Antoine de Saint-Exupéry', it:'Si vede bene solo col cuore. L\'essenziale è invisibile agli occhi.' },
+  { text:'La connaissance s\'acquiert par l\'expérience, tout le reste n\'est qu\'information.', author:'Albert Einstein', it:'La conoscenza si acquisisce con l\'esperienza, tutto il resto è solo informazione.' },
+  { text:'Il faut toujours viser la lune, car même en cas d\'échec, on atterrit dans les étoiles.', author:'Oscar Wilde', it:'Bisogna sempre puntare alla luna, perché anche in caso di fallimento si atterrerà tra le stelle.' },
+  { text:'Le temps, c\'est de l\'argent.', author:'Benjamin Franklin', it:'Il tempo è denaro.' },
+  { text:'La liberté des uns s\'arrête là où commence celle des autres.', author:'Jean-Paul Sartre', it:'La libertà degli uni finisce dove comincia quella degli altri.' },
+  { text:'L\'argent ne fait pas le bonheur, mais il y contribue.', author:'Sébastien-Roch Nicolas de Chamfort', it:'Il denaro non fa la felicità, ma vi contribuisce.' },
+  { text:'Rien ne se perd, rien ne se crée, tout se transforme.', author:'Antoine Lavoisier', it:'Nulla si perde, nulla si crea, tutto si trasforma.' },
+  { text:'Le mieux est l\'ennemi du bien.', author:'Voltaire', it:'Il meglio è nemico del bene.' },
+  { text:'Dans ce monde, il faut être un peu trop bon pour l\'être assez.', author:'Pierre Marivaux', it:'In questo mondo, bisogna essere un po\' troppo buoni per esserlo abbastanza.' },
+  { text:'La plus grande richesse est d\'avoir peu de désirs.', author:'Épictète', it:'La più grande ricchezza è avere pochi desideri.' },
+  { text:'Les marchés peuvent rester irrationnels plus longtemps que vous ne pouvez rester solvable.', author:'John Maynard Keynes', it:'I mercati possono restare irrazionali più a lungo di quanto voi possiate restare solventi.' },
+  { text:'Le risque vient de ne pas savoir ce que l\'on fait.', author:'Warren Buffett', it:'Il rischio viene dal non sapere quello che si sta facendo.' },
+  { text:'L\'investissement réussi prend du temps, de la discipline et de la patience.', author:'Warren Buffett', it:'Un investimento di successo richiede tempo, disciplina e pazienza.' },
+  { text:'Ne remettez jamais à demain ce que vous pouvez faire aujourd\'hui.', author:'Benjamin Franklin', it:'Non rimandare mai a domani quello che puoi fare oggi.' },
+  { text:'Le savoir est la seule matière qui s\'accroît quand on la partage.', author:'Socrate', it:'La conoscenza è l\'unica materia che cresce quando la si condivide.' },
+  { text:'La simplicité est la sophistication suprême.', author:'Léonard de Vinci', it:'La semplicità è la sofisticazione suprema.' },
+  { text:'Tout ce qui est grand a été accompli par des gens qui avaient plus d\'enthousiasme que d\'expérience.', author:'Donald Phillips', it:'Tutto ciò che è grande è stato compiuto da persone che avevano più entusiasmo che esperienza.' },
+  { text:'L\'avenir appartient à ceux qui se lèvent tôt.', author:'Proverbe français', it:'Il futuro appartiene a chi si alza presto.' },
+  { text:'La chance ne sourit qu\'aux esprits bien préparés.', author:'Louis Pasteur', it:'Il caso favorisce solo le menti preparate.' },
+  { text:'L\'échec est le fondement de la réussite.', author:'Lao-Tseu', it:'Il fallimento è il fondamento del successo.' },
+  { text:'Celui qui déplace des montagnes commence par enlever de petites pierres.', author:'Confucius', it:'Colui che sposta le montagne inizia rimuovendo i piccoli sassi.' },
+  { text:'Il n\'y a pas de vent favorable pour celui qui ne sait pas où il va.', author:'Sénèque', it:'Non c\'è vento favorevole per chi non sa dove sta andando.' },
+  { text:'La vraie générosité envers l\'avenir consiste à tout donner au présent.', author:'Albert Camus', it:'La vera generosità verso il futuro consiste nel dare tutto al presente.' },
+  { text:'Gouverner, c\'est prévoir.', author:'Émile de Girardin', it:'Governare è prevedere.' },
+  { text:'On ne résout pas un problème avec les modes de pensée qui l\'ont engendré.', author:'Albert Einstein', it:'Non si risolve un problema con le stesse modalità di pensiero che lo hanno generato.' },
+  { text:'La fortune sourit aux audacieux.', author:'Virgile', it:'La fortuna sorride agli audaci.' },
+  { text:'Aimer, c\'est agir.', author:'Victor Hugo', it:'Amare è agire.' },
+  { text:'Ce n\'est pas parce que les choses sont difficiles que nous n\'osons pas, c\'est parce que nous n\'osons pas qu\'elles sont difficiles.', author:'Sénèque', it:'Non è perché le cose sono difficili che non osiamo, è perché non osiamo che le cose sono difficili.' },
+  { text:'La lecture est à l\'esprit ce que l\'exercice est au corps.', author:'Joseph Addison', it:'La lettura è alla mente ciò che l\'esercizio è al corpo.' },
+  { text:'Le bonheur n\'est pas quelque chose qu\'on trouve, mais quelque chose qu\'on crée.', author:'Anonymous', it:'La felicità non è qualcosa che si trova, ma qualcosa che si crea.' },
+  { text:'La diversification est la seule chose gratuite en finance.', author:'Harry Markowitz', it:'La diversificazione è l\'unica cosa gratuita in finanza.' },
+  { text:'Les arbres qui donnent le plus de fruits sont ceux qu\'on taille le plus.', author:'Proverbe français', it:'Gli alberi che danno più frutti sono quelli che si potano di più.' },
+  { text:'Un investisseur a besoin de faire très peu de choses correctement, pourvu qu\'il évite les grandes erreurs.', author:'Warren Buffett', it:'Un investitore ha bisogno di fare pochissime cose correttamente, purché eviti i grandi errori.' },
+  { text:'Les optimistes ont tort aussi souvent que les pessimistes, mais ils vivent plus heureux.', author:'Anonymous', it:'Gli ottimisti hanno torto spesso quanto i pessimisti, ma vivono più felici.' },
+  { text:'Celui qui n\'a pas d\'objectifs ne risque pas de les atteindre.', author:'Sun Tzu', it:'Chi non ha obiettivi non rischia di raggiungerli.' },
+  { text:'Le doute est le commencement de la sagesse.', author:'René Descartes', it:'Il dubbio è l\'inizio della saggezza.' },
+  { text:'Il vaut mieux allumer une bougie que de maudire l\'obscurité.', author:'Confucius', it:'È meglio accendere una candela che maledire l\'oscurità.' },
+  { text:'La perfection n\'est pas de faire plus, mais de ne rien avoir à retirer.', author:'Antoine de Saint-Exupéry', it:'La perfezione non si raggiunge quando non c\'è niente da aggiungere, ma quando non c\'è niente da togliere.' },
+];
+
+const FR_TIPS = [
+  'Ascolta RFI ogni mattina per 10 minuti: la radio è il mezzo migliore per acquisire l\'intonazione autentica.',
+  'Studia una parola di finance al giorno: in un anno conoscerai 365 termini specialistici.',
+  'Usa il metodo "shadowing": ripeti ad alta voce ciò che senti in un podcast francese, imitando ritmo e intonazione.',
+  'Scrivi ogni giorno 3 frasi in francese nel tuo diario o su un\'app: la produzione attiva consolida la grammatica.',
+  'Guarda le notizie su France 24 con i sottotitoli in francese: attiva la mente su registri formali.',
+  'Impara le collocazioni, non le singole parole: "prendre une décision" non "faire une décision".',
+  'La liaison è fondamentale: "vous avez" si pronuncia "vou-zavez". Allenati sulle liaison più comuni.',
+  'Il condizionale è usatissimo nel linguaggio professionale per ammorbidire le richieste: "Je souhaiterais..." invece di "Je veux...".',
+  'Usa Anki con mazzi di francese finance: la ripetizione spaziata è il metodo più efficiente per memorizzare.',
+  'Leggi un articolo di Les Échos o Le Monde ogni giorno: sottolinea 5 parole nuove e cercale nel contesto.',
+  'I verbi pronominali sono un punto critico: "se rendre compte", "s\'en tenir à", "s\'avérer". Imparane uno al giorno.',
+  'Il subjuntif (subjonctif) si usa molto più in francese che in italiano: allenati con "il faut que", "bien que", "afin que".',
+  'Tieni un "carnet de vocabulaire" suddiviso per temi: finance, réunions, négociations, vie quotidienne.',
+  'Impara le espressioni idiomatiche finance: "avoir le vent en poupe" (andare a gonfie vele), "mettre la clé sous la porte" (chiudere i battenti).',
+  'Pratica la comprensione orale con podcast come "France Culture – Les enjeux économiques" o "BFM Business".',
+  'Non aver paura degli errori: i francesi apprezzano chi prova a parlare la loro lingua, anche imperfettamente.',
+  'Il "ne" nella negazione è spesso omesso nel parlato: "Je sais pas" invece di "Je ne sais pas". Riconoscilo ma evitalo nello scritto formale.',
+  'Studia le preposizioni con i verbi: "parler de", "s\'occuper de", "répondre à". Sono imprevedibili e vanno memorizzate caso per caso.',
+  'Usa Reverso Context per vedere come una parola viene usata in frasi reali, non solo la definizione.',
+  'Impara le abbreviazioni tipiche degli email aziendali francesi: "Cdt" (Cordialement), "Ci-joint" (in allegato), "Veuillez trouver ci-dessous" (troverete qui di seguito).',
+  'La "politesse" è fondamentale in Francia: inizia ogni email con "Monsieur/Madame" e concludi con una formula di saluto elaborata.',
+  'Conosci la differenza tra "tutoyer" e "vouvoyer": in contesto professionale, usa sempre "vous" finché non ti invitano a usare "tu".',
+  'Impara i numeri grandi ad alta voce: "un milliard" (1 miliardo), "cent millions" (100 milioni). Cruciale nelle riunioni finanziarie.',
+  'Allenati a leggere i grafici in francese: "en hausse" (in rialzo), "en baisse" (in ribasso), "en stagnation", "en forte progression".',
+  'Studia le "faux amis": "actuellement" = attualmente (non "attualmente"), "éventuellement" = possibilmente (non "eventualmente").',
+  'Registra te stesso che parli francese e riascolta: noterai errori di pronuncia che non percepisci in tempo reale.',
+  'Il francese ama i nominali: "une hausse des taux" invece di "les taux ont augmenté". Studia le costruzioni nominali formali.',
+  'Partecipa a tandem linguistici online con madrelingua francesi: Tandem, HelloTalk, Speaky.',
+  'Impara i connettivi logici: "néanmoins", "toutefois", "cependant", "en revanche", "or". Rendono il tuo francese molto più sofisticato.',
+  'Guarda film o serie francesi con sottotitoli in francese (non italiano): "Les Revenants", "Lupin", "Baron Noir" per il lessico politico.',
+  'Nell\'email professionale francese, mai iniziare con "Bonjour [nome]": è troppo informale. Usa "Madame/Monsieur" o al massimo "Chère [nome]" se vi conoscete bene.',
+  'Impara la grammatica dei prezzi: "cela coûte vingt euros" non "vingt euros coûte". Ordine degli elementi nei prezzi.',
+  'Il "on" è usatissimo come pronome generico al posto di "nous" nel parlato: "On va à la réunion" = "Andiamo alla riunione".',
+  'Studia le differenze tra "faire" e "rendre": "rendre service" (fare un favore), "rendre compte" (riferire), "se rendre compte" (rendersi conto).',
+  'Conosci i registri linguistici: soutenu (formale), courant (standard), familier (familiare), argotique (gergale). Scegli il registro giusto per ogni contesto.',
+  'Allenati sui numeri ordinali in francese: "premier trimestre", "deuxième semestre", "troisième trimestre". Essenziali nei report finanziari.',
+  'Impara le espressioni per strutturare un intervento in riunione: "Pour commencer", "D\'une part... d\'autre part", "En définitive", "Pour conclure".',
+  'Studia le locuzioni temporali del business francese: "à court terme", "à moyen terme", "à long terme", "dans les meilleurs délais".',
+  'Leggi le relazioni annuali di aziende del CAC 40 in francese: LVMH, BNP Paribas, TotalEnergies. Lessico autentico e aggiornato.',
+  'La liaison obbligatoria: "les_enfants", "nous_avons", "ils_ont". Impara le regole e pratica ogni giorno con un testo ad alta voce.',
+];
+
+// --- Helpers ---
+function dayOfYear(){
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now - start;
+  return Math.floor(diff / 86400000);
+}
+
+function frDateString(){
+  const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const d = new Date();
+  return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function getFrStreak(){
+  return state.frStreak || {lastDate:'', count:0};
+}
+
+function updateFrStreak(){
+  const today = todayISO();
+  const s = getFrStreak();
+  if(s.lastDate === today) return s;
+  const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yStr = yesterday.toISOString().slice(0,10);
+  if(s.lastDate === yStr){
+    state.frStreak = {lastDate: today, count: (s.count||0)+1};
+  } else {
+    state.frStreak = {lastDate: today, count: 1};
+  }
+  save();
+  return state.frStreak;
+}
+
+function getTodayFR(){
+  const d = dayOfYear();
+  const mot = FR_WORDS[d % FR_WORDS.length];
+  // pick 5 words different from mot
+  const pool = FR_WORDS.filter(w => w.word !== mot.word);
+  const words5 = [];
+  for(let i=0;i<5;i++) words5.push(pool[(d*7 + i*13) % pool.length]);
+  const quote = FR_QUOTES[d % FR_QUOTES.length];
+  const tip = FR_TIPS[d % FR_TIPS.length];
+  return {mot, words5, quote, tip};
+}
+
+// --- Exercise state ---
+let frExState = null;
+
+function frBuildExercises(mot, words5){
+  const allWords = [mot, ...words5];
+  const exercises = [];
+
+  // Type A: FR → IT (4 choices)
+  const q1word = allWords[0];
+  const wrongsA = FR_WORDS.filter(w=>w.word!==q1word.word).sort(()=>Math.random()-.5).slice(0,3);
+  const optionsA = [q1word, ...wrongsA].sort(()=>Math.random()-.5);
+  exercises.push({
+    type:'A',
+    question: `Quale traduzione corrisponde a: <strong style="color:var(--accent)">${q1word.word}</strong>?`,
+    options: optionsA.map(w=>w.it),
+    correct: optionsA.findIndex(w=>w.word===q1word.word)
+  });
+
+  // Type B: IT → FR (4 choices)
+  const q2word = allWords[1];
+  const wrongsB = FR_WORDS.filter(w=>w.word!==q2word.word).sort(()=>Math.random()-.5).slice(0,3);
+  const optionsB = [q2word, ...wrongsB].sort(()=>Math.random()-.5);
+  exercises.push({
+    type:'B',
+    question: `Come si dice in francese: <strong style="color:var(--gold)">${q2word.it}</strong>?`,
+    options: optionsB.map(w=>w.word),
+    correct: optionsB.findIndex(w=>w.word===q2word.word)
+  });
+
+  // Type C: completa la frase
+  const q3word = allWords[2];
+  const blank = q3word.sentence.replace(q3word.word, '_____');
+  const wrongsC = FR_WORDS.filter(w=>w.word!==q3word.word).sort(()=>Math.random()-.5).slice(0,3);
+  const optionsC = [q3word, ...wrongsC].sort(()=>Math.random()-.5);
+  exercises.push({
+    type:'C',
+    question: `Completa la frase: <em style="color:var(--muted2)">"${blank}"</em>`,
+    options: optionsC.map(w=>w.word),
+    correct: optionsC.findIndex(w=>w.word===q3word.word)
+  });
+
+  return exercises;
+}
+
+function renderFrDaily(){
+  const streak = updateFrStreak();
+  const {mot, words5, quote, tip} = getTodayFR();
+
+  // Header
+  document.getElementById('fr-date-label').textContent = frDateString();
+  document.getElementById('fr-streak-badge').textContent = `🔥 ${streak.count} jour${streak.count!==1?'s':''}`;
+
+  // Mot du jour
+  document.getElementById('fr-mot-word').textContent = mot.word;
+  document.getElementById('fr-mot-genre').textContent = mot.genre;
+  document.getElementById('fr-mot-ipa').textContent = `/${mot.ipa}/`;
+  document.getElementById('fr-mot-it').textContent = mot.it;
+  const sentEl = document.getElementById('fr-mot-sentence');
+  sentEl.innerHTML = mot.sentence + '<em id="fr-mot-sentence-it"></em>';
+  document.getElementById('fr-mot-sentence-it').textContent = mot.sentenceIt;
+  document.getElementById('fr-mot-fact').textContent = '💡 ' + mot.fact;
+
+  // 5 Vocaboli
+  const grid = document.getElementById('fr-vocab-grid');
+  grid.innerHTML = words5.map((w,i)=>`
+    <div class="fr-vcard" id="fr-vc-${i}" onclick="frRevealCard(${i})">
+      <div class="vc-word">${w.word}</div>
+      <div class="vc-cat">${w.cat} · ${w.level}</div>
+      <div class="vc-it">${w.it}</div>
+      <div class="vc-hint" style="display:block" id="fr-vc-hint-${i}">tocca</div>
+    </div>`).join('');
+
+  // Exercise
+  frExState = {
+    exercises: frBuildExercises(mot, words5),
+    current: 0,
+    score: 0,
+    answered: false
+  };
+  frRenderExercise();
+
+  // Citation
+  document.getElementById('fr-citation-text').textContent = `"${quote.text}"`;
+  document.getElementById('fr-citation-author').textContent = `— ${quote.author}`;
+  document.getElementById('fr-citation-it').textContent = quote.it;
+
+  // Tip
+  document.getElementById('fr-tip-box').textContent = tip;
+}
+
+function frRevealCard(i){
+  const card = document.getElementById('fr-vc-'+i);
+  const hint = document.getElementById('fr-vc-hint-'+i);
+  if(!card) return;
+  card.classList.toggle('revealed');
+  if(hint) hint.style.display = card.classList.contains('revealed') ? 'none' : 'block';
+}
+
+function frRenderExercise(){
+  if(!frExState) return;
+  const {exercises, current, score} = frExState;
+
+  // Dots
+  const dotsEl = document.getElementById('fr-ex-dots');
+  dotsEl.innerHTML = exercises.map((_,i)=>`<div class="fr-ex-dot ${i<current?'done':i===current?'active':''}"></div>`).join('');
+
+  if(current >= exercises.length){
+    // Score screen
+    const pct = Math.round(score/exercises.length*100);
+    const color = pct===100?'var(--green)':pct>=66?'var(--gold)':'var(--red)';
+    document.getElementById('fr-ex-question').innerHTML = '';
+    document.getElementById('fr-ex-options').innerHTML = '';
+    document.getElementById('fr-ex-feedback').innerHTML = '';
+    const area = document.getElementById('fr-exercise-area');
+    area.innerHTML = `
+      <div class="fr-ex-progress">${exercises.map((_,i)=>`<div class="fr-ex-dot done"></div>`).join('')}</div>
+      <div class="fr-ex-score">
+        <div class="score-num" style="color:${color}">${score}/${exercises.length}</div>
+        <div style="font-size:.85rem;color:var(--muted2);margin:8px 0 16px">${pct===100?'Parfait! 🎉':pct>=66?'Très bien! 👍':'Continue à pratiquer! 💪'}</div>
+        <button class="btn ghost" onclick="frResetExercise()">Riprova</button>
+      </div>`;
+    return;
+  }
+
+  const ex = exercises[current];
+  document.getElementById('fr-ex-question').innerHTML = ex.question;
+  document.getElementById('fr-ex-options').innerHTML = ex.options.map((opt,i)=>
+    `<button class="fr-ex-btn" id="fr-ex-opt-${i}" onclick="frAnswerExercise(${i})">${opt}</button>`
+  ).join('');
+  document.getElementById('fr-ex-feedback').textContent = '';
+  frExState.answered = false;
+}
+
+function frAnswerExercise(idx){
+  if(!frExState || frExState.answered) return;
+  frExState.answered = true;
+  const ex = frExState.exercises[frExState.current];
+  const isCorrect = idx === ex.correct;
+  if(isCorrect) frExState.score++;
+
+  // Color buttons
+  ex.options.forEach((_,i)=>{
+    const btn = document.getElementById('fr-ex-opt-'+i);
+    if(!btn) return;
+    btn.disabled = true;
+    if(i===ex.correct) btn.classList.add('correct');
+    else if(i===idx && !isCorrect) btn.classList.add('wrong');
+  });
+
+  const fb = document.getElementById('fr-ex-feedback');
+  if(fb) fb.innerHTML = isCorrect
+    ? '<span style="color:var(--green);font-weight:700">✓ Correct!</span>'
+    : `<span style="color:var(--red);font-weight:700">✗ Réponse: </span><span style="color:var(--accent)">${ex.options[ex.correct]}</span>`;
+
+  setTimeout(()=>{
+    frExState.current++;
+    frRenderExercise();
+  }, 1400);
+}
+
+function frResetExercise(){
+  const {mot, words5} = getTodayFR();
+  const area = document.getElementById('fr-exercise-area');
+  area.innerHTML = `
+    <div class="fr-ex-progress" id="fr-ex-dots"></div>
+    <div class="fr-ex-question" id="fr-ex-question">Caricamento…</div>
+    <div class="fr-ex-options" id="fr-ex-options"></div>
+    <div id="fr-ex-feedback" style="margin-top:10px;font-size:.82rem;min-height:22px"></div>`;
+  frExState = {
+    exercises: frBuildExercises(mot, words5),
+    current: 0,
+    score: 0,
+    answered: false
+  };
+  frRenderExercise();
+}
+
+async function loadFrNews(){
+  const container = document.getElementById('fr-news-list');
+  if(!container) return;
+  container.innerHTML = '<div style="color:var(--muted2);font-size:.78rem">Carico notizie…</div>';
+
+  const feeds = [
+    'https://www.rfi.fr/fr/rss-actualite-internationale.xml',
+    'https://www.france24.com/fr/rss',
+    'https://www.lemonde.fr/rss/une.xml'
+  ];
+
+  let items = null;
+  for(const feed of feeds){
+    for(const proxy of CORS_PROXIES){
+      try{
+        const res = await fetch(proxy(feed), {cache:'no-store', signal: AbortSignal.timeout(8000)});
+        if(!res.ok) continue;
+        const text = await res.text();
+        if(!text || text.length < 100) continue;
+        const xml = new DOMParser().parseFromString(text, 'text/xml');
+        if(xml.querySelector('parsererror')) continue;
+        const nodes = xml.querySelectorAll('item, entry');
+        if(!nodes.length) continue;
+        items = Array.from(nodes).slice(0,3).map(n=>({
+          title: (n.querySelector('title')?.textContent||'').trim(),
+          link: (n.querySelector('link')?.getAttribute('href') || n.querySelector('link')?.textContent || '').trim(),
+          pubDate: (n.querySelector('pubDate')?.textContent || n.querySelector('updated')?.textContent || '').trim()
+        })).filter(i=>i.title);
+        if(items && items.length) break;
+      }catch(e){ /* try next */ }
+    }
+    if(items && items.length) break;
+  }
+
+  if(!items || !items.length){
+    container.innerHTML = '<div style="color:var(--muted2);font-size:.78rem">Notizie non disponibili. Controlla la connessione.</div>';
+    return;
+  }
+
+  container.innerHTML = items.slice(0,3).map(item=>{
+    const d = item.pubDate ? new Date(item.pubDate) : null;
+    const when = d && !isNaN(d) ? d.toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+    const safeTitle = item.title.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const href = item.link ? `href="${item.link.replace(/"/g,'%22')}" target="_blank" rel="noopener"` : '';
+    return `<div class="fr-news-item">
+      <div class="fr-news-title"><a ${href}>${safeTitle}</a></div>
+      ${when?`<div class="fr-news-time">${when}</div>`:''}
+    </div>`;
+  }).join('');
+}
 </script>
 </body>
 </html>
