@@ -1132,8 +1132,13 @@ const ddToggle = dd.querySelector('.dropdown-toggle');
 const ddMenu = dd.querySelector('.dropdown-menu');
 function positionDropdown(){
   const r = ddToggle.getBoundingClientRect();
+  const menuW = ddMenu.offsetWidth || 220;
   ddMenu.style.top = (r.bottom + 6) + 'px';
-  ddMenu.style.right = (window.innerWidth - r.right) + 'px';
+  ddMenu.style.right = 'auto';
+  // Align right edge of menu to right edge of toggle, clamped so it stays on screen
+  let left = r.right - menuW;
+  left = Math.max(8, Math.min(left, window.innerWidth - menuW - 8));
+  ddMenu.style.left = left + 'px';
 }
 ddToggle.onclick = (e)=>{
   e.stopPropagation();
