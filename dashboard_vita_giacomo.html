@@ -1688,12 +1688,16 @@ function load(){
   return def;
 }
 function save(){
-  // Ensure all fields exist (migration safety)
   const def = defaultState();
   Object.keys(def).forEach(k=>{ if(state[k]===undefined) state[k]=def[k]; });
-  // Always write to localStorage immediately (offline cache)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  // Debounce Firebase push: wait 1.5s after last change to avoid flooding
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) {
+    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED') {
+      setSyncStatus('error');
+      console.warn('localStorage quota esaurita – salvataggio solo su Firebase');
+    }
+  }
   clearTimeout(saveTimer);
   saveTimer = setTimeout(()=>{ pushToFirebase(); }, 1500);
 }
