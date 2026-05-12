@@ -449,20 +449,27 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fl-stat-val{font-size:1.3rem;font-weight:800;color:#fff;font-family:var(--mono);letter-spacing:-1px}
 @media(max-width:700px){.fl-stats-strip{grid-template-columns:repeat(2,1fr)}}
 
-.fl-thought{background:linear-gradient(135deg,rgba(20,29,51,.6),rgba(12,19,34,.8));border:1px solid var(--border);border-radius:8px;padding:13px;transition:border-color .2s}
-.fl-thought:hover{border-color:var(--border2)}
+.fl-thought{background:linear-gradient(135deg,rgba(20,29,51,.5),rgba(12,19,34,.7));border:1px solid var(--border);border-radius:8px;padding:10px 13px;transition:border-color .2s,background .2s;cursor:pointer}
+.fl-thought:hover{border-color:var(--border2);background:linear-gradient(135deg,rgba(20,29,51,.8),rgba(12,19,34,.9))}
 .fl-thought.starred{border-left:3px solid var(--gold)}
-.fl-thought-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
-.fl-thought-title{font-size:.88rem;font-weight:700;color:#fff;line-height:1.3;flex:1}
+.fl-thought.expanded{border-color:var(--border2);cursor:default}
+.fl-thought-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fl-thought-title{font-size:.85rem;font-weight:700;color:#fff;line-height:1.3;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl-thought.expanded .fl-thought-title{white-space:normal;overflow:visible;text-overflow:unset}
 .fl-thought-actions{display:flex;gap:4px;flex-shrink:0}
-.fl-thought-actions button{background:transparent;border:none;cursor:pointer;font-size:.85rem;padding:2px 4px;border-radius:4px;opacity:.5;transition:opacity .15s}
-.fl-thought-actions button:hover{opacity:1}
-.fl-thought-body{font-size:.79rem;color:var(--muted2);line-height:1.5;margin-bottom:8px;white-space:pre-wrap;word-break:break-word}
-.fl-thought-img{width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:8px;cursor:pointer}
-.fl-thought-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fl-thought-actions button{background:transparent;border:none;cursor:pointer;font-size:.82rem;padding:2px 4px;border-radius:4px;opacity:0;transition:opacity .15s}
+.fl-thought:hover .fl-thought-actions button,.fl-thought.expanded .fl-thought-actions button{opacity:.55}
+.fl-thought-actions button:hover{opacity:1!important}
+.fl-thought-body{font-size:.79rem;color:var(--muted2);line-height:1.55;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);white-space:pre-wrap;word-break:break-word;display:none}
+.fl-thought.expanded .fl-thought-body{display:block}
+.fl-thought-img{width:100%;max-height:260px;object-fit:contain;border-radius:6px;margin-top:10px;cursor:zoom-in;display:none;background:rgba(0,0,0,.3)}
+.fl-thought.expanded .fl-thought-img{display:block}
+.fl-thought-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px}
+.fl-thought-chevron{font-size:.7rem;color:var(--muted);flex-shrink:0;transition:transform .2s;margin-left:4px}
+.fl-thought.expanded .fl-thought-chevron{transform:rotate(180deg)}
 .fl-tag-badge{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px}
 .fl-ticker{font-size:.65rem;font-family:var(--mono);color:var(--accent);background:rgba(0,229,255,.08);padding:2px 7px;border-radius:4px;border:1px solid rgba(0,229,255,.2);font-weight:700}
-.fl-thought-date{font-size:.65rem;color:var(--muted);font-family:var(--mono);margin-left:auto}
+.fl-thought-date{font-size:.63rem;color:var(--muted);font-family:var(--mono);margin-left:auto}
 
 .fl-tag-filter-btn{font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;transition:all .15s}
 .fl-tag-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.08)}
@@ -1307,7 +1314,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <h2 style="margin:0"><span class="ico">📋</span> Feed</h2>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="fl-tag-filters"></div>
       </div>
-      <div id="fl-thoughts-feed" style="overflow-y:auto;max-height:480px;display:flex;flex-direction:column;gap:10px"></div>
+      <div id="fl-thoughts-feed" style="overflow-y:auto;max-height:520px;display:flex;flex-direction:column;gap:6px"></div>
     </div>
   </div>
 
@@ -3441,6 +3448,12 @@ function saveEditThought(id){
   save(); renderFinanceLab();
 }
 
+function toggleThoughtExpand(id, e){
+  if(e && e.target.closest('.fl-thought-actions')) return;
+  const el = document.getElementById('fl-t-'+id);
+  if(el) el.classList.toggle('expanded');
+}
+
 function toggleThoughtStar(id){
   const t = (state.flThoughts||[]).find(t=>t.id===id);
   if(t){ t.starred = !t.starred; save(); renderFinanceLab(); }
@@ -3543,8 +3556,9 @@ function renderFinanceLab(){
       feed.innerHTML = filtered.map(t=>{
         const localImg = (()=>{ try{ return localStorage.getItem('fl_img_'+t.id)||''; }catch(e){ return ''; } })();
         const imgSrc = localImg || (t.img||'');
+        const hasDetail = !!(t.body || imgSrc);
         return `
-        <div class="fl-thought${t.starred?' starred':''}" id="fl-t-${t.id}">
+        <div class="fl-thought${t.starred?' starred':''}" id="fl-t-${t.id}" onclick="toggleThoughtExpand('${t.id}',event)">
           <div class="fl-thought-header">
             <div class="fl-thought-title">${escapeHtml(t.title)}</div>
             <div class="fl-thought-actions">
@@ -3552,14 +3566,15 @@ function renderFinanceLab(){
               <button onclick="startEditThought('${t.id}')" title="Modifica">✏️</button>
               <button onclick="deleteThought('${t.id}')" title="Elimina">🗑️</button>
             </div>
+            ${hasDetail?`<span class="fl-thought-chevron">▾</span>`:''}
           </div>
-          ${imgSrc?`<img class="fl-thought-img" src="${escapeHtml(imgSrc)}" alt="chart" onerror="this.style.display='none'" onclick="this.requestFullscreen?this.requestFullscreen():window.open('${escapeHtml(imgSrc)}','_blank')"/>`:''}
-          ${t.body?`<div class="fl-thought-body">${escapeHtml(t.body)}</div>`:''}
           <div class="fl-thought-meta">
             <span class="fl-tag-badge" style="color:${FL_TAG_COLORS[t.tag]||'#8a9ab8'};background:${FL_TAG_COLORS[t.tag]||'#8a9ab8'}18;border:1px solid ${FL_TAG_COLORS[t.tag]||'#8a9ab8'}30">${FL_TAG_LABELS[t.tag]||t.tag}</span>
             ${t.ticker?`<span class="fl-ticker">${escapeHtml(t.ticker)}</span>`:''}
             <span class="fl-thought-date">${t.date}</span>
           </div>
+          ${t.body?`<div class="fl-thought-body">${escapeHtml(t.body)}</div>`:''}
+          ${imgSrc?`<img class="fl-thought-img" src="${escapeHtml(imgSrc)}" alt="chart" onerror="this.style.display='none'" onclick="event.stopPropagation();this.requestFullscreen?this.requestFullscreen():window.open(this.src,'_blank')"/>`:''}
         </div>`; }).join('');
     }
   }
