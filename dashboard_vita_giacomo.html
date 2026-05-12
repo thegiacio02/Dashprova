@@ -26,11 +26,11 @@
   --mono:'JetBrains Mono','SF Mono','Monaco','Inconsolata','Roboto Mono','Courier New',monospace;
 }
 [data-theme="light"]{
-  --bg:#f0f4fb;--surface:#ffffff;--surface2:#e8eef8;--border:#d0daea;--border2:#b8c6dc;
-  --text:#18253d;--muted:#7a8aaa;--muted2:#4e617f;
-  --green:#059669;--yellow:#d97706;--red:#dc2626;
-  --blue:#2563eb;--teal:#0891b2;--cyan:#0077aa;--purple:#7c3aed;--gold:#b45309;--pink:#db2777;
-  --accent:#0077aa;--accent2:#059669;
+  --bg:#eaf0f8;--surface:#ffffff;--surface2:#dde6f2;--border:#b8c5dc;--border2:#9aabc6;
+  --text:#0a1426;--muted:#566685;--muted2:#2a3855;
+  --green:#047857;--yellow:#b45309;--red:#b91c1c;
+  --blue:#1d4ed8;--teal:#0e7490;--cyan:#005f87;--purple:#6d28d9;--gold:#92400e;--pink:#be185d;
+  --accent:#005f87;--accent2:#047857;
 }
 html{scroll-behavior:smooth;background:var(--bg);-webkit-text-size-adjust:100%}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;background:
@@ -542,6 +542,34 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 [data-theme="light"] .btn.ghost{background:transparent}
 [data-theme="light"] .sync-badge{color:var(--muted2)}
 [data-theme="light"] .fl-thought-chevron{color:var(--muted)}
+/* Override ALL hardcoded white text in light mode */
+[data-theme="light"] header h1,
+[data-theme="light"] .habit-info .h-name,
+[data-theme="light"] .goal-head .title,
+[data-theme="light"] .goal-progress .vals,
+[data-theme="light"] .contact-info .c-name,
+[data-theme="light"] .decision-head .d-title,
+[data-theme="light"] .wf-temps,
+[data-theme="light"] .quote-label,
+[data-theme="light"] .quote-price,
+[data-theme="light"] .reminder-title,
+[data-theme="light"] .insight-text strong,
+[data-theme="light"] .stat-value,
+[data-theme="light"] .kpi .v,
+[data-theme="light"] .bar-row .lbl .name,
+[data-theme="light"] .book .title,
+[data-theme="light"] .todo-content .text,
+[data-theme="light"] .timer-display,
+[data-theme="light"] .mot-word,
+[data-theme="light"] .fr-vcard .vc-word,
+[data-theme="light"] .fr-ex-question,
+[data-theme="light"] .fl-stat-val,
+[data-theme="light"] #dist-avg{color:var(--text)!important}
+[data-theme="light"] .weather-temp{color:var(--text);background:none;-webkit-text-fill-color:var(--text)}
+[data-theme="light"] .dropdown-toggle:hover,
+[data-theme="light"] .dropdown.open .dropdown-toggle{color:var(--accent)}
+[data-theme="light"] .reminder-item .reminder-meta,
+[data-theme="light"] .reminder-item small{color:var(--muted)}
 </style>
 </head>
 <body>
