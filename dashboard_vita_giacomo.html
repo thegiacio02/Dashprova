@@ -3956,18 +3956,36 @@ function openRichForField(fieldId, title, autoSaveFn) {
 
 function openRichForEditThought(id) {
   openRichForField('fl-edit-body-'+id, 'Note del pensiero', () => {
-    const el = document.getElementById('fl-edit-body-'+id);
-    if(!el) return;
     const t = (state.flThoughts||[]).find(t=>t.id===id);
-    if(t){ t.body = el.value; save(); }
+    if(!t) return;
+    const g = s => document.getElementById(s);
+    const body = g('fl-edit-body-'+id);
+    if(body) t.body = body.value;
+    const title = g('fl-edit-title-'+id);
+    if(title && title.value.trim()) t.title = title.value.trim();
+    const cat = g('fl-edit-cat-'+id);
+    if(cat) t.cat = cat.value;
+    const src = g('fl-edit-source-'+id);
+    if(src) t.source = src.value.trim();
+    save();
+    renderFinanceLab();
   });
 }
 function openRichForEditConcept(id) {
   openRichForField('fl-cedit-body-'+id, 'Spiegazione concetto', () => {
-    const el = document.getElementById('fl-cedit-body-'+id);
-    if(!el) return;
     const c = (state.flConcepts||[]).find(c=>c.id===id);
-    if(c){ c.body = el.value; save(); }
+    if(!c) return;
+    const g = s => document.getElementById(s);
+    const body = g('fl-cedit-body-'+id);
+    if(body) c.body = body.value;
+    const name = g('fl-cedit-name-'+id);
+    if(name && name.value.trim()) c.name = name.value.trim();
+    const cat = g('fl-cedit-cat-'+id);
+    if(cat) c.cat = cat.value;
+    const src = g('fl-cedit-source-'+id);
+    if(src) c.source = src.value.trim();
+    save();
+    renderFinanceLab();
   });
 }
 
