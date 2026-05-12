@@ -3675,7 +3675,7 @@ function renderConcepts(){
         </div>
       </div>
       <div class="fl-concept-body">
-        ${c.body?.trim().startsWith('<') ? c.body : escapeHtml(c.body||'')}
+        ${looksLikeHtml(c.body) ? c.body : escapeHtml(c.body||'')}
         ${c.source?`<div class="fl-concept-source">📖 ${escapeHtml(c.source)}</div>`:''}
       </div>
     </div>`).join('');
@@ -3782,7 +3782,7 @@ function renderFinanceLab(){
             ${t.ticker?`<span class="fl-ticker">${escapeHtml(t.ticker)}</span>`:''}
             <span class="fl-thought-date">${t.date}</span>
           </div>
-          ${t.body?`<div class="fl-thought-body">${t.body.trim().startsWith('<') ? t.body : escapeHtml(t.body)}</div>`:''}
+          ${t.body?`<div class="fl-thought-body">${looksLikeHtml(t.body) ? t.body : escapeHtml(t.body)}</div>`:''}
           ${imgSrc?`<img class="fl-thought-img" src="${escapeHtml(imgSrc)}" alt="chart" onerror="this.style.display='none'" onclick="event.stopPropagation();this.requestFullscreen?this.requestFullscreen():window.open(this.src,'_blank')"/>`:''}
         </div>`; }).join('');
     }
@@ -3836,7 +3836,7 @@ function openRichModal(htmlOrText, onSave, title) {
   if(!c) return;
   if(!htmlOrText) {
     c.innerHTML = '';
-  } else if(!htmlOrText.trim().startsWith('<')) {
+  } else if(!looksLikeHtml(htmlOrText)) {
     c.innerHTML = htmlOrText
       .replace(/&/g,'&amp;')
       .replace(/</g,'&lt;')
@@ -3939,6 +3939,10 @@ function rUpdateActiveState(){
       btn.classList.toggle('active', on);
     }
   });
+}
+
+function looksLikeHtml(s){
+  return typeof s==='string' && /<\/?[a-z][^>]*>/i.test(s);
 }
 
 function openRichForField(fieldId, title, autoSaveFn) {
