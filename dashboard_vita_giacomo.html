@@ -3566,7 +3566,7 @@ function saveEditThought(id){
 }
 
 function toggleThoughtExpand(id, e){
-  if(e && e.target.closest('.fl-thought-actions')) return;
+  if(e && e.target.tagName==='BUTTON') return;
   const el = document.getElementById('fl-t-'+id);
   if(el) el.classList.toggle('expanded');
 }
@@ -3617,8 +3617,8 @@ function renderConcepts(){
   }
   const CAT_LABELS = {valuation:'📊 Valuation',macro:'🌍 Macro',risk:'⚠️ Risk',products:'🧩 Products',strategy:'♟️ Strategy',accounting:'🧾 Accounting',altro:'📌 Altro'};
   list.innerHTML = concepts.map(c=>`
-    <div class="fl-concept" id="fl-concept-${c.id}" onclick="toggleConceptExpand('${c.id}')">
-      <div class="fl-concept-header">
+    <div class="fl-concept" id="fl-concept-${c.id}">
+      <div class="fl-concept-header" onclick="toggleConceptExpand('${c.id}')" style="cursor:pointer">
         <span class="fl-concept-name">${escapeHtml(c.name)}</span>
         <div style="display:flex;gap:6px;align-items:center">
           <span class="fl-concept-cat">${CAT_LABELS[c.cat]||c.cat}</span>
@@ -3715,8 +3715,8 @@ function renderFinanceLab(){
         const imgSrc = localImg || (t.img||'');
         const hasDetail = !!(t.body || imgSrc);
         return `
-        <div class="fl-thought${t.starred?' starred':''}" id="fl-t-${t.id}" onclick="toggleThoughtExpand('${t.id}',event)">
-          <div class="fl-thought-header">
+        <div class="fl-thought${t.starred?' starred':''}" id="fl-t-${t.id}">
+          <div class="fl-thought-header" onclick="toggleThoughtExpand('${t.id}',event)" style="cursor:pointer">
             <div class="fl-thought-title">${escapeHtml(t.title)}</div>
             <div class="fl-thought-actions">
               <button onclick="toggleThoughtStar('${t.id}')" title="${t.starred?'Rimuovi stella':'Segna come importante'}">${t.starred?'⭐':'☆'}</button>
