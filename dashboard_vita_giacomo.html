@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <meta name="theme-color" content="#05080f"/>
+<script>try{var _t=localStorage.getItem('dash_theme');if(_t)document.documentElement.dataset.theme=_t;}catch(e){}</script>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
@@ -23,6 +24,13 @@
   --blue:#3b82f6;--teal:#22d3ee;--cyan:#00e5ff;--purple:#a855f7;--gold:#ffb800;--pink:#ec4899;
   --accent:#00e5ff;--accent2:#00ff9d;
   --mono:'JetBrains Mono','SF Mono','Monaco','Inconsolata','Roboto Mono','Courier New',monospace;
+}
+[data-theme="light"]{
+  --bg:#f0f4fb;--surface:#ffffff;--surface2:#e8eef8;--border:#d0daea;--border2:#b8c6dc;
+  --text:#18253d;--muted:#7a8aaa;--muted2:#4e617f;
+  --green:#059669;--yellow:#d97706;--red:#dc2626;
+  --blue:#2563eb;--teal:#0891b2;--cyan:#0077aa;--purple:#7c3aed;--gold:#b45309;--pink:#db2777;
+  --accent:#0077aa;--accent2:#059669;
 }
 html{scroll-behavior:smooth;background:var(--bg);-webkit-text-size-adjust:100%}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;background:
@@ -489,6 +497,51 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fl-edit-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,229,255,.1)}
 .fl-img-drop{border:2px dashed var(--border2);border-radius:8px;padding:18px 14px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(12,19,34,.4);min-height:100px;display:flex;align-items:center;justify-content:center}
 .fl-img-drop:hover,.fl-img-drop.drag-over{border-color:var(--accent);background:rgba(0,229,255,.04)}
+
+/* ── LIGHT THEME OVERRIDES ── */
+[data-theme="light"] html{background:var(--bg)}
+[data-theme="light"] body{background:radial-gradient(ellipse at top,rgba(0,119,170,.06),transparent 60%),radial-gradient(ellipse at bottom right,rgba(124,58,237,.04),transparent 60%),var(--bg)}
+[data-theme="light"] body::before{background-image:linear-gradient(rgba(0,119,170,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,119,170,.04) 1px,transparent 1px)}
+[data-theme="light"] header{background:rgba(240,244,251,.96)}
+[data-theme="light"] header::after{opacity:.25}
+[data-theme="light"] nav.tabs button:hover{color:var(--text)}
+[data-theme="light"] nav.tabs button.active{text-shadow:none}
+[data-theme="light"] .card{background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px var(--border)}
+[data-theme="light"] .card:hover{box-shadow:0 0 0 1px rgba(0,119,170,.2),0 6px 20px rgba(0,0,0,.08)}
+[data-theme="light"] .card:hover::before{opacity:.5}
+[data-theme="light"] .card h2{color:var(--text)}
+[data-theme="light"] input,[data-theme="light"] select,[data-theme="light"] textarea{background:var(--surface2);color:var(--text);border-color:var(--border)}
+[data-theme="light"] .dropdown-menu{background:rgba(255,255,255,.99);box-shadow:0 12px 32px rgba(0,0,0,.14),0 0 0 1px var(--border)}
+[data-theme="light"] .dropdown-menu button{color:var(--text)}
+[data-theme="light"] .dropdown-menu button:hover{background:var(--surface2);color:var(--accent)}
+[data-theme="light"] .cornice-switch{background:var(--surface2)}
+[data-theme="light"] .habit-row,[data-theme="light"] .habit-today-card{background:var(--surface2)}
+[data-theme="light"] .habit-cell{background:var(--surface);border-color:var(--border)}
+[data-theme="light"] .habit-today-btn{background:var(--surface2);color:var(--text)}
+[data-theme="light"] .goal-card,[data-theme="light"] .contact-card,[data-theme="light"] .decision-card{background:var(--surface2)}
+[data-theme="light"] .decision-review-form{background:var(--surface)}
+[data-theme="light"] .wf-day{background:var(--surface2)}
+[data-theme="light"] .todo-item.overdue:not(.done){background:rgba(220,38,38,.06)}
+[data-theme="light"] .news-skeleton{background:var(--surface2)}
+[data-theme="light"] .reminder-item{background:var(--surface2)}
+[data-theme="light"] .fl-stats-strip{background:var(--border)}
+[data-theme="light"] .fl-stat{background:var(--surface)}
+[data-theme="light"] .fl-thought{background:var(--surface2)}
+[data-theme="light"] .fl-thought:hover,[data-theme="light"] .fl-thought.expanded{background:var(--surface)}
+[data-theme="light"] .fl-thought-title{color:var(--text)}
+[data-theme="light"] .fl-thought-body{color:var(--muted2)}
+[data-theme="light"] .fl-concept{background:var(--surface2)}
+[data-theme="light"] .fl-concept.expanded{background:var(--surface)}
+[data-theme="light"] .fl-concept-name{color:var(--text)}
+[data-theme="light"] .fl-edit-input{background:var(--surface2);color:var(--text)}
+[data-theme="light"] .fl-img-drop{background:var(--surface2)}
+[data-theme="light"] .fl-img-drop:hover,[data-theme="light"] .fl-img-drop.drag-over{background:rgba(0,119,170,.04)}
+[data-theme="light"] .card-badge{background:rgba(0,119,170,.1);color:var(--accent);border-color:rgba(0,119,170,.2)}
+[data-theme="light"] .card-badge.warn{background:rgba(180,83,9,.1);color:var(--gold);border-color:rgba(180,83,9,.25)}
+[data-theme="light"] .card-badge.urgent{background:rgba(220,38,38,.1);color:var(--red);border-color:rgba(220,38,38,.3)}
+[data-theme="light"] .btn.ghost{background:transparent}
+[data-theme="light"] .sync-badge{color:var(--muted2)}
+[data-theme="light"] .fl-thought-chevron{color:var(--muted)}
 </style>
 </head>
 <body>
@@ -498,7 +551,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <h1>📊 Il mio sistema personale
       <span class="sub">Giacomo · Maggio 2026 → Novembre 2026</span>
     </h1>
-    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button id="theme-toggle" onclick="toggleTheme()" title="Cambia tema" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 11px;border-radius:8px;cursor:pointer;font-size:.85rem;line-height:1;transition:all .15s">☀️</button>
       <div id="sync-status" class="sync-badge sync-idle" title="Stato sincronizzazione Firebase">⬤ —</div>
     </div>
   </div>
@@ -1370,6 +1424,20 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 </footer>
 
 <script>
+// ============ THEME ============
+function applyTheme(t){
+  document.documentElement.dataset.theme = t;
+  const btn = document.getElementById('theme-toggle');
+  if(btn) btn.textContent = t==='light' ? '🌙' : '☀️';
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', t==='light' ? '#f0f4fb' : '#05080f');
+}
+function toggleTheme(){
+  const next = (document.documentElement.dataset.theme||'dark')==='dark' ? 'light' : 'dark';
+  localStorage.setItem('dash_theme', next);
+  applyTheme(next);
+}
+(function(){ applyTheme(localStorage.getItem('dash_theme')||'dark'); })();
+
 // ============ DATA MODEL ============
 const STORAGE_KEY = 'giacomo_life_dashboard_v1';
 const FB_URL = 'https://dashboard-vita-c9599-default-rtdb.europe-west1.firebasedatabase.app/data.json';
