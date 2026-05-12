@@ -3951,10 +3951,20 @@ function openRichForField(fieldId, title, autoSaveFn) {
 }
 
 function openRichForEditThought(id) {
-  openRichForField('fl-edit-body-'+id, 'Note del pensiero', () => saveEditThought(id));
+  openRichForField('fl-edit-body-'+id, 'Note del pensiero', () => {
+    const el = document.getElementById('fl-edit-body-'+id);
+    if(!el) return;
+    const t = (state.flThoughts||[]).find(t=>t.id===id);
+    if(t){ t.body = el.value; save(); }
+  });
 }
 function openRichForEditConcept(id) {
-  openRichForField('fl-cedit-body-'+id, 'Spiegazione concetto', () => saveEditConcept(id));
+  openRichForField('fl-cedit-body-'+id, 'Spiegazione concetto', () => {
+    const el = document.getElementById('fl-cedit-body-'+id);
+    if(!el) return;
+    const c = (state.flConcepts||[]).find(c=>c.id===id);
+    if(c){ c.body = el.value; save(); }
+  });
 }
 
 // Track selection while editor is open
