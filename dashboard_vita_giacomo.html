@@ -591,6 +591,40 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 [data-theme="light"] .dropdown.open .dropdown-toggle{color:var(--accent)}
 [data-theme="light"] .reminder-item .reminder-meta,
 [data-theme="light"] .reminder-item small{color:var(--muted)}
+
+/* ── RICH EDITOR MODAL ── */
+#rich-modal{position:fixed;inset:0;z-index:999999;display:none;flex-direction:column;background:#0a0d14}
+#rich-modal-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:#000;border-bottom:1px solid #222;flex-shrink:0;gap:12px}
+#rich-modal-title{font-size:.78rem;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:1px;font-family:var(--mono)}
+#rich-modal-actions{display:flex;gap:8px}
+#rich-toolbar{background:#111;border-bottom:1px solid #222;padding:8px 16px;display:flex;gap:3px;flex-wrap:wrap;align-items:center;flex-shrink:0}
+.rtb{background:transparent;border:1px solid transparent;color:#aaa;padding:5px 9px;border-radius:4px;cursor:pointer;font-size:.78rem;font-weight:700;line-height:1;transition:all .12s;font-family:inherit}
+.rtb:hover{background:#222;color:#fff;border-color:#333}
+.rtb.active{background:#333;color:#fff;border-color:#555}
+.rtb-sep{width:1px;background:#333;height:20px;margin:0 6px;align-self:center;flex-shrink:0}
+.rtb-color{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;flex-shrink:0;transition:border-color .12s;display:inline-block}
+.rtb-color:hover,.rtb-color.sel{border-color:#fff!important}
+.rtb-select{background:#1a1a1a;border:1px solid #333;color:#ccc;padding:4px 7px;border-radius:4px;font-size:.72rem;cursor:pointer;font-family:var(--mono);height:28px}
+#rich-body-wrap{flex:1;overflow-y:auto;padding:48px 24px}
+#rich-content{max-width:820px;margin:0 auto;color:#e8eef9;font-size:1rem;line-height:1.9;outline:none;min-height:60vh;caret-color:#00e5ff}
+#rich-content:empty:before{content:attr(data-placeholder);color:#444;pointer-events:none}
+#rich-content h1{font-size:1.6rem;font-weight:800;color:#fff;margin:1.2em 0 .4em;letter-spacing:-.5px}
+#rich-content h2{font-size:1.15rem;font-weight:700;color:#e0e8f8;margin:1em 0 .3em}
+#rich-content ul,#rich-content ol{padding-left:1.6em;margin:.4em 0}
+#rich-content li{margin:.2em 0}
+#rich-content b,#rich-content strong{font-weight:800}
+#rich-content blockquote{border-left:3px solid var(--accent);margin:.8em 0;padding:.4em 1em;color:var(--muted2);font-style:italic}
+[data-theme="light"] #rich-modal{background:#f8faff}
+[data-theme="light"] #rich-modal-bar{background:#000}
+[data-theme="light"] #rich-toolbar{background:#f0f0f0;border-color:#ddd}
+[data-theme="light"] .rtb{color:#444}
+[data-theme="light"] .rtb:hover{background:#e0e0e0;color:#000;border-color:#ccc}
+[data-theme="light"] .rtb.active{background:#d0d0d0;color:#000}
+[data-theme="light"] .rtb-sep{background:#ccc}
+[data-theme="light"] .rtb-select{background:#fff;border-color:#ccc;color:#333}
+[data-theme="light"] #rich-content{color:#0a1426;caret-color:#cc0033}
+[data-theme="light"] #rich-content h1,[data-theme="light"] #rich-content h2{color:#000}
+[data-theme="light"] #rich-content:empty:before{color:#aaa}
 </style>
 </head>
 <body>
@@ -1362,7 +1396,10 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <input type="text" id="fl-title" placeholder="es. BCE potrebbe tagliare prima del previsto…"/>
       </div>
       <div class="field">
-        <label>Note estese</label>
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          Note estese
+          <button type="button" class="btn ghost sm" style="font-size:.65rem;padding:3px 9px" onclick="openRichForField('fl-body','Note del pensiero')">📝 Editor avanzato</button>
+        </label>
         <textarea id="fl-body" rows="4" placeholder="Sviluppa il pensiero, dati, ragionamento..."></textarea>
       </div>
       <div class="row">
@@ -1431,7 +1468,10 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <input type="text" id="fl-concept-name" placeholder="es. Duration, Carry Trade, WACC…"/>
       </div>
       <div class="field">
-        <label>Spiegazione con parole mie</label>
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          Spiegazione con parole mie
+          <button type="button" class="btn ghost sm" style="font-size:.65rem;padding:3px 9px" onclick="openRichForField('fl-concept-body','Spiegazione concetto')">📝 Editor avanzato</button>
+        </label>
         <textarea id="fl-concept-body" rows="4" placeholder="Come lo spiegherei a qualcuno che non sa nulla di finanza…"></textarea>
       </div>
       <div class="row">
@@ -3502,6 +3542,10 @@ function startEditThought(id){
   el.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:8px" onclick="event.stopPropagation()">
       <input class="fl-edit-input" value="${escapeHtml(t.title)}" placeholder="Titolo" id="fl-edit-title-${id}" style="font-weight:700"/>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:.7rem;color:var(--muted2)">Note</span>
+        <button type="button" class="btn ghost sm" style="font-size:.6rem;padding:2px 7px" onclick="openRichForField('fl-edit-body-${id}','Note del pensiero')">📝 Editor avanzato</button>
+      </div>
       <textarea class="fl-edit-input" rows="4" id="fl-edit-body-${id}" placeholder="Note...">${escapeHtml(t.body||'')}</textarea>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <select class="fl-edit-input" id="fl-edit-tag-${id}" style="flex:1">${tagOptions}</select>
@@ -3627,7 +3671,7 @@ function renderConcepts(){
         </div>
       </div>
       <div class="fl-concept-body">
-        ${escapeHtml(c.body)}
+        ${c.body?.trim().startsWith('<') ? c.body : escapeHtml(c.body||'')}
         ${c.source?`<div class="fl-concept-source">📖 ${escapeHtml(c.source)}</div>`:''}
       </div>
     </div>`).join('');
@@ -3649,6 +3693,10 @@ function startEditConcept(id){
   el.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:8px" onclick="event.stopPropagation()">
       <input class="fl-edit-input" value="${escapeHtml(c.name)}" placeholder="Concetto" id="fl-cedit-name-${id}" style="font-weight:700"/>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:.7rem;color:var(--muted2)">Spiegazione</span>
+        <button type="button" class="btn ghost sm" style="font-size:.6rem;padding:2px 7px" onclick="openRichForField('fl-cedit-body-${id}','Spiegazione concetto')">📝 Editor avanzato</button>
+      </div>
       <textarea class="fl-edit-input" rows="5" id="fl-cedit-body-${id}" placeholder="Spiegazione...">${escapeHtml(c.body||'')}</textarea>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <select class="fl-edit-input" id="fl-cedit-cat-${id}" style="flex:1">${catOptions}</select>
@@ -3730,7 +3778,7 @@ function renderFinanceLab(){
             ${t.ticker?`<span class="fl-ticker">${escapeHtml(t.ticker)}</span>`:''}
             <span class="fl-thought-date">${t.date}</span>
           </div>
-          ${t.body?`<div class="fl-thought-body">${escapeHtml(t.body)}</div>`:''}
+          ${t.body?`<div class="fl-thought-body">${t.body.trim().startsWith('<') ? t.body : escapeHtml(t.body)}</div>`:''}
           ${imgSrc?`<img class="fl-thought-img" src="${escapeHtml(imgSrc)}" alt="chart" onerror="this.style.display='none'" onclick="event.stopPropagation();this.requestFullscreen?this.requestFullscreen():window.open(this.src,'_blank')"/>`:''}
         </div>`; }).join('');
     }
@@ -3742,6 +3790,62 @@ function setFlTagFilter(tag){
   state.flTagFilter = tag;
   renderFinanceLab();
 }
+
+// ============ RICH TEXT EDITOR ============
+let _richSaveFn = null;
+
+function openRichModal(htmlOrText, onSave, title) {
+  _richSaveFn = onSave;
+  const el = document.getElementById('rich-modal-title');
+  if(el) el.textContent = title || 'Editor';
+  const c = document.getElementById('rich-content');
+  if(!c) return;
+  if(!htmlOrText) {
+    c.innerHTML = '';
+  } else if(!htmlOrText.trim().startsWith('<')) {
+    c.innerHTML = htmlOrText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  } else {
+    c.innerHTML = htmlOrText;
+  }
+  const m = document.getElementById('rich-modal');
+  if(m){ m.style.display='flex'; }
+  setTimeout(()=>{ c.focus(); const r=document.createRange(),s=window.getSelection(); r.selectNodeContents(c); r.collapse(false); s.removeAllRanges(); s.addRange(r); }, 50);
+}
+
+function closeRichModal(save) {
+  if(save && _richSaveFn) {
+    const c = document.getElementById('rich-content');
+    if(c) _richSaveFn(c.innerHTML);
+  }
+  const m = document.getElementById('rich-modal');
+  if(m) m.style.display = 'none';
+  _richSaveFn = null;
+}
+
+function rCmd(cmd, val) {
+  document.getElementById('rich-content')?.focus();
+  document.execCommand(cmd, false, val ?? null);
+}
+
+function openRichForField(fieldId, title) {
+  const field = document.getElementById(fieldId);
+  if(!field) return;
+  openRichModal(field.value, html => { field.value = html; }, title);
+}
+
+// Keyboard shortcuts inside modal
+document.addEventListener('keydown', e => {
+  const modal = document.getElementById('rich-modal');
+  if(!modal || modal.style.display==='none') return;
+  if((e.metaKey||e.ctrlKey)){
+    if(e.key==='b'){ e.preventDefault(); rCmd('bold'); }
+    if(e.key==='i'){ e.preventDefault(); rCmd('italic'); }
+    if(e.key==='u'){ e.preventDefault(); rCmd('underline'); }
+    if(e.key==='s'){ e.preventDefault(); closeRichModal(true); }
+    if(e.key==='Enter'){ e.preventDefault(); closeRichModal(true); }
+  }
+  if(e.key==='Escape'){ closeRichModal(false); }
+});
 
 // ============ FRANCESE – ALLENAMENTO QUOTIDIANO ============
 
@@ -4198,5 +4302,72 @@ async function loadFrNews(){
   }).join('');
 }
 </script>
+
+<!-- ══ RICH EDITOR MODAL ══ -->
+<div id="rich-modal">
+  <div id="rich-modal-bar">
+    <span id="rich-modal-title">Editor</span>
+    <div id="rich-modal-actions">
+      <button class="btn ghost sm" onclick="closeRichModal(false)">✕ Annulla</button>
+      <button class="btn sm" onclick="closeRichModal(true)" style="background:var(--green);color:#000">✓ Salva</button>
+    </div>
+  </div>
+  <div id="rich-toolbar">
+    <!-- Blocchi / heading -->
+    <select class="rtb-select" onchange="rCmd('formatBlock',this.value);this.value=''" title="Stile testo">
+      <option value="">— Stile —</option>
+      <option value="p">Paragrafo</option>
+      <option value="h1">Titolo H1</option>
+      <option value="h2">Titolo H2</option>
+      <option value="blockquote">Citazione</option>
+    </select>
+    <!-- Font size -->
+    <select class="rtb-select" onchange="rCmd('fontSize',this.value);this.value=''" title="Dimensione">
+      <option value="">— Dim —</option>
+      <option value="1">XS</option>
+      <option value="3">Normal</option>
+      <option value="4">L</option>
+      <option value="5">XL</option>
+      <option value="6">XXL</option>
+    </select>
+    <div class="rtb-sep"></div>
+    <!-- Format -->
+    <button class="rtb" onclick="rCmd('bold')" title="Grassetto (⌘B)"><b>B</b></button>
+    <button class="rtb" onclick="rCmd('italic')" title="Corsivo (⌘I)"><i>I</i></button>
+    <button class="rtb" onclick="rCmd('underline')" title="Sottolineato"><u>U</u></button>
+    <button class="rtb" onclick="rCmd('strikeThrough')" title="Barrato"><s>S</s></button>
+    <div class="rtb-sep"></div>
+    <!-- Text colors -->
+    <span style="font-size:.6rem;color:#666;font-family:var(--mono);letter-spacing:.5px;margin-right:3px">A</span>
+    <span class="rtb-color" style="background:#ffffff" onclick="rCmd('foreColor','#ffffff')" title="Bianco"></span>
+    <span class="rtb-color" style="background:#e8eef9" onclick="rCmd('foreColor','#e8eef9')" title="Grigio chiaro"></span>
+    <span class="rtb-color" style="background:#00e5ff" onclick="rCmd('foreColor','#00e5ff')" title="Cyan"></span>
+    <span class="rtb-color" style="background:#00ff9d" onclick="rCmd('foreColor','#00ff9d')" title="Verde"></span>
+    <span class="rtb-color" style="background:#ffcc33" onclick="rCmd('foreColor','#ffcc33')" title="Giallo"></span>
+    <span class="rtb-color" style="background:#ff4d6d" onclick="rCmd('foreColor','#ff4d6d')" title="Rosso"></span>
+    <span class="rtb-color" style="background:#a855f7" onclick="rCmd('foreColor','#a855f7')" title="Viola"></span>
+    <div class="rtb-sep"></div>
+    <!-- Highlight -->
+    <span style="font-size:.6rem;color:#666;font-family:var(--mono);letter-spacing:.5px;margin-right:3px">▐</span>
+    <span class="rtb-color" style="background:#ffcc3344;border:2px solid #ffcc33" onclick="rCmd('hiliteColor','#ffcc3330')" title="Evidenzia giallo"></span>
+    <span class="rtb-color" style="background:#00e5ff44;border:2px solid #00e5ff" onclick="rCmd('hiliteColor','#00e5ff25')" title="Evidenzia cyan"></span>
+    <span class="rtb-color" style="background:#00ff9d44;border:2px solid #00ff9d" onclick="rCmd('hiliteColor','#00ff9d25')" title="Evidenzia verde"></span>
+    <span class="rtb-color" style="background:#ff4d6d44;border:2px solid #ff4d6d" onclick="rCmd('hiliteColor','#ff4d6d25')" title="Evidenzia rosso"></span>
+    <span class="rtb-color" style="background:#33333366;border:2px solid #555" onclick="rCmd('hiliteColor','transparent')" title="Rimuovi evidenziazione"></span>
+    <div class="rtb-sep"></div>
+    <!-- Lists -->
+    <button class="rtb" onclick="rCmd('insertUnorderedList')" title="Elenco puntato">• Lista</button>
+    <button class="rtb" onclick="rCmd('insertOrderedList')" title="Elenco numerato">1. Lista</button>
+    <button class="rtb" onclick="rCmd('outdent')" title="Riduci rientro">⇤</button>
+    <button class="rtb" onclick="rCmd('indent')" title="Aumenta rientro">⇥</button>
+    <div class="rtb-sep"></div>
+    <!-- Clear -->
+    <button class="rtb" onclick="rCmd('removeFormat')" title="Rimuovi formattazione">⊘ Clear</button>
+  </div>
+  <div id="rich-body-wrap">
+    <div id="rich-content" contenteditable="true" data-placeholder="Inizia a scrivere…" spellcheck="true"></div>
+  </div>
+</div>
+
 </body>
 </html>
