@@ -26,11 +26,11 @@
   --mono:'JetBrains Mono','SF Mono','Monaco','Inconsolata','Roboto Mono','Courier New',monospace;
 }
 [data-theme="light"]{
-  --bg:#eaf0f8;--surface:#ffffff;--surface2:#dde6f2;--border:#b8c5dc;--border2:#9aabc6;
-  --text:#0a1426;--muted:#566685;--muted2:#2a3855;
-  --green:#047857;--yellow:#b45309;--red:#b91c1c;
-  --blue:#1d4ed8;--teal:#0e7490;--cyan:#005f87;--purple:#6d28d9;--gold:#92400e;--pink:#be185d;
-  --accent:#005f87;--accent2:#047857;
+  --bg:#ffffff;--surface:#ffffff;--surface2:#f4f4f4;--border:#d0d0d0;--border2:#999999;
+  --text:#000000;--muted:#666666;--muted2:#333333;
+  --green:#0a8a3f;--yellow:#cc6600;--red:#cc0033;
+  --blue:#0033cc;--teal:#006080;--cyan:#cc0033;--purple:#6d28d9;--gold:#cc6600;--pink:#be185d;
+  --accent:#cc0033;--accent2:#0a8a3f;
 }
 html{scroll-behavior:smooth;background:var(--bg);-webkit-text-size-adjust:100%}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;background:
@@ -498,50 +498,71 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fl-img-drop{border:2px dashed var(--border2);border-radius:8px;padding:18px 14px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(12,19,34,.4);min-height:100px;display:flex;align-items:center;justify-content:center}
 .fl-img-drop:hover,.fl-img-drop.drag-over{border-color:var(--accent);background:rgba(0,229,255,.04)}
 
-/* ── LIGHT THEME OVERRIDES ── */
+/* ── LIGHT THEME (BLOOMBERG-STYLE) ── */
 [data-theme="light"] html{background:var(--bg)}
-[data-theme="light"] body{background:radial-gradient(ellipse at top,rgba(0,119,170,.06),transparent 60%),radial-gradient(ellipse at bottom right,rgba(124,58,237,.04),transparent 60%),var(--bg)}
-[data-theme="light"] body::before{background-image:linear-gradient(rgba(0,119,170,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,119,170,.04) 1px,transparent 1px)}
-[data-theme="light"] header{background:rgba(240,244,251,.96)}
-[data-theme="light"] header::after{opacity:.25}
-[data-theme="light"] nav.tabs button:hover{color:var(--text)}
-[data-theme="light"] nav.tabs button.active{text-shadow:none}
-[data-theme="light"] .card{background:var(--surface);box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px var(--border)}
-[data-theme="light"] .card:hover{box-shadow:0 0 0 1px rgba(0,119,170,.2),0 6px 20px rgba(0,0,0,.08)}
-[data-theme="light"] .card:hover::before{opacity:.5}
-[data-theme="light"] .card h2{color:var(--text)}
-[data-theme="light"] input,[data-theme="light"] select,[data-theme="light"] textarea{background:var(--surface2);color:var(--text);border-color:var(--border)}
-[data-theme="light"] .dropdown-menu{background:rgba(255,255,255,.99);box-shadow:0 12px 32px rgba(0,0,0,.14),0 0 0 1px var(--border)}
-[data-theme="light"] .dropdown-menu button{color:var(--text)}
-[data-theme="light"] .dropdown-menu button:hover{background:var(--surface2);color:var(--accent)}
-[data-theme="light"] .cornice-switch{background:var(--surface2)}
-[data-theme="light"] .habit-row,[data-theme="light"] .habit-today-card{background:var(--surface2)}
-[data-theme="light"] .habit-cell{background:var(--surface);border-color:var(--border)}
-[data-theme="light"] .habit-today-btn{background:var(--surface2);color:var(--text)}
-[data-theme="light"] .goal-card,[data-theme="light"] .contact-card,[data-theme="light"] .decision-card{background:var(--surface2)}
-[data-theme="light"] .decision-review-form{background:var(--surface)}
-[data-theme="light"] .wf-day{background:var(--surface2)}
-[data-theme="light"] .todo-item.overdue:not(.done){background:rgba(220,38,38,.06)}
+[data-theme="light"] body{background:var(--bg)}
+[data-theme="light"] body::before{display:none}
+[data-theme="light"] header{background:#000;border-bottom:none;color:#fff}
+[data-theme="light"] header::after{display:none}
+[data-theme="light"] header h1{color:#fff!important}
+[data-theme="light"] header h1 .sub{color:#999}
+[data-theme="light"] nav.tabs{border-top:1px solid #222;padding-top:6px;margin-top:10px}
+[data-theme="light"] nav.tabs button{color:#bbb;border-radius:0;padding:10px 14px;font-weight:700}
+[data-theme="light"] nav.tabs button:hover{color:#fff}
+[data-theme="light"] nav.tabs button.active{color:#fff;border-bottom:3px solid var(--accent);text-shadow:none}
+[data-theme="light"] nav.tabs .badge{background:var(--accent);color:#fff}
+[data-theme="light"] nav.tabs .badge.zero{background:#333;color:#888}
+[data-theme="light"] .dropdown-toggle{color:#bbb}
+[data-theme="light"] #theme-toggle{background:#1a1a1a;color:#fff;border-color:#333}
+[data-theme="light"] .card{background:var(--surface);border:1px solid var(--border);border-radius:2px;box-shadow:none}
+[data-theme="light"] .card:hover{border-color:#666;box-shadow:none}
+[data-theme="light"] .card:hover::before{opacity:0}
+[data-theme="light"] .card::before{display:none}
+[data-theme="light"] .card h2{color:var(--text);font-weight:800;letter-spacing:.8px;border-bottom:2px solid var(--text);padding-bottom:8px}
+[data-theme="light"] input,[data-theme="light"] select,[data-theme="light"] textarea{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:2px}
+[data-theme="light"] input:focus,[data-theme="light"] select:focus,[data-theme="light"] textarea:focus{border-color:#000;box-shadow:none}
+[data-theme="light"] .dropdown-menu{background:#000;border:1px solid #333;border-radius:2px;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+[data-theme="light"] .dropdown-menu button{color:#ddd}
+[data-theme="light"] .dropdown-menu button:hover{background:#1a1a1a;color:#fff}
+[data-theme="light"] .dropdown-divider{background:#333}
+[data-theme="light"] button.btn{background:#000;color:#fff;border-radius:2px;box-shadow:none;letter-spacing:1px}
+[data-theme="light"] button.btn:hover{background:var(--accent);box-shadow:none;transform:none}
+[data-theme="light"] button.btn.ghost{background:transparent;color:#000;border:1px solid #000}
+[data-theme="light"] button.btn.ghost:hover{background:#000;color:#fff}
+[data-theme="light"] button.btn.danger{background:var(--accent);color:#fff}
+[data-theme="light"] .cornice-switch{background:var(--surface2);border-radius:2px}
+[data-theme="light"] .habit-row,[data-theme="light"] .habit-today-card{background:var(--surface2);border-radius:2px}
+[data-theme="light"] .habit-cell{background:#fff;border:1px solid var(--border);border-radius:0}
+[data-theme="light"] .habit-today-btn{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:2px}
+[data-theme="light"] .goal-card,[data-theme="light"] .contact-card,[data-theme="light"] .decision-card{background:var(--surface2);border-radius:2px}
+[data-theme="light"] .decision-review-form{background:#fff;border:1px solid var(--border);border-radius:2px}
+[data-theme="light"] .wf-day{background:var(--surface2);border-radius:2px}
+[data-theme="light"] .todo-item{background:var(--surface2);border-radius:2px}
+[data-theme="light"] .todo-item.overdue:not(.done){background:rgba(204,0,51,.08)}
+[data-theme="light"] .mit-item{background:var(--surface2);border-radius:2px}
 [data-theme="light"] .news-skeleton{background:var(--surface2)}
-[data-theme="light"] .reminder-item{background:var(--surface2)}
-[data-theme="light"] .fl-stats-strip{background:var(--border)}
-[data-theme="light"] .fl-stat{background:var(--surface)}
-[data-theme="light"] .fl-thought{background:var(--surface2)}
-[data-theme="light"] .fl-thought:hover,[data-theme="light"] .fl-thought.expanded{background:var(--surface)}
+[data-theme="light"] .reminder-item{background:var(--surface2);border-radius:2px;border-left:3px solid var(--accent)}
+[data-theme="light"] .fl-stats-strip{background:var(--border);border-radius:2px}
+[data-theme="light"] .fl-stat{background:#fff}
+[data-theme="light"] .fl-thought{background:var(--surface2);border-radius:2px;border:1px solid var(--border)}
+[data-theme="light"] .fl-thought:hover{background:#fff}
+[data-theme="light"] .fl-thought.expanded{background:#fff;border-color:#000}
 [data-theme="light"] .fl-thought-title{color:var(--text)}
 [data-theme="light"] .fl-thought-body{color:var(--muted2)}
-[data-theme="light"] .fl-concept{background:var(--surface2)}
-[data-theme="light"] .fl-concept.expanded{background:var(--surface)}
+[data-theme="light"] .fl-concept{background:var(--surface2);border-radius:2px}
+[data-theme="light"] .fl-concept.expanded{background:#fff;border-color:#000}
 [data-theme="light"] .fl-concept-name{color:var(--text)}
-[data-theme="light"] .fl-edit-input{background:var(--surface2);color:var(--text)}
-[data-theme="light"] .fl-img-drop{background:var(--surface2)}
-[data-theme="light"] .fl-img-drop:hover,[data-theme="light"] .fl-img-drop.drag-over{background:rgba(0,119,170,.04)}
-[data-theme="light"] .card-badge{background:rgba(0,119,170,.1);color:var(--accent);border-color:rgba(0,119,170,.2)}
-[data-theme="light"] .card-badge.warn{background:rgba(180,83,9,.1);color:var(--gold);border-color:rgba(180,83,9,.25)}
-[data-theme="light"] .card-badge.urgent{background:rgba(220,38,38,.1);color:var(--red);border-color:rgba(220,38,38,.3)}
-[data-theme="light"] .btn.ghost{background:transparent}
-[data-theme="light"] .sync-badge{color:var(--muted2)}
+[data-theme="light"] .fl-edit-input{background:#fff;color:var(--text);border-radius:2px}
+[data-theme="light"] .fl-img-drop{background:var(--surface2);border-radius:2px}
+[data-theme="light"] .fl-img-drop:hover,[data-theme="light"] .fl-img-drop.drag-over{background:#fff;border-color:#000}
+[data-theme="light"] .card-badge{background:#000;color:#fff;border:1px solid #000;border-radius:2px;font-weight:800}
+[data-theme="light"] .card-badge.warn{background:var(--gold);color:#fff;border-color:var(--gold)}
+[data-theme="light"] .card-badge.urgent{background:var(--accent);color:#fff;border-color:var(--accent)}
+[data-theme="light"] .fl-tag-badge,[data-theme="light"] .fl-ticker{border-radius:2px;font-weight:800}
+[data-theme="light"] .sync-badge{color:#fff;background:#1a1a1a;border-color:#333}
 [data-theme="light"] .fl-thought-chevron{color:var(--muted)}
+[data-theme="light"] .quote-row{border-color:var(--border)}
+[data-theme="light"] nav.tabs .badge{border-radius:2px}
 /* Override ALL hardcoded white text in light mode */
 [data-theme="light"] header h1,
 [data-theme="light"] .habit-info .h-name,
