@@ -478,6 +478,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fl-concept-source{font-size:.65rem;color:var(--muted2);font-family:var(--mono);margin-top:6px}
 .fl-concept-del{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:2px 6px;border-radius:4px;transition:color .15s}
 .fl-concept-del:hover{color:var(--red)}
+.fl-edit-input{background:rgba(20,29,51,.8);border:1px solid var(--border2);color:#fff;padding:8px 10px;border-radius:6px;font-size:.82rem;width:100%;font-family:inherit;resize:vertical}
+.fl-edit-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,229,255,.1)}
 </style>
 </head>
 <body>
@@ -3281,6 +3283,42 @@ function deleteThought(id){
   save(); renderFinanceLab();
 }
 
+function startEditThought(id){
+  const t = (state.flThoughts||[]).find(t=>t.id===id);
+  if(!t) return;
+  const el = document.getElementById('fl-t-'+id);
+  if(!el) return;
+  const tagOptions = Object.entries(FL_TAG_LABELS).map(([v,l])=>
+    `<option value="${v}"${t.tag===v?' selected':''}>${l}</option>`).join('');
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <input class="fl-edit-input" value="${escapeHtml(t.title)}" placeholder="Titolo" id="fl-edit-title-${id}" style="font-weight:700"/>
+      <textarea class="fl-edit-input" rows="4" id="fl-edit-body-${id}" placeholder="Note...">${escapeHtml(t.body||'')}</textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select class="fl-edit-input" id="fl-edit-tag-${id}" style="flex:1">${tagOptions}</select>
+        <input class="fl-edit-input" value="${escapeHtml(t.ticker||'')}" placeholder="Ticker" id="fl-edit-ticker-${id}" style="flex:1"/>
+      </div>
+      <input class="fl-edit-input" value="${escapeHtml(t.img||'')}" placeholder="URL immagine" id="fl-edit-img-${id}"/>
+      <div style="display:flex;gap:8px">
+        <button class="btn sm" onclick="saveEditThought('${id}')">✓ Salva</button>
+        <button class="btn ghost sm" onclick="renderFinanceLab()">Annulla</button>
+      </div>
+    </div>`;
+}
+
+function saveEditThought(id){
+  const t = (state.flThoughts||[]).find(t=>t.id===id);
+  if(!t) return;
+  const g = s => document.getElementById(s)?.value||'';
+  t.title  = g(`fl-edit-title-${id}`).trim();
+  t.body   = g(`fl-edit-body-${id}`).trim();
+  t.tag    = g(`fl-edit-tag-${id}`);
+  t.ticker = g(`fl-edit-ticker-${id}`).trim().toUpperCase();
+  t.img    = g(`fl-edit-img-${id}`).trim();
+  if(!t.title){ alert('Inserisci un titolo.'); return; }
+  save(); renderFinanceLab();
+}
+
 function toggleThoughtStar(id){
   const t = (state.flThoughts||[]).find(t=>t.id===id);
   if(t){ t.starred = !t.starred; save(); renderFinanceLab(); }
@@ -3381,11 +3419,12 @@ function renderFinanceLab(){
       feed.innerHTML = '<div style="color:var(--muted2);font-size:.78rem;padding:20px;text-align:center">Nessun pensiero ancora. Aggiungi la tua prima idea! 💡</div>';
     } else {
       feed.innerHTML = filtered.map(t=>`
-        <div class="fl-thought${t.starred?' starred':''}">
+        <div class="fl-thought${t.starred?' starred':''}" id="fl-t-${t.id}">
           <div class="fl-thought-header">
             <div class="fl-thought-title">${escapeHtml(t.title)}</div>
             <div class="fl-thought-actions">
               <button onclick="toggleThoughtStar('${t.id}')" title="${t.starred?'Rimuovi stella':'Segna come importante'}">${t.starred?'⭐':'☆'}</button>
+              <button onclick="startEditThought('${t.id}')" title="Modifica">✏️</button>
               <button onclick="deleteThought('${t.id}')" title="Elimina">🗑️</button>
             </div>
           </div>
