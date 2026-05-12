@@ -3544,7 +3544,7 @@ function startEditThought(id){
       <input class="fl-edit-input" value="${escapeHtml(t.title)}" placeholder="Titolo" id="fl-edit-title-${id}" style="font-weight:700"/>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <span style="font-size:.7rem;color:var(--muted2)">Note</span>
-        <button type="button" class="btn ghost sm" style="font-size:.6rem;padding:2px 7px" onclick="openRichForField('fl-edit-body-${id}','Note del pensiero')">📝 Editor avanzato</button>
+        <button type="button" class="btn ghost sm" style="font-size:.6rem;padding:2px 7px" onclick="openRichForEditThought('${id}')">📝 Editor avanzato</button>
       </div>
       <textarea class="fl-edit-input" rows="4" id="fl-edit-body-${id}" placeholder="Note...">${escapeHtml(t.body||'')}</textarea>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -3695,7 +3695,7 @@ function startEditConcept(id){
       <input class="fl-edit-input" value="${escapeHtml(c.name)}" placeholder="Concetto" id="fl-cedit-name-${id}" style="font-weight:700"/>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
         <span style="font-size:.7rem;color:var(--muted2)">Spiegazione</span>
-        <button type="button" class="btn ghost sm" style="font-size:.6rem;padding:2px 7px" onclick="openRichForField('fl-cedit-body-${id}','Spiegazione concetto')">📝 Editor avanzato</button>
+        <button type="button" class="btn ghost sm" style="font-size:.6rem;padding:2px 7px" onclick="openRichForEditConcept('${id}')">📝 Editor avanzato</button>
       </div>
       <textarea class="fl-edit-input" rows="5" id="fl-cedit-body-${id}" placeholder="Spiegazione...">${escapeHtml(c.body||'')}</textarea>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -3937,10 +3937,20 @@ function rUpdateActiveState(){
   });
 }
 
-function openRichForField(fieldId, title) {
+function openRichForField(fieldId, title, autoSaveFn) {
   const field = document.getElementById(fieldId);
   if(!field) return;
-  openRichModal(field.value, html => { field.value = html; }, title);
+  openRichModal(field.value, html => {
+    field.value = html;
+    if(autoSaveFn) autoSaveFn();
+  }, title);
+}
+
+function openRichForEditThought(id) {
+  openRichForField('fl-edit-body-'+id, 'Note del pensiero', () => saveEditThought(id));
+}
+function openRichForEditConcept(id) {
+  openRichForField('fl-cedit-body-'+id, 'Spiegazione concetto', () => saveEditConcept(id));
 }
 
 // Track selection while editor is open
