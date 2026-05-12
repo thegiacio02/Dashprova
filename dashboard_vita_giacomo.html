@@ -442,6 +442,42 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fr-header-strip { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:10px; }
 .fr-date-label { font-size:.75rem; color:var(--muted2); font-family:var(--mono); letter-spacing:.5px; }
 .fr-streak { font-size:.78rem; font-weight:700; color:var(--gold); font-family:var(--mono); }
+/* ===== FINANCE LAB ===== */
+.fl-stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:16px}
+.fl-stat{background:linear-gradient(180deg,rgba(20,29,51,.5),rgba(12,19,34,.7));padding:12px 14px;display:flex;flex-direction:column;gap:3px}
+.fl-stat-label{font-size:.6rem;color:var(--muted2);font-family:var(--mono);letter-spacing:1px;font-weight:700;text-transform:uppercase}
+.fl-stat-val{font-size:1.3rem;font-weight:800;color:#fff;font-family:var(--mono);letter-spacing:-1px}
+@media(max-width:700px){.fl-stats-strip{grid-template-columns:repeat(2,1fr)}}
+
+.fl-thought{background:linear-gradient(135deg,rgba(20,29,51,.6),rgba(12,19,34,.8));border:1px solid var(--border);border-radius:8px;padding:13px;transition:border-color .2s}
+.fl-thought:hover{border-color:var(--border2)}
+.fl-thought.starred{border-left:3px solid var(--gold)}
+.fl-thought-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.fl-thought-title{font-size:.88rem;font-weight:700;color:#fff;line-height:1.3;flex:1}
+.fl-thought-actions{display:flex;gap:4px;flex-shrink:0}
+.fl-thought-actions button{background:transparent;border:none;cursor:pointer;font-size:.85rem;padding:2px 4px;border-radius:4px;opacity:.5;transition:opacity .15s}
+.fl-thought-actions button:hover{opacity:1}
+.fl-thought-body{font-size:.79rem;color:var(--muted2);line-height:1.5;margin-bottom:8px;white-space:pre-wrap;word-break:break-word}
+.fl-thought-img{width:100%;max-height:200px;object-fit:cover;border-radius:6px;margin-bottom:8px;cursor:pointer}
+.fl-thought-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fl-tag-badge{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px}
+.fl-ticker{font-size:.65rem;font-family:var(--mono);color:var(--accent);background:rgba(0,229,255,.08);padding:2px 7px;border-radius:4px;border:1px solid rgba(0,229,255,.2);font-weight:700}
+.fl-thought-date{font-size:.65rem;color:var(--muted);font-family:var(--mono);margin-left:auto}
+
+.fl-tag-filter-btn{font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;transition:all .15s}
+.fl-tag-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.08)}
+
+.fl-concept{background:rgba(20,29,51,.5);border:1px solid var(--border);border-radius:8px;padding:12px;transition:border-color .2s;cursor:pointer}
+.fl-concept:hover{border-color:var(--border2)}
+.fl-concept.expanded{border-color:var(--accent)}
+.fl-concept-header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fl-concept-name{font-size:.88rem;font-weight:700;color:#fff}
+.fl-concept-cat{font-size:.62rem;color:var(--muted2);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;padding:2px 7px;border:1px solid var(--border);border-radius:8px}
+.fl-concept-body{font-size:.78rem;color:var(--text);line-height:1.55;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);white-space:pre-wrap;display:none}
+.fl-concept.expanded .fl-concept-body{display:block}
+.fl-concept-source{font-size:.65rem;color:var(--muted2);font-family:var(--mono);margin-top:6px}
+.fl-concept-del{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:2px 6px;border-radius:4px;transition:color .15s}
+.fl-concept-del:hover{color:var(--red)}
 </style>
 </head>
 <body>
@@ -467,6 +503,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <button data-tab="obiettivi">🎯 Obiettivi 6 mesi</button>
         <button data-tab="network">🤝 Network</button>
         <button data-tab="decisioni">💭 Decisioni</button>
+        <button data-tab="financelab">📈 Finance Lab</button>
         <div class="dropdown-divider"></div>
         <button data-tab="aree">📊 Aree di vita</button>
         <button data-tab="libri">📚 Libri</button>
@@ -1188,6 +1225,119 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 </section>
 
+<!-- ============ FINANCE LAB ============ -->
+<section class="tab" id="tab-financelab">
+
+  <!-- Stats strip -->
+  <div class="fl-stats-strip">
+    <div class="fl-stat"><span class="fl-stat-label">PENSIERI</span><span class="fl-stat-val" id="fl-thoughts-count">0</span></div>
+    <div class="fl-stat"><span class="fl-stat-label">CONCETTI</span><span class="fl-stat-val" id="fl-concepts-count">0</span></div>
+    <div class="fl-stat"><span class="fl-stat-label">ULTIMO LOG</span><span class="fl-stat-val" id="fl-last-log">—</span></div>
+    <div class="fl-stat"><span class="fl-stat-label">TAG PIÙ USATO</span><span class="fl-stat-val" id="fl-top-tag">—</span></div>
+  </div>
+
+  <div class="grid grid-2">
+
+    <!-- PENSIERI -->
+    <div class="card">
+      <h2><span class="ico">💭</span> Pensieri & Idee</h2>
+
+      <div class="field">
+        <label>Titolo / idea in breve</label>
+        <input type="text" id="fl-title" placeholder="es. BCE potrebbe tagliare prima del previsto…"/>
+      </div>
+      <div class="field">
+        <label>Note estese</label>
+        <textarea id="fl-body" rows="4" placeholder="Sviluppa il pensiero, dati, ragionamento..."></textarea>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Tag</label>
+          <select id="fl-tag">
+            <option value="macro">🌍 Macro</option>
+            <option value="equity">📈 Equity</option>
+            <option value="bonds">🏦 Bonds</option>
+            <option value="crypto">₿ Crypto</option>
+            <option value="real-estate">🏠 Real Estate</option>
+            <option value="italia">🇮🇹 Italia</option>
+            <option value="usa">🇺🇸 USA</option>
+            <option value="emerging">🌏 Emerging</option>
+            <option value="forex">💱 Forex</option>
+            <option value="commodities">🛢️ Commodities</option>
+            <option value="idea">💡 Idea investimento</option>
+            <option value="altro">📌 Altro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ticker (opz.)</label>
+          <input type="text" id="fl-ticker" placeholder="es. AAPL, BTP"/>
+        </div>
+      </div>
+      <div class="field">
+        <label>URL immagine / chart (opz.)</label>
+        <input type="url" id="fl-img" placeholder="https://..."/>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="addThought()">+ Aggiungi pensiero</button>
+        <button class="btn ghost sm" id="fl-star-btn" onclick="toggleFlStar()" title="Segna come idea importante">☆ Salva come idea chiave</button>
+      </div>
+    </div>
+
+    <!-- FEED PENSIERI -->
+    <div class="card" style="display:flex;flex-direction:column;gap:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h2 style="margin:0"><span class="ico">📋</span> Feed</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="fl-tag-filters"></div>
+      </div>
+      <div id="fl-thoughts-feed" style="overflow-y:auto;max-height:480px;display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </div>
+
+  <!-- CONCETTI -->
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h2><span class="ico">📚</span> Glossario personale</h2>
+      <p style="font-size:.74rem;color:var(--muted2);margin-bottom:14px">Scrivi i concetti con parole tue. Capire = saper spiegare semplicemente.</p>
+      <div class="field">
+        <label>Concetto</label>
+        <input type="text" id="fl-concept-name" placeholder="es. Duration, Carry Trade, WACC…"/>
+      </div>
+      <div class="field">
+        <label>Spiegazione con parole mie</label>
+        <textarea id="fl-concept-body" rows="4" placeholder="Come lo spiegherei a qualcuno che non sa nulla di finanza…"></textarea>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Categoria</label>
+          <select id="fl-concept-cat">
+            <option value="valuation">📊 Valuation</option>
+            <option value="macro">🌍 Macro</option>
+            <option value="risk">⚠️ Risk</option>
+            <option value="products">🧩 Products</option>
+            <option value="strategy">♟️ Strategy</option>
+            <option value="accounting">🧾 Accounting</option>
+            <option value="altro">📌 Altro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Fonte (opz.)</label>
+          <input type="text" id="fl-concept-source" placeholder="libro, articolo, corso…"/>
+        </div>
+      </div>
+      <button class="btn" onclick="addConcept()">+ Salva concetto</button>
+    </div>
+
+    <div class="card">
+      <h2><span class="ico">🗂️</span> I miei concetti</h2>
+      <div class="field" style="margin-bottom:10px">
+        <input type="text" id="fl-concept-search" placeholder="Cerca..." oninput="renderConcepts()" style="font-size:.78rem"/>
+      </div>
+      <div id="fl-concepts-list" style="overflow-y:auto;max-height:440px;display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+  </div>
+
+</section>
+
 </main>
 
 <footer>
@@ -1336,7 +1486,10 @@ function defaultState(){ return {
     contacts:[],
     contactFilter:'all',
     decisions:[],
-    frStreak:{lastDate:'',count:0}
+    frStreak:{lastDate:'',count:0},
+    flThoughts:[],
+    flConcepts:[],
+    flTagFilter:'all'
   };}
 
 function load(){
@@ -2645,6 +2798,7 @@ function renderAll(){
   renderProductivityStats();
   try { renderReminders(); } catch(e){ console.error('renderReminders error:', e); }
   try { renderInsights(); } catch(e){ console.error('renderInsights error:', e); }
+  try { renderFinanceLab(); } catch(e){ console.error('renderFinanceLab error:', e); }
 }
 
 // ============ PROMEMORIA + INSIGHTS AI ============
@@ -3073,6 +3227,184 @@ loadWeather();
 loadQuotes();
 setInterval(loadWeather, 15*60*1000);   // ogni 15min
 setInterval(loadQuotes,  5*60*1000);    // ogni 5min
+
+// ============ FINANCE LAB ============
+const FL_TAG_COLORS = {
+  macro:'#6366f1', equity:'#00e5ff', bonds:'#ffb800', crypto:'#f59e0b',
+  'real-estate':'#22c55e', italia:'#22d3ee', usa:'#3b82f6', emerging:'#a855f7',
+  forex:'#ec4899', commodities:'#f97316', idea:'#00ff9d', altro:'#8a9ab8'
+};
+const FL_TAG_LABELS = {
+  macro:'🌍 Macro', equity:'📈 Equity', bonds:'🏦 Bonds', crypto:'₿ Crypto',
+  'real-estate':'🏠 Real Estate', italia:'🇮🇹 Italia', usa:'🇺🇸 USA',
+  emerging:'🌏 Emerging', forex:'💱 Forex', commodities:'🛢️ Commodities',
+  idea:'💡 Idea', altro:'📌 Altro'
+};
+
+let flStarPending = false;
+
+function toggleFlStar(){
+  flStarPending = !flStarPending;
+  const btn = document.getElementById('fl-star-btn');
+  if(btn) btn.textContent = flStarPending ? '⭐ Idea chiave ON' : '☆ Salva come idea chiave';
+}
+
+function addThought(){
+  ensureState();
+  const title = document.getElementById('fl-title').value.trim();
+  const body  = document.getElementById('fl-body').value.trim();
+  if(!title) return alert('Inserisci un titolo/idea.');
+  const t = {
+    id: uid(),
+    date: todayISO(),
+    ts: Date.now(),
+    title,
+    body,
+    tag:    document.getElementById('fl-tag').value,
+    ticker: document.getElementById('fl-ticker').value.trim().toUpperCase(),
+    img:    document.getElementById('fl-img').value.trim(),
+    starred: flStarPending
+  };
+  state.flThoughts.unshift(t);
+  flStarPending = false;
+  ['fl-title','fl-body','fl-ticker','fl-img'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  const btn = document.getElementById('fl-star-btn');
+  if(btn) btn.textContent = '☆ Salva come idea chiave';
+  save(); renderFinanceLab();
+}
+
+function deleteThought(id){
+  state.flThoughts = (state.flThoughts||[]).filter(t=>t.id!==id);
+  save(); renderFinanceLab();
+}
+
+function toggleThoughtStar(id){
+  const t = (state.flThoughts||[]).find(t=>t.id===id);
+  if(t){ t.starred = !t.starred; save(); renderFinanceLab(); }
+}
+
+function addConcept(){
+  ensureState();
+  const name = document.getElementById('fl-concept-name').value.trim();
+  const body = document.getElementById('fl-concept-body').value.trim();
+  if(!name) return alert('Inserisci il nome del concetto.');
+  if(!body) return alert('Scrivi la spiegazione.');
+  const c = {
+    id: uid(),
+    date: todayISO(),
+    name,
+    body,
+    cat:    document.getElementById('fl-concept-cat').value,
+    source: document.getElementById('fl-concept-source').value.trim()
+  };
+  state.flConcepts.unshift(c);
+  ['fl-concept-name','fl-concept-body','fl-concept-source'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  save(); renderFinanceLab();
+}
+
+function deleteConcept(id){
+  state.flConcepts = (state.flConcepts||[]).filter(c=>c.id!==id);
+  save(); renderFinanceLab();
+}
+
+function renderConcepts(){
+  ensureState();
+  const list = document.getElementById('fl-concepts-list');
+  if(!list) return;
+  const q = (document.getElementById('fl-concept-search')?.value||'').toLowerCase();
+  const concepts = (state.flConcepts||[]).filter(c=>
+    !q || c.name.toLowerCase().includes(q) || c.body.toLowerCase().includes(q) || (c.source||'').toLowerCase().includes(q)
+  );
+  document.getElementById('fl-concepts-count').textContent = (state.flConcepts||[]).length;
+  if(!concepts.length){
+    list.innerHTML = '<div style="color:var(--muted2);font-size:.78rem;padding:16px;text-align:center">Nessun concetto trovato.</div>';
+    return;
+  }
+  const CAT_LABELS = {valuation:'📊 Valuation',macro:'🌍 Macro',risk:'⚠️ Risk',products:'🧩 Products',strategy:'♟️ Strategy',accounting:'🧾 Accounting',altro:'📌 Altro'};
+  list.innerHTML = concepts.map(c=>`
+    <div class="fl-concept" id="fl-concept-${c.id}" onclick="toggleConceptExpand('${c.id}')">
+      <div class="fl-concept-header">
+        <span class="fl-concept-name">${escapeHtml(c.name)}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="fl-concept-cat">${CAT_LABELS[c.cat]||c.cat}</span>
+          <button class="fl-concept-del" onclick="event.stopPropagation();deleteConcept('${c.id}')" title="Elimina">×</button>
+        </div>
+      </div>
+      <div class="fl-concept-body">
+        ${escapeHtml(c.body)}
+        ${c.source?`<div class="fl-concept-source">📖 ${escapeHtml(c.source)}</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function toggleConceptExpand(id){
+  document.getElementById('fl-concept-'+id)?.classList.toggle('expanded');
+}
+
+function renderFinanceLab(){
+  ensureState();
+  if(!state.flThoughts) state.flThoughts=[];
+  if(!state.flConcepts) state.flConcepts=[];
+
+  // Stats
+  const el = n=>document.getElementById(n);
+  if(el('fl-thoughts-count')) el('fl-thoughts-count').textContent = state.flThoughts.length;
+  if(el('fl-concepts-count')) el('fl-concepts-count').textContent = state.flConcepts.length;
+  const last = state.flThoughts[0];
+  if(el('fl-last-log')) el('fl-last-log').textContent = last ? last.date.slice(5) : '—';
+  // Top tag
+  const tagCounts = {};
+  state.flThoughts.forEach(t=>{ tagCounts[t.tag]=(tagCounts[t.tag]||0)+1; });
+  const topTag = Object.entries(tagCounts).sort((a,b)=>b[1]-a[1])[0];
+  if(el('fl-top-tag')) el('fl-top-tag').textContent = topTag ? FL_TAG_LABELS[topTag[0]]||topTag[0] : '—';
+
+  // Tag filter buttons
+  const filterEl = el('fl-tag-filters');
+  if(filterEl){
+    const usedTags = [...new Set(state.flThoughts.map(t=>t.tag))];
+    const active = state.flTagFilter||'all';
+    filterEl.innerHTML = `<button class="fl-tag-filter-btn${active==='all'?' active':''}" onclick="setFlTagFilter('all')">Tutti</button>` +
+      usedTags.map(tag=>`<button class="fl-tag-filter-btn${active===tag?' active':''}" style="border-color:${FL_TAG_COLORS[tag]||'#8a9ab8'}40;${active===tag?'color:'+FL_TAG_COLORS[tag]+';background:'+FL_TAG_COLORS[tag]+'18':''}" onclick="setFlTagFilter('${tag}')">${FL_TAG_LABELS[tag]||tag}</button>`).join('');
+  }
+
+  // Thoughts feed
+  const feed = el('fl-thoughts-feed');
+  if(feed){
+    const active = state.flTagFilter||'all';
+    const filtered = active==='all' ? state.flThoughts : state.flThoughts.filter(t=>t.tag===active);
+    if(!filtered.length){
+      feed.innerHTML = '<div style="color:var(--muted2);font-size:.78rem;padding:20px;text-align:center">Nessun pensiero ancora. Aggiungi la tua prima idea! 💡</div>';
+    } else {
+      feed.innerHTML = filtered.map(t=>`
+        <div class="fl-thought${t.starred?' starred':''}">
+          <div class="fl-thought-header">
+            <div class="fl-thought-title">${escapeHtml(t.title)}</div>
+            <div class="fl-thought-actions">
+              <button onclick="toggleThoughtStar('${t.id}')" title="${t.starred?'Rimuovi stella':'Segna come importante'}">${t.starred?'⭐':'☆'}</button>
+              <button onclick="deleteThought('${t.id}')" title="Elimina">🗑️</button>
+            </div>
+          </div>
+          ${t.img?`<img class="fl-thought-img" src="${escapeHtml(t.img)}" alt="chart" onerror="this.style.display='none'" onclick="window.open('${escapeHtml(t.img)}','_blank')"/>`:''}
+          ${t.body?`<div class="fl-thought-body">${escapeHtml(t.body)}</div>`:''}
+          <div class="fl-thought-meta">
+            <span class="fl-tag-badge" style="color:${FL_TAG_COLORS[t.tag]||'#8a9ab8'};background:${FL_TAG_COLORS[t.tag]||'#8a9ab8'}18;border:1px solid ${FL_TAG_COLORS[t.tag]||'#8a9ab8'}30">${FL_TAG_LABELS[t.tag]||t.tag}</span>
+            ${t.ticker?`<span class="fl-ticker">${escapeHtml(t.ticker)}</span>`:''}
+            <span class="fl-thought-date">${t.date}</span>
+          </div>
+        </div>`).join('');
+    }
+  }
+  renderConcepts();
+}
+
+function setFlTagFilter(tag){
+  state.flTagFilter = tag;
+  renderFinanceLab();
+}
 
 // ============ FRANCESE – ALLENAMENTO QUOTIDIANO ============
 
