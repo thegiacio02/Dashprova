@@ -3500,7 +3500,7 @@ function startEditThought(id){
        </div>`
     : '';
   el.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;flex-direction:column;gap:8px" onclick="event.stopPropagation()">
       <input class="fl-edit-input" value="${escapeHtml(t.title)}" placeholder="Titolo" id="fl-edit-title-${id}" style="font-weight:700"/>
       <textarea class="fl-edit-input" rows="4" id="fl-edit-body-${id}" placeholder="Note...">${escapeHtml(t.body||'')}</textarea>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -3622,6 +3622,7 @@ function renderConcepts(){
         <span class="fl-concept-name">${escapeHtml(c.name)}</span>
         <div style="display:flex;gap:6px;align-items:center">
           <span class="fl-concept-cat">${CAT_LABELS[c.cat]||c.cat}</span>
+          <button class="fl-concept-del" onclick="event.stopPropagation();startEditConcept('${c.id}')" title="Modifica" style="opacity:.5;font-size:.85rem">✏️</button>
           <button class="fl-concept-del" onclick="event.stopPropagation();deleteConcept('${c.id}')" title="Elimina">×</button>
         </div>
       </div>
@@ -3634,6 +3635,45 @@ function renderConcepts(){
 
 function toggleConceptExpand(id){
   document.getElementById('fl-concept-'+id)?.classList.toggle('expanded');
+}
+
+function startEditConcept(id){
+  const c = (state.flConcepts||[]).find(c=>c.id===id);
+  if(!c) return;
+  const el = document.getElementById('fl-concept-'+id);
+  if(!el) return;
+  const CAT_LABELS = {valuation:'📊 Valuation',macro:'🌍 Macro',risk:'⚠️ Risk',products:'🧩 Products',strategy:'♟️ Strategy',accounting:'🧾 Accounting',altro:'📌 Altro'};
+  const catOptions = Object.entries(CAT_LABELS).map(([v,l])=>
+    `<option value="${v}"${c.cat===v?' selected':''}>${l}</option>`).join('');
+  el.classList.add('expanded');
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px" onclick="event.stopPropagation()">
+      <input class="fl-edit-input" value="${escapeHtml(c.name)}" placeholder="Concetto" id="fl-cedit-name-${id}" style="font-weight:700"/>
+      <textarea class="fl-edit-input" rows="5" id="fl-cedit-body-${id}" placeholder="Spiegazione...">${escapeHtml(c.body||'')}</textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select class="fl-edit-input" id="fl-cedit-cat-${id}" style="flex:1">${catOptions}</select>
+        <input class="fl-edit-input" value="${escapeHtml(c.source||'')}" placeholder="Fonte (opz.)" id="fl-cedit-source-${id}" style="flex:1"/>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn sm" onclick="saveEditConcept('${id}')">✓ Salva</button>
+        <button class="btn ghost sm" onclick="renderFinanceLab()">Annulla</button>
+      </div>
+    </div>`;
+}
+
+function saveEditConcept(id){
+  const c = (state.flConcepts||[]).find(c=>c.id===id);
+  if(!c) return;
+  const g = s => document.getElementById(s)?.value||'';
+  const name = g(`fl-cedit-name-${id}`).trim();
+  const body = g(`fl-cedit-body-${id}`).trim();
+  if(!name){ alert('Inserisci il nome del concetto.'); return; }
+  if(!body){ alert('Inserisci la spiegazione.'); return; }
+  c.name   = name;
+  c.body   = body;
+  c.cat    = g(`fl-cedit-cat-${id}`);
+  c.source = g(`fl-cedit-source-${id}`).trim();
+  save(); renderFinanceLab();
 }
 
 function renderFinanceLab(){
