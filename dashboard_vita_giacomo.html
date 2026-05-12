@@ -3793,23 +3793,70 @@ function setFlTagFilter(tag){
 
 // ============ RICH TEXT EDITOR ============
 let _richSaveFn = null;
+let _richSavedRange = null;
+
+function rIsOpen(){
+  const m = document.getElementById('rich-modal');
+  return m && m.style.display !== 'none' && m.style.display !== '';
+}
+
+function rGuardMouseDown(e){
+  // Only prevent default when clicking on the modal frame itself,
+  // not on inputs/buttons/editor area
+  if(e.target.id === 'rich-modal') e.preventDefault();
+}
+
+function rSaveSel(){
+  const sel = window.getSelection();
+  if(!sel || sel.rangeCount === 0) return;
+  const c = document.getElementById('rich-content');
+  if(c && c.contains(sel.anchorNode)) {
+    _richSavedRange = sel.getRangeAt(0).cloneRange();
+  }
+}
+function rRestoreSel(){
+  const c = document.getElementById('rich-content');
+  if(!c || !_richSavedRange) return;
+  c.focus();
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(_richSavedRange);
+}
 
 function openRichModal(htmlOrText, onSave, title) {
   _richSaveFn = onSave;
-  const el = document.getElementById('rich-modal-title');
-  if(el) el.textContent = title || 'Editor';
+  _richSavedRange = null;
+  const titleEl = document.getElementById('rich-modal-title');
+  if(titleEl) titleEl.textContent = title || 'Editor';
   const c = document.getElementById('rich-content');
   if(!c) return;
   if(!htmlOrText) {
     c.innerHTML = '';
   } else if(!htmlOrText.trim().startsWith('<')) {
-    c.innerHTML = htmlOrText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    c.innerHTML = htmlOrText
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/\n/g,'<br>');
   } else {
     c.innerHTML = htmlOrText;
   }
   const m = document.getElementById('rich-modal');
-  if(m){ m.style.display='flex'; }
-  setTimeout(()=>{ c.focus(); const r=document.createRange(),s=window.getSelection(); r.selectNodeContents(c); r.collapse(false); s.removeAllRanges(); s.addRange(r); }, 50);
+  if(m) m.style.display = 'flex';
+  // Enable CSS-based formatting so foreColor/hiliteColor work correctly
+  try { document.execCommand('styleWithCSS', false, true); } catch(e){}
+  try { document.execCommand('defaultParagraphSeparator', false, 'p'); } catch(e){}
+  setTimeout(()=>{
+    c.focus();
+    const r = document.createRange();
+    r.selectNodeContents(c);
+    r.collapse(false);
+    const s = window.getSelection();
+    s.removeAllRanges();
+    s.addRange(r);
+    rSaveSel();
+    rUpdateActiveState();
+  }, 50);
 }
 
 function closeRichModal(save) {
@@ -3820,11 +3867,74 @@ function closeRichModal(save) {
   const m = document.getElementById('rich-modal');
   if(m) m.style.display = 'none';
   _richSaveFn = null;
+  _richSavedRange = null;
 }
 
 function rCmd(cmd, val) {
-  document.getElementById('rich-content')?.focus();
+  const c = document.getElementById('rich-content');
+  if(!c) return;
+  if(document.activeElement !== c) {
+    c.focus();
+    rRestoreSel();
+  }
+  try { document.execCommand('styleWithCSS', false, true); } catch(e){}
   document.execCommand(cmd, false, val ?? null);
+  rSaveSel();
+  rUpdateActiveState();
+}
+
+function rBlock(tag){
+  // formatBlock requires angle brackets in some browsers
+  rCmd('formatBlock', '<'+tag+'>');
+}
+
+function rHilite(color){
+  const c = document.getElementById('rich-content');
+  if(!c) return;
+  if(document.activeElement !== c) { c.focus(); rRestoreSel(); }
+  try { document.execCommand('styleWithCSS', false, true); } catch(e){}
+  // Chromium uses 'hiliteColor', some Webkit older versions need 'backColor'
+  if(!document.execCommand('hiliteColor', false, color)){
+    document.execCommand('backColor', false, color);
+  }
+  rSaveSel();
+}
+
+function rInsertLink(){
+  const sel = window.getSelection();
+  const selText = sel ? sel.toString() : '';
+  const url = prompt('Inserisci URL:', 'https://');
+  if(!url) return;
+  rRestoreSel();
+  if(selText){
+    rCmd('createLink', url);
+  } else {
+    rCmd('insertHTML', `<a href="${url.replace(/"/g,'&quot;')}" target="_blank" rel="noopener">${url.replace(/[<>&]/g,c=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]))}</a>`);
+  }
+}
+
+function rInsertCode(){
+  const sel = window.getSelection();
+  const selText = sel ? sel.toString() : '';
+  rRestoreSel();
+  if(selText){
+    rCmd('insertHTML', `<code style="background:rgba(127,127,127,.18);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.9em">${selText.replace(/[<>&]/g,c=>({ '<':'&lt;','>':'&gt;','&':'&amp;' }[c]))}</code>`);
+  } else {
+    rCmd('insertHTML', '<code style="background:rgba(127,127,127,.18);padding:1px 6px;border-radius:3px;font-family:var(--mono);font-size:.9em">code</code>');
+  }
+}
+
+function rUpdateActiveState(){
+  if(!rIsOpen()) return;
+  const cmds = ['bold','italic','underline','strikeThrough'];
+  cmds.forEach(cmd=>{
+    const btn = document.querySelector(`.rtb[data-cmd="${cmd}"]`);
+    if(btn){
+      let on = false;
+      try { on = document.queryCommandState(cmd); } catch(e){}
+      btn.classList.toggle('active', on);
+    }
+  });
 }
 
 function openRichForField(fieldId, title) {
@@ -3833,18 +3943,21 @@ function openRichForField(fieldId, title) {
   openRichModal(field.value, html => { field.value = html; }, title);
 }
 
-// Keyboard shortcuts inside modal
+// Track selection while editor is open
+document.addEventListener('selectionchange', () => {
+  if(!rIsOpen()) return;
+  rSaveSel();
+  rUpdateActiveState();
+});
+
+// Keyboard shortcuts — only the ones that aren't already handled natively by browser
 document.addEventListener('keydown', e => {
-  const modal = document.getElementById('rich-modal');
-  if(!modal || modal.style.display==='none') return;
-  if((e.metaKey||e.ctrlKey)){
-    if(e.key==='b'){ e.preventDefault(); rCmd('bold'); }
-    if(e.key==='i'){ e.preventDefault(); rCmd('italic'); }
-    if(e.key==='u'){ e.preventDefault(); rCmd('underline'); }
-    if(e.key==='s'){ e.preventDefault(); closeRichModal(true); }
-    if(e.key==='Enter'){ e.preventDefault(); closeRichModal(true); }
+  if(!rIsOpen()) return;
+  if((e.metaKey||e.ctrlKey) && !e.shiftKey && (e.key==='s' || e.key==='S')){
+    e.preventDefault(); closeRichModal(true);
+  } else if(e.key==='Escape'){
+    e.preventDefault(); closeRichModal(false);
   }
-  if(e.key==='Escape'){ closeRichModal(false); }
 });
 
 // ============ FRANCESE – ALLENAMENTO QUOTIDIANO ============
@@ -4304,65 +4417,82 @@ async function loadFrNews(){
 </script>
 
 <!-- ══ RICH EDITOR MODAL ══ -->
-<div id="rich-modal">
+<div id="rich-modal" onmousedown="rGuardMouseDown(event)">
   <div id="rich-modal-bar">
     <span id="rich-modal-title">Editor</span>
+    <span id="rich-modal-hint" style="font-size:.65rem;color:#666;font-family:var(--mono);letter-spacing:.5px;display:none">⌘B/I/U · ⌘S salva · Esc esci</span>
     <div id="rich-modal-actions">
-      <button class="btn ghost sm" onclick="closeRichModal(false)">✕ Annulla</button>
-      <button class="btn sm" onclick="closeRichModal(true)" style="background:var(--green);color:#000">✓ Salva</button>
+      <button type="button" class="btn ghost sm" onclick="closeRichModal(false)">✕ Annulla</button>
+      <button type="button" class="btn sm" onclick="closeRichModal(true)" style="background:var(--green);color:#000">✓ Salva</button>
     </div>
   </div>
   <div id="rich-toolbar">
-    <!-- Blocchi / heading -->
-    <select class="rtb-select" onchange="rCmd('formatBlock',this.value);this.value=''" title="Stile testo">
-      <option value="">— Stile —</option>
-      <option value="p">Paragrafo</option>
-      <option value="h1">Titolo H1</option>
-      <option value="h2">Titolo H2</option>
-      <option value="blockquote">Citazione</option>
-    </select>
+    <!-- Heading buttons -->
+    <button type="button" class="rtb" data-cmd="p" onmousedown="event.preventDefault()" onclick="rBlock('p')" title="Paragrafo normale">¶</button>
+    <button type="button" class="rtb" data-cmd="h1" onmousedown="event.preventDefault()" onclick="rBlock('h1')" title="Titolo grande" style="font-size:.95rem">H1</button>
+    <button type="button" class="rtb" data-cmd="h2" onmousedown="event.preventDefault()" onclick="rBlock('h2')" title="Titolo medio" style="font-size:.85rem">H2</button>
+    <button type="button" class="rtb" data-cmd="h3" onmousedown="event.preventDefault()" onclick="rBlock('h3')" title="Sottotitolo" style="font-size:.78rem">H3</button>
+    <button type="button" class="rtb" data-cmd="blockquote" onmousedown="event.preventDefault()" onclick="rBlock('blockquote')" title="Citazione">❝</button>
+    <div class="rtb-sep"></div>
     <!-- Font size -->
-    <select class="rtb-select" onchange="rCmd('fontSize',this.value);this.value=''" title="Dimensione">
-      <option value="">— Dim —</option>
+    <select class="rtb-select" onmousedown="rSaveSel()" onchange="rRestoreSel();rCmd('fontSize',this.value);this.value=''" title="Dimensione testo">
+      <option value="">DIM</option>
       <option value="1">XS</option>
-      <option value="3">Normal</option>
+      <option value="2">S</option>
+      <option value="3">M</option>
       <option value="4">L</option>
       <option value="5">XL</option>
       <option value="6">XXL</option>
+      <option value="7">XXXL</option>
     </select>
     <div class="rtb-sep"></div>
-    <!-- Format -->
-    <button class="rtb" onclick="rCmd('bold')" title="Grassetto (⌘B)"><b>B</b></button>
-    <button class="rtb" onclick="rCmd('italic')" title="Corsivo (⌘I)"><i>I</i></button>
-    <button class="rtb" onclick="rCmd('underline')" title="Sottolineato"><u>U</u></button>
-    <button class="rtb" onclick="rCmd('strikeThrough')" title="Barrato"><s>S</s></button>
+    <!-- Inline format -->
+    <button type="button" class="rtb" data-cmd="bold" onmousedown="event.preventDefault()" onclick="rCmd('bold')" title="Grassetto (⌘B)"><b>B</b></button>
+    <button type="button" class="rtb" data-cmd="italic" onmousedown="event.preventDefault()" onclick="rCmd('italic')" title="Corsivo (⌘I)"><i>I</i></button>
+    <button type="button" class="rtb" data-cmd="underline" onmousedown="event.preventDefault()" onclick="rCmd('underline')" title="Sottolineato (⌘U)"><u>U</u></button>
+    <button type="button" class="rtb" data-cmd="strikeThrough" onmousedown="event.preventDefault()" onclick="rCmd('strikeThrough')" title="Barrato"><s>S</s></button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rInsertCode()" title="Codice / monospace" style="font-family:var(--mono)">‹/›</button>
     <div class="rtb-sep"></div>
     <!-- Text colors -->
-    <span style="font-size:.6rem;color:#666;font-family:var(--mono);letter-spacing:.5px;margin-right:3px">A</span>
-    <span class="rtb-color" style="background:#ffffff" onclick="rCmd('foreColor','#ffffff')" title="Bianco"></span>
-    <span class="rtb-color" style="background:#e8eef9" onclick="rCmd('foreColor','#e8eef9')" title="Grigio chiaro"></span>
-    <span class="rtb-color" style="background:#00e5ff" onclick="rCmd('foreColor','#00e5ff')" title="Cyan"></span>
-    <span class="rtb-color" style="background:#00ff9d" onclick="rCmd('foreColor','#00ff9d')" title="Verde"></span>
-    <span class="rtb-color" style="background:#ffcc33" onclick="rCmd('foreColor','#ffcc33')" title="Giallo"></span>
-    <span class="rtb-color" style="background:#ff4d6d" onclick="rCmd('foreColor','#ff4d6d')" title="Rosso"></span>
-    <span class="rtb-color" style="background:#a855f7" onclick="rCmd('foreColor','#a855f7')" title="Viola"></span>
+    <span style="font-size:.6rem;color:#888;font-family:var(--mono);letter-spacing:.5px;margin-right:4px;font-weight:800">A</span>
+    <span class="rtb-color" style="background:#ffffff" onmousedown="event.preventDefault()" onclick="rCmd('foreColor','#ffffff')" title="Bianco"></span>
+    <span class="rtb-color" style="background:#8a9ab8" onmousedown="event.preventDefault()" onclick="rCmd('foreColor','#8a9ab8')" title="Grigio"></span>
+    <span class="rtb-color" style="background:#00e5ff" onmousedown="event.preventDefault()" onclick="rCmd('foreColor','#00e5ff')" title="Cyan"></span>
+    <span class="rtb-color" style="background:#00ff9d" onmousedown="event.preventDefault()" onclick="rCmd('foreColor','#00ff9d')" title="Verde"></span>
+    <span class="rtb-color" style="background:#ffcc33" onmousedown="event.preventDefault()" onclick="rCmd('foreColor','#ffcc33')" title="Giallo"></span>
+    <span class="rtb-color" style="background:#ff9500" onmousedown="event.preventDefault()" onclick="rCmd('foreColor','#ff9500')" title="Arancio"></span>
+    <span class="rtb-color" style="background:#ff4d6d" onmousedown="event.preventDefault()" onclick="rCmd('foreColor','#ff4d6d')" title="Rosso"></span>
+    <span class="rtb-color" style="background:#a855f7" onmousedown="event.preventDefault()" onclick="rCmd('foreColor','#a855f7')" title="Viola"></span>
     <div class="rtb-sep"></div>
     <!-- Highlight -->
-    <span style="font-size:.6rem;color:#666;font-family:var(--mono);letter-spacing:.5px;margin-right:3px">▐</span>
-    <span class="rtb-color" style="background:#ffcc3344;border:2px solid #ffcc33" onclick="rCmd('hiliteColor','#ffcc3330')" title="Evidenzia giallo"></span>
-    <span class="rtb-color" style="background:#00e5ff44;border:2px solid #00e5ff" onclick="rCmd('hiliteColor','#00e5ff25')" title="Evidenzia cyan"></span>
-    <span class="rtb-color" style="background:#00ff9d44;border:2px solid #00ff9d" onclick="rCmd('hiliteColor','#00ff9d25')" title="Evidenzia verde"></span>
-    <span class="rtb-color" style="background:#ff4d6d44;border:2px solid #ff4d6d" onclick="rCmd('hiliteColor','#ff4d6d25')" title="Evidenzia rosso"></span>
-    <span class="rtb-color" style="background:#33333366;border:2px solid #555" onclick="rCmd('hiliteColor','transparent')" title="Rimuovi evidenziazione"></span>
+    <span style="font-size:.7rem;color:#888;font-family:var(--mono);letter-spacing:.5px;margin-right:4px">▐</span>
+    <span class="rtb-color" style="background:#ffe066;border:2px solid #b38700" onmousedown="event.preventDefault()" onclick="rHilite('rgba(255,224,102,.45)')" title="Evidenzia giallo"></span>
+    <span class="rtb-color" style="background:#7fe5ff;border:2px solid #007088" onmousedown="event.preventDefault()" onclick="rHilite('rgba(127,229,255,.4)')" title="Evidenzia cyan"></span>
+    <span class="rtb-color" style="background:#7fffb5;border:2px solid #006633" onmousedown="event.preventDefault()" onclick="rHilite('rgba(127,255,181,.4)')" title="Evidenzia verde"></span>
+    <span class="rtb-color" style="background:#ff9eb0;border:2px solid #8c0020" onmousedown="event.preventDefault()" onclick="rHilite('rgba(255,158,176,.45)')" title="Evidenzia rosa"></span>
+    <span class="rtb-color" style="background:transparent;border:2px solid #666;position:relative" onmousedown="event.preventDefault()" onclick="rHilite('transparent')" title="Rimuovi evidenziazione">
+      <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:#888;font-weight:800">×</span>
+    </span>
+    <div class="rtb-sep"></div>
+    <!-- Alignment -->
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('justifyLeft')" title="Allinea a sinistra">⇤</button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('justifyCenter')" title="Centra">≡</button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('justifyRight')" title="Allinea a destra">⇥</button>
     <div class="rtb-sep"></div>
     <!-- Lists -->
-    <button class="rtb" onclick="rCmd('insertUnorderedList')" title="Elenco puntato">• Lista</button>
-    <button class="rtb" onclick="rCmd('insertOrderedList')" title="Elenco numerato">1. Lista</button>
-    <button class="rtb" onclick="rCmd('outdent')" title="Riduci rientro">⇤</button>
-    <button class="rtb" onclick="rCmd('indent')" title="Aumenta rientro">⇥</button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('insertUnorderedList')" title="Elenco puntato">• Lista</button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('insertOrderedList')" title="Elenco numerato">1. Lista</button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('outdent')" title="Riduci rientro">←</button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('indent')" title="Aumenta rientro">→</button>
     <div class="rtb-sep"></div>
-    <!-- Clear -->
-    <button class="rtb" onclick="rCmd('removeFormat')" title="Rimuovi formattazione">⊘ Clear</button>
+    <!-- Insert -->
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rInsertLink()" title="Inserisci link">🔗</button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('insertHorizontalRule')" title="Linea divisoria">—</button>
+    <div class="rtb-sep"></div>
+    <!-- History + clear -->
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('undo')" title="Annulla (⌘Z)">↶</button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('redo')" title="Ripeti (⌘⇧Z)">↷</button>
+    <button type="button" class="rtb" onmousedown="event.preventDefault()" onclick="rCmd('removeFormat')" title="Rimuovi formattazione">⊘</button>
   </div>
   <div id="rich-body-wrap">
     <div id="rich-content" contenteditable="true" data-placeholder="Inizia a scrivere…" spellcheck="true"></div>
