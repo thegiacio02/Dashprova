@@ -480,6 +480,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fl-concept-del:hover{color:var(--red)}
 .fl-edit-input{background:rgba(20,29,51,.8);border:1px solid var(--border2);color:#fff;padding:8px 10px;border-radius:6px;font-size:.82rem;width:100%;font-family:inherit;resize:vertical}
 .fl-edit-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,229,255,.1)}
+.fl-img-drop{border:2px dashed var(--border2);border-radius:8px;padding:18px 14px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(12,19,34,.4);min-height:100px;display:flex;align-items:center;justify-content:center}
+.fl-img-drop:hover,.fl-img-drop.drag-over{border-color:var(--accent);background:rgba(0,229,255,.04)}
 </style>
 </head>
 <body>
@@ -1277,8 +1279,21 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         </div>
       </div>
       <div class="field">
-        <label>URL immagine / chart (opz.)</label>
-        <input type="url" id="fl-img" placeholder="https://..."/>
+        <label>Immagine / Chart</label>
+        <div class="fl-img-drop" id="fl-img-drop" ondragover="flDragOver(event)" ondrop="flDrop(event)">
+          <div id="fl-img-preview-wrap" style="display:none">
+            <img id="fl-img-preview" style="max-height:160px;max-width:100%;border-radius:6px;display:block;margin:0 auto"/>
+            <button class="btn ghost sm" style="margin-top:8px;width:100%" onclick="flClearImg()">× Rimuovi</button>
+          </div>
+          <div id="fl-img-placeholder" style="display:flex;flex-direction:column;align-items:center">
+            <div style="font-size:1.5rem;margin-bottom:6px">📊</div>
+            <div style="font-size:.78rem;color:var(--muted2);margin-bottom:10px">Trascina, incolla (Cmd+V) o carica un grafico</div>
+            <label class="btn ghost sm" style="cursor:pointer">
+              📁 Scegli file
+              <input type="file" id="fl-img-file" accept="image/*" style="display:none" onchange="flFileUpload(event)"/>
+            </label>
+          </div>
+        </div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" onclick="addThought()">+ Aggiungi pensiero</button>
@@ -3245,12 +3260,69 @@ const FL_TAG_LABELS = {
 };
 
 let flStarPending = false;
+let FL_PENDING_IMG = null;
 
 function toggleFlStar(){
   flStarPending = !flStarPending;
   const btn = document.getElementById('fl-star-btn');
   if(btn) btn.textContent = flStarPending ? '⭐ Idea chiave ON' : '☆ Salva come idea chiave';
 }
+
+function flReadImageFile(file){
+  return new Promise((res,rej)=>{
+    const r = new FileReader();
+    r.onload = e => res(e.target.result);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function flShowImgPreview(base64){
+  FL_PENDING_IMG = base64;
+  const wrap = document.getElementById('fl-img-preview-wrap');
+  const img  = document.getElementById('fl-img-preview');
+  const ph   = document.getElementById('fl-img-placeholder');
+  if(img)  img.src = base64;
+  if(wrap) wrap.style.display = 'block';
+  if(ph)   ph.style.display   = 'none';
+}
+
+function flClearImg(){
+  FL_PENDING_IMG = null;
+  const wrap = document.getElementById('fl-img-preview-wrap');
+  const img  = document.getElementById('fl-img-preview');
+  const ph   = document.getElementById('fl-img-placeholder');
+  if(img)  img.src = '';
+  if(wrap) wrap.style.display = 'none';
+  if(ph)   ph.style.display   = 'flex';
+}
+
+function flDragOver(e){ e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+
+function flDrop(e){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const file = e.dataTransfer?.files?.[0];
+  if(file && file.type.startsWith('image/'))
+    flReadImageFile(file).then(flShowImgPreview);
+}
+
+function flFileUpload(e){
+  const file = e.target.files?.[0];
+  if(file) flReadImageFile(file).then(flShowImgPreview);
+}
+
+document.addEventListener('paste', e => {
+  if(!document.getElementById('fl-img-drop')) return;
+  const items = e.clipboardData?.items||[];
+  for(const item of items){
+    if(item.type.startsWith('image/')){
+      const file = item.getAsFile();
+      if(file) flReadImageFile(file).then(flShowImgPreview);
+      break;
+    }
+  }
+});
 
 function addThought(){
   ensureState();
@@ -3265,14 +3337,18 @@ function addThought(){
     body,
     tag:    document.getElementById('fl-tag').value,
     ticker: document.getElementById('fl-ticker').value.trim().toUpperCase(),
-    img:    document.getElementById('fl-img').value.trim(),
     starred: flStarPending
   };
+  if(FL_PENDING_IMG){
+    try{ localStorage.setItem('fl_img_'+t.id, FL_PENDING_IMG); }catch(e){}
+  }
   state.flThoughts.unshift(t);
   flStarPending = false;
-  ['fl-title','fl-body','fl-ticker','fl-img'].forEach(id=>{
+  FL_PENDING_IMG = null;
+  ['fl-title','fl-body','fl-ticker'].forEach(id=>{
     const el = document.getElementById(id); if(el) el.value='';
   });
+  flClearImg();
   const btn = document.getElementById('fl-star-btn');
   if(btn) btn.textContent = '☆ Salva come idea chiave';
   save(); renderFinanceLab();
@@ -3280,6 +3356,7 @@ function addThought(){
 
 function deleteThought(id){
   state.flThoughts = (state.flThoughts||[]).filter(t=>t.id!==id);
+  try{ localStorage.removeItem('fl_img_'+id); }catch(e){}
   save(); renderFinanceLab();
 }
 
@@ -3290,6 +3367,14 @@ function startEditThought(id){
   if(!el) return;
   const tagOptions = Object.entries(FL_TAG_LABELS).map(([v,l])=>
     `<option value="${v}"${t.tag===v?' selected':''}>${l}</option>`).join('');
+  const localImg = (()=>{ try{ return localStorage.getItem('fl_img_'+id)||''; }catch(e){ return ''; } })();
+  const existingImg = localImg || (t.img||'');
+  const imgPreview = existingImg
+    ? `<div style="position:relative;margin-bottom:4px">
+         <img src="${escapeHtml(existingImg)}" style="max-height:140px;max-width:100%;border-radius:6px;display:block"/>
+         <button class="btn ghost sm" style="margin-top:4px;width:100%" onclick="flEditClearImg('${id}')">× Rimuovi immagine</button>
+       </div>`
+    : '';
   el.innerHTML = `
     <div style="display:flex;flex-direction:column;gap:8px">
       <input class="fl-edit-input" value="${escapeHtml(t.title)}" placeholder="Titolo" id="fl-edit-title-${id}" style="font-weight:700"/>
@@ -3298,12 +3383,39 @@ function startEditThought(id){
         <select class="fl-edit-input" id="fl-edit-tag-${id}" style="flex:1">${tagOptions}</select>
         <input class="fl-edit-input" value="${escapeHtml(t.ticker||'')}" placeholder="Ticker" id="fl-edit-ticker-${id}" style="flex:1"/>
       </div>
-      <input class="fl-edit-input" value="${escapeHtml(t.img||'')}" placeholder="URL immagine" id="fl-edit-img-${id}"/>
+      <div>
+        <div style="font-size:.72rem;color:var(--muted2);margin-bottom:6px">Immagine / Chart</div>
+        <div id="fl-edit-img-wrap-${id}">${imgPreview}</div>
+        <label class="btn ghost sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+          📁 ${existingImg?'Sostituisci':'Carica'} immagine
+          <input type="file" accept="image/*" style="display:none" onchange="flEditFileUpload(event,'${id}')"/>
+        </label>
+      </div>
       <div style="display:flex;gap:8px">
         <button class="btn sm" onclick="saveEditThought('${id}')">✓ Salva</button>
         <button class="btn ghost sm" onclick="renderFinanceLab()">Annulla</button>
       </div>
     </div>`;
+}
+
+function flEditFileUpload(e, id){
+  const file = e.target.files?.[0];
+  if(!file) return;
+  flReadImageFile(file).then(base64=>{
+    const wrap = document.getElementById('fl-edit-img-wrap-'+id);
+    if(wrap){
+      wrap.dataset.pendingImg = base64;
+      wrap.innerHTML = `<div style="position:relative;margin-bottom:4px">
+        <img src="${escapeHtml(base64)}" style="max-height:140px;max-width:100%;border-radius:6px;display:block"/>
+        <button class="btn ghost sm" style="margin-top:4px;width:100%" onclick="flEditClearImg('${id}')">× Rimuovi immagine</button>
+      </div>`;
+    }
+  });
+}
+
+function flEditClearImg(id){
+  const wrap = document.getElementById('fl-edit-img-wrap-'+id);
+  if(wrap){ wrap.dataset.pendingImg = '__clear__'; wrap.innerHTML = ''; }
 }
 
 function saveEditThought(id){
@@ -3314,8 +3426,18 @@ function saveEditThought(id){
   t.body   = g(`fl-edit-body-${id}`).trim();
   t.tag    = g(`fl-edit-tag-${id}`);
   t.ticker = g(`fl-edit-ticker-${id}`).trim().toUpperCase();
-  t.img    = g(`fl-edit-img-${id}`).trim();
   if(!t.title){ alert('Inserisci un titolo.'); return; }
+  const wrap = document.getElementById('fl-edit-img-wrap-'+id);
+  if(wrap){
+    const pending = wrap.dataset.pendingImg||'';
+    if(pending === '__clear__'){
+      try{ localStorage.removeItem('fl_img_'+id); }catch(e){}
+      t.img = '';
+    } else if(pending){
+      try{ localStorage.setItem('fl_img_'+id, pending); }catch(e){}
+      t.img = '';
+    }
+  }
   save(); renderFinanceLab();
 }
 
@@ -3418,7 +3540,10 @@ function renderFinanceLab(){
     if(!filtered.length){
       feed.innerHTML = '<div style="color:var(--muted2);font-size:.78rem;padding:20px;text-align:center">Nessun pensiero ancora. Aggiungi la tua prima idea! 💡</div>';
     } else {
-      feed.innerHTML = filtered.map(t=>`
+      feed.innerHTML = filtered.map(t=>{
+        const localImg = (()=>{ try{ return localStorage.getItem('fl_img_'+t.id)||''; }catch(e){ return ''; } })();
+        const imgSrc = localImg || (t.img||'');
+        return `
         <div class="fl-thought${t.starred?' starred':''}" id="fl-t-${t.id}">
           <div class="fl-thought-header">
             <div class="fl-thought-title">${escapeHtml(t.title)}</div>
@@ -3428,14 +3553,14 @@ function renderFinanceLab(){
               <button onclick="deleteThought('${t.id}')" title="Elimina">🗑️</button>
             </div>
           </div>
-          ${t.img?`<img class="fl-thought-img" src="${escapeHtml(t.img)}" alt="chart" onerror="this.style.display='none'" onclick="window.open('${escapeHtml(t.img)}','_blank')"/>`:''}
+          ${imgSrc?`<img class="fl-thought-img" src="${escapeHtml(imgSrc)}" alt="chart" onerror="this.style.display='none'" onclick="this.requestFullscreen?this.requestFullscreen():window.open('${escapeHtml(imgSrc)}','_blank')"/>`:''}
           ${t.body?`<div class="fl-thought-body">${escapeHtml(t.body)}</div>`:''}
           <div class="fl-thought-meta">
             <span class="fl-tag-badge" style="color:${FL_TAG_COLORS[t.tag]||'#8a9ab8'};background:${FL_TAG_COLORS[t.tag]||'#8a9ab8'}18;border:1px solid ${FL_TAG_COLORS[t.tag]||'#8a9ab8'}30">${FL_TAG_LABELS[t.tag]||t.tag}</span>
             ${t.ticker?`<span class="fl-ticker">${escapeHtml(t.ticker)}</span>`:''}
             <span class="fl-thought-date">${t.date}</span>
           </div>
-        </div>`).join('');
+        </div>`; }).join('');
     }
   }
   renderConcepts();
