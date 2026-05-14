@@ -597,6 +597,43 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 [data-theme="light"] .dropdown.open .dropdown-toggle{color:var(--accent)}
 [data-theme="light"] .reminder-item .reminder-meta,
 [data-theme="light"] .reminder-item small{color:var(--muted)}
+/* === Francese: light theme polish === */
+[data-theme="light"] .fr-daily .fr-header-strip > div > div:first-child{color:var(--text)!important}
+[data-theme="light"] .fr-vcard{background:#fafbfc;border-color:var(--border)}
+[data-theme="light"] .fr-vcard:hover,
+[data-theme="light"] .fr-vcard.revealed{background:#fff;border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+[data-theme="light"] .fr-vcard .vc-word{color:var(--text)}
+[data-theme="light"] .fr-vcard .vc-it{color:var(--accent);font-weight:600}
+[data-theme="light"] .fr-ex-btn{background:#fafbfc;border-color:var(--border);color:var(--text)}
+[data-theme="light"] .fr-ex-btn:hover{background:#fff;border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+[data-theme="light"] .mot-sentence{background:rgba(220,38,38,.04);border-left-color:var(--accent)}
+[data-theme="light"] .mot-sentence em{color:var(--muted)}
+[data-theme="light"] .mot-fact{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2);color:#a16207}
+[data-theme="light"] .fr-citation{color:var(--text)}
+[data-theme="light"] .fr-tip-box{background:linear-gradient(135deg,rgba(220,38,38,.04),rgba(139,92,246,.04));border-color:var(--border)}
+[data-theme="light"] .fr-streak{color:#d97706}
+[data-theme="light"] #fr-level-badge{background:rgba(220,38,38,.08)!important;color:var(--accent)!important}
+/* === AI Lesson section === */
+.fr-ai-lesson{background:linear-gradient(135deg,rgba(139,92,246,.05),rgba(220,38,38,.04));border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:4px}
+.fr-ai-lesson .lesson-title{font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:4px;line-height:1.3}
+.fr-ai-lesson .lesson-theme{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted2);font-family:var(--mono);margin-bottom:12px}
+.fr-ai-lesson .lesson-block{margin-bottom:14px;padding-bottom:12px;border-bottom:1px dashed var(--border)}
+.fr-ai-lesson .lesson-block:last-child{margin-bottom:0;padding-bottom:0;border-bottom:0}
+.fr-ai-lesson .lesson-block-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:700;font-family:var(--mono);margin-bottom:6px}
+.fr-ai-lesson .lesson-fr{font-size:.92rem;line-height:1.55;color:var(--text);font-weight:500}
+.fr-ai-lesson .lesson-it{font-size:.78rem;line-height:1.45;color:var(--muted);font-style:italic;margin-top:3px}
+.fr-ai-lesson .lesson-grammar{font-size:.83rem;line-height:1.55;background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+[data-theme="dark"] .fr-ai-lesson .lesson-grammar{background:rgba(255,255,255,.03)}
+.fr-phrase-row{display:flex;flex-direction:column;gap:1px;padding:7px 0;border-bottom:1px solid var(--border)}
+.fr-phrase-row:last-child{border-bottom:0}
+.fr-mini-ex{background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+[data-theme="dark"] .fr-mini-ex{background:rgba(255,255,255,.03)}
+.fr-mini-ex .ex-q{font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:8px}
+.fr-mini-ex .ex-reveal-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:6px;font-size:.72rem;cursor:pointer;font-family:var(--mono)}
+.fr-mini-ex .ex-reveal-btn:hover{border-color:var(--accent);color:var(--accent)}
+.fr-mini-ex .ex-answer{margin-top:8px;font-size:.85rem;color:var(--accent);font-weight:600;display:none}
+.fr-mini-ex.revealed .ex-answer{display:block}
+.fr-mini-ex.revealed .ex-reveal-btn{display:none}
 
 /* ── RICH EDITOR MODAL ── */
 #rich-modal{position:fixed;inset:0;z-index:999999;display:none;flex-direction:column;background:#0a0d14}
@@ -1358,7 +1395,16 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       </div>
     </div>
 
-    <!-- 4 · Citation du Jour -->
+    <!-- 4 · Impara con l'AI -->
+    <div class="fr-section">
+      <div class="fr-section-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span>🎓 Impara con l'AI <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;font-size:.63rem">— lezione personalizzata del giorno</span></span>
+        <button class="btn ghost sm" onclick="fetchAILesson(true)" id="fr-lesson-regen" style="font-size:.65rem;padding:3px 9px">↻ Nuova lezione</button>
+      </div>
+      <div id="fr-ai-lesson"><div style="color:var(--muted);font-size:.82rem">⏳ Preparo la lezione di oggi…</div></div>
+    </div>
+
+    <!-- 5 · Citation du Jour -->
     <div class="fr-section">
       <div class="fr-section-title">💬 Citation du Jour</div>
       <div class="fr-citation" id="fr-citation-text"></div>
@@ -1958,7 +2004,8 @@ function defaultState(){ return {
     focus:{},
     flTagFilter:'all',
     aiChat:{messages:[]},
-    dailyMotivation:null
+    dailyMotivation:null,
+    frAILesson:null
   };}
 
 function load(){
@@ -2314,6 +2361,7 @@ function renderFrancese(){
 
   try { renderFrDaily(); } catch(e){ console.error('renderFrDaily error:', e); }
   try { loadFrNews(); } catch(e){ console.error('loadFrNews error:', e); }
+  try { fetchAILesson(false); } catch(e){ console.error('fetchAILesson error:', e); }
 }
 
 function renderSleepChart(){
@@ -5686,6 +5734,131 @@ function frBuildExercises(mot, words5){
   });
 
   return exercises;
+}
+
+async function fetchAILesson(force=false){
+  ensureState();
+  const wrap = document.getElementById('fr-ai-lesson');
+  if(!wrap) return;
+  const key = getGeminiKey();
+  if(!key){
+    wrap.innerHTML = `<div style="text-align:center;padding:14px;color:var(--muted2);font-size:.85rem">🔑 Serve l'API Gemini. <button class="btn sm" onclick="openGeminiSetup()" style="margin-left:8px">Configura</button></div>`;
+    return;
+  }
+
+  const today = todayISO();
+  const cached = state.frAILesson;
+  if(!force && cached && cached.date===today){
+    renderAILesson(cached); return;
+  }
+
+  wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">⏳ Preparo la lezione di oggi…</div>';
+  const btn = document.getElementById('fr-lesson-regen');
+  if(btn) btn.disabled = true;
+
+  try {
+    const recentLessons = (state.frLessonHistory||[]).slice(-7).map(l=>l.theme).filter(Boolean);
+    const savedVocab = (state.vocab||[]).slice(-20).map(v=>v.fr).filter(Boolean);
+    const prompt = `Sei un insegnante di francese di Giacomo, studente italiano livello B1-B2 che lavora nel settore finanziario.
+Oggi è ${new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}.
+
+CONTEXT:
+- Vocaboli che Giacomo conosce già: ${savedVocab.length ? savedVocab.join(', ') : '(pochi)'}
+- Temi di lezioni recenti da NON ripetere: ${recentLessons.length ? recentLessons.join(' | ') : '(nessuno)'}
+
+Genera la lezione del giorno come JSON puro (niente markdown):
+{
+  "theme": "tema/categoria breve (max 4 parole)",
+  "title": "titolo della lezione in italiano (max 60 char)",
+  "intro_fr": "introduzione al tema in francese (2-3 frasi, livello B1-B2)",
+  "intro_it": "traduzione italiana dell'intro (fluente, non letterale)",
+  "key_phrases": [
+    {"fr":"frase utile 1","it":"traduzione 1"},
+    {"fr":"frase utile 2","it":"traduzione 2"},
+    {"fr":"frase utile 3","it":"traduzione 3"},
+    {"fr":"frase utile 4","it":"traduzione 4"}
+  ],
+  "grammar_focus": "Un punto grammaticale o sfumatura linguistica spiegata in italiano in 2-3 frasi, con esempio in francese inserito a metà spiegazione.",
+  "mini_exercise": {
+    "question": "esercizio rapido in italiano: traduci, completa, scegli (max 1 frase)",
+    "answer": "risposta corretta in francese"
+  }
+}
+
+Regole:
+- Tema: alterna tra finanza/business, vita quotidiana francese, espressioni idiomatiche, sfumature culturali, faux-amis, congiuntivo, condizionale. Sii sorprendente, non sempre "il presente di être".
+- Livello B1-B2: vocabolario non banale ma comprensibile.
+- Le 4 key_phrases devono essere USABILI in conversazione, non astratte.
+- grammar_focus: una cosa concreta che italiani sbagliano spesso.
+- mini_exercise: deve testare ciò che hai appena insegnato, non altro.
+SOLO JSON.`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+    const resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{parts:[{text: prompt}]}],
+        generationConfig:{ temperature:.8, maxOutputTokens:2500, thinkingConfig:{thinkingBudget:0}, responseMimeType:'application/json' }
+      })
+    });
+    if(!resp.ok){ const t=await resp.text(); throw new Error('HTTP '+resp.status+' — '+t.slice(0,200)); }
+    const data = await resp.json();
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const parsed = JSON.parse(raw.replace(/^```json\s*/i,'').replace(/```\s*$/,'').trim());
+    if(!parsed.title || !parsed.key_phrases) throw new Error('JSON incompleto');
+
+    state.frAILesson = { ...parsed, date: today, timestamp: new Date().toISOString() };
+    state.frLessonHistory = state.frLessonHistory || [];
+    state.frLessonHistory.push({ date: today, theme: parsed.theme||'' });
+    if(state.frLessonHistory.length > 30) state.frLessonHistory = state.frLessonHistory.slice(-30);
+    save();
+    renderAILesson(state.frAILesson);
+  } catch(e){
+    wrap.innerHTML = `<div style="color:var(--red);font-size:.82rem;padding:8px 0">Errore: ${escapeHtml(e.message)} <button class="btn ghost sm" onclick="fetchAILesson(true)" style="margin-left:6px">Riprova</button></div>`;
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+}
+
+function renderAILesson(l){
+  const wrap = document.getElementById('fr-ai-lesson');
+  if(!wrap || !l) return;
+  const phrases = (l.key_phrases||[]).map(p=>`
+    <div class="fr-phrase-row">
+      <div class="lesson-fr">${escapeHtml(p.fr||'')}</div>
+      <div class="lesson-it">${escapeHtml(p.it||'')}</div>
+    </div>`).join('');
+
+  wrap.innerHTML = `<div class="fr-ai-lesson">
+    <div class="lesson-title">${escapeHtml(l.title||'')}</div>
+    <div class="lesson-theme">${escapeHtml(l.theme||'')}</div>
+
+    <div class="lesson-block">
+      <div class="lesson-block-label">Introduzione</div>
+      <div class="lesson-fr">${escapeHtml(l.intro_fr||'')}</div>
+      <div class="lesson-it">${escapeHtml(l.intro_it||'')}</div>
+    </div>
+
+    <div class="lesson-block">
+      <div class="lesson-block-label">Frasi chiave</div>
+      ${phrases}
+    </div>
+
+    ${l.grammar_focus ? `<div class="lesson-block">
+      <div class="lesson-block-label">Punto grammaticale</div>
+      <div class="lesson-grammar">${escapeHtml(l.grammar_focus)}</div>
+    </div>` : ''}
+
+    ${l.mini_exercise ? `<div class="lesson-block">
+      <div class="lesson-block-label">Esercizio</div>
+      <div class="fr-mini-ex" id="fr-mini-ex">
+        <div class="ex-q">${escapeHtml(l.mini_exercise.question||'')}</div>
+        <button class="ex-reveal-btn" onclick="document.getElementById('fr-mini-ex').classList.add('revealed')">Mostra risposta</button>
+        <div class="ex-answer">→ ${escapeHtml(l.mini_exercise.answer||'')}</div>
+      </div>
+    </div>` : ''}
+  </div>`;
 }
 
 function renderFrDaily(){
