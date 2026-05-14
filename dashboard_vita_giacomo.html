@@ -739,7 +739,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <input type="text" id="oggi-quick-todo" placeholder="Aggiungi al volo… (Invio)" style="flex:1" onkeydown="if(event.key==='Enter')quickAddTodo()"/>
         <button class="btn sm" onclick="quickAddTodo()" style="padding:0 14px">+</button>
       </div>
-      <ul class="clean" id="today-todos-list"></ul>
+      <div id="today-todos-list"></div>
     </div>
 
     <div style="display:flex;flex-direction:column;gap:16px">
@@ -4270,7 +4270,7 @@ Regole:
 TITOLI DI OGGI:
 ${headlines.join('\n')}`;
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(key)}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
     const resp = await fetch(url, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -4287,7 +4287,7 @@ ${headlines.join('\n')}`;
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     if(!text) throw new Error('Risposta vuota dal modello.');
 
-    state.aiBriefing = { text: text.trim(), timestamp: new Date().toISOString(), model:'gemini-2.0-flash' };
+    state.aiBriefing = { text: text.trim(), timestamp: new Date().toISOString(), model:'gemini-2.5-flash' };
     save();
     renderAIBriefing();
   } catch(e){
@@ -4362,16 +4362,16 @@ function renderTodayTodos(){
     });
   if(count) count.textContent = items.length;
   if(!items.length){
-    list.innerHTML = '<li style="color:var(--muted);text-align:center;padding:14px;font-size:.86rem">🎉 Niente da fare oggi!</li>';
+    list.innerHTML = '<div style="color:var(--muted);text-align:center;padding:14px;font-size:.86rem">🎉 Niente da fare oggi!</div>';
     return;
   }
   list.innerHTML = items.slice(0,12).map(t => {
     const overdue = t.due && t.due < today;
-    return `<li style="display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <input type="checkbox" onchange="toggleTodo('${t.id}');renderTodayTodos();" style="cursor:pointer;flex-shrink:0;margin:0"/>
-      <span style="flex:1 1 0;min-width:0;font-size:.86rem;line-height:1.4;word-wrap:break-word;${overdue?'color:var(--red)':''}">${escapeHtml(t.text)}${overdue?' <span style="font-size:.7rem;opacity:.7">(scaduta '+t.due+')</span>':''}</span>
-      ${t.prio==='high'?'<span style="font-size:.65rem;color:var(--red);font-weight:700;flex-shrink:0">●</span>':''}
-    </li>`;
+    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <input type="checkbox" onchange="toggleTodo('${t.id}');renderTodayTodos();" style="cursor:pointer;flex-shrink:0;margin-top:2px"/>
+      <div style="flex:1;min-width:0;font-size:.86rem;line-height:1.45;${overdue?'color:var(--red)':'color:var(--text)'}">${escapeHtml(t.text)}${overdue?` <span style="font-size:.7rem;opacity:.6">(scad. ${t.due})</span>`:''}</div>
+      ${t.prio==='high'?'<span style="font-size:.65rem;color:var(--red);font-weight:700;flex-shrink:0;margin-top:4px">●</span>':''}
+    </div>`;
   }).join('');
 }
 
