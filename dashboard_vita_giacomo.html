@@ -4522,30 +4522,38 @@ async function fetchCalendar(force=false){
     { name:'corsproxy.io',  url:`https://corsproxy.io/?url=${enc}` },
     { name:'allorigins',    url:`https://api.allorigins.win/raw?url=${enc}` },
     { name:'codetabs',      url:`https://api.codetabs.com/v1/proxy/?quest=${ICAL_URL}` },
-    { name:'thingproxy',    url:`https://thingproxy.freeboard.io/fetch/${ICAL_URL}` },
     { name:'cors.lol',      url:`https://api.cors.lol/?url=${enc}` },
+    { name:'thingproxy',    url:`https://thingproxy.freeboard.io/fetch/${ICAL_URL}` },
   ];
 
-  const errors = [];
-  let text = null;
-  for(const p of proxies){
+  const tryProxy = async (p)=>{
+    const ctrl = new AbortController();
+    const t = setTimeout(()=>ctrl.abort(), 9000);
     try {
-      const ctrl = new AbortController();
-      const t = setTimeout(()=>ctrl.abort(), 12000);
       const r = await fetch(p.url, { signal: ctrl.signal, cache:'no-store' });
-      clearTimeout(t);
       const body = await r.text();
-      if(r.ok && /BEGIN:VCALENDAR/i.test(body)){
-        text = body;
-        break;
-      }
-      errors.push(`${p.name}: HTTP ${r.status} — ${body.slice(0,80)}`);
+      clearTimeout(t);
+      if(r.ok && /BEGIN:VCALENDAR/i.test(body)) return { ok:true, name:p.name, body };
+      return { ok:false, name:p.name, err:`HTTP ${r.status} — ${body.slice(0,60)}` };
     } catch(e){
-      errors.push(`${p.name}: ${e.name==='AbortError'?'timeout':e.message}`);
+      clearTimeout(t);
+      return { ok:false, name:p.name, err: e.name==='AbortError'?'timeout':e.message };
     }
+  };
+
+  // Run all proxies in parallel, take first successful
+  let text = null, winner = null;
+  const errors = [];
+  try {
+    const result = await Promise.any(proxies.map(p => tryProxy(p).then(r => r.ok ? r : Promise.reject(r))));
+    text = result.body;
+    winner = result.name;
+  } catch(agg){
+    if(agg && agg.errors) agg.errors.forEach(e => errors.push(`${e.name}: ${e.err}`));
   }
 
   if(!text){
+    // Fallback: also collect any pending results sequentially in case Promise.any logic missed something
     if(wrap){
       wrap.innerHTML = `<div style="color:var(--red);font-size:.78rem;line-height:1.5">
         <strong>Calendario non raggiungibile.</strong> Nessun proxy CORS ha risposto con un file iCalendar valido.<br>
@@ -4560,7 +4568,7 @@ async function fetchCalendar(force=false){
 
   try {
     const events = parseICS(text);
-    _icalCache = { events, timestamp: Date.now(), rawSize: text.length };
+    _icalCache = { events, timestamp: Date.now(), rawSize: text.length, proxy: winner };
     renderCalendar(events);
   } catch(e){
     if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:.82rem">Errore parsing ICS: ${escapeHtml(e.message)}</div>`;
@@ -4568,7 +4576,7 @@ async function fetchCalendar(force=false){
 }
 
 function parseICS(text){
-  text = text.replace(/\r\n[ \t]/g,'').replace(/\r/g,'');
+  text = text.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'').replace(/\r/g,'');
   const lines = text.split('\n');
   const events = [];
   let cur = null;
@@ -4588,12 +4596,98 @@ function parseICS(text){
     else if(base==='LOCATION') cur.location = _unescapeICS(val);
     else if(base==='UID') cur.uid = val;
     else if(base==='RRULE') cur.rrule = val;
+    else if(base==='EXDATE'){ cur.exdates = cur.exdates||[]; cur.exdates.push(_parseICSDate(key,val)); }
   }
+
   const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
-  const limit = new Date(todayMidnight); limit.setDate(limit.getDate()+14);
-  return events
-    .filter(e=>e.dtstart && e.dtstart>=todayMidnight && e.dtstart<=limit)
-    .sort((a,b)=>a.dtstart-b.dtstart);
+  const limit = new Date(todayMidnight); limit.setDate(limit.getDate()+60); // next 60 days
+
+  // Expand recurring events
+  const expanded = [];
+  for(const e of events){
+    if(!e.dtstart) continue;
+    if(!e.rrule){
+      if(e.dtstart >= todayMidnight && e.dtstart <= limit) expanded.push(e);
+      continue;
+    }
+    const occ = _expandRRule(e, todayMidnight, limit);
+    for(const o of occ) expanded.push(o);
+  }
+
+  return expanded.sort((a,b)=>a.dtstart-b.dtstart).slice(0, 80);
+}
+
+function _expandRRule(event, from, to){
+  // Parse RRULE: FREQ=...;INTERVAL=...;COUNT=...;UNTIL=...;BYDAY=...
+  const parts = {};
+  event.rrule.split(';').forEach(p=>{ const [k,v]=p.split('='); if(k) parts[k.toUpperCase()]=v; });
+  const freq = parts.FREQ;
+  const interval = parseInt(parts.INTERVAL||'1', 10) || 1;
+  const count = parts.COUNT ? parseInt(parts.COUNT,10) : null;
+  let until = null;
+  if(parts.UNTIL){
+    const u = parts.UNTIL;
+    const m = u.match(/^(\d{4})(\d{2})(\d{2})(T(\d{2})(\d{2})(\d{2})(Z?))?$/);
+    if(m){
+      if(m[4]) until = m[8]==='Z' ? new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[5],+m[6],+m[7])) : new Date(+m[1],+m[2]-1,+m[3],+m[5],+m[6],+m[7]);
+      else until = new Date(+m[1],+m[2]-1,+m[3]);
+    }
+  }
+  const byday = parts.BYDAY ? parts.BYDAY.split(',') : null;
+  const dayMap = {SU:0,MO:1,TU:2,WE:3,TH:4,FR:5,SA:6};
+  const exdates = (event.exdates||[]).filter(Boolean).map(d=>d.getTime());
+
+  const out = [];
+  const start = event.dtstart;
+  const duration = event.dtend ? (event.dtend.getTime() - start.getTime()) : 0;
+  let cursor = new Date(start);
+  let n = 0;
+  const MAX_ITER = 500;
+
+  while(n < MAX_ITER){
+    if(cursor > to) break;
+    if(until && cursor > until) break;
+    if(count !== null && out.length >= count) break;
+
+    const candidates = [];
+    if(byday && (freq==='WEEKLY' || freq==='DAILY')){
+      const weekStart = new Date(cursor); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+      byday.forEach(d=>{
+        const dow = dayMap[d.replace(/^[+-]?\d+/,'')];
+        if(dow==null) return;
+        const candidate = new Date(weekStart); candidate.setDate(weekStart.getDate()+dow);
+        candidate.setHours(start.getHours(),start.getMinutes(),start.getSeconds(),0);
+        if(candidate >= start) candidates.push(candidate);
+      });
+    } else {
+      candidates.push(new Date(cursor));
+    }
+
+    for(const c of candidates){
+      if(c < start) continue;
+      if(c > to) break;
+      if(until && c > until) break;
+      if(exdates.includes(c.getTime())) continue;
+      if(c >= from){
+        out.push({
+          ...event,
+          dtstart: new Date(c),
+          dtend: duration ? new Date(c.getTime()+duration) : null,
+          recurring: true
+        });
+      }
+      if(count !== null && out.length >= count) return out;
+    }
+
+    // Advance cursor
+    if(freq==='DAILY')   cursor.setDate(cursor.getDate()+interval);
+    else if(freq==='WEEKLY')  cursor.setDate(cursor.getDate()+(7*interval));
+    else if(freq==='MONTHLY') cursor.setMonth(cursor.getMonth()+interval);
+    else if(freq==='YEARLY')  cursor.setFullYear(cursor.getFullYear()+interval);
+    else break;
+    n++;
+  }
+  return out;
 }
 
 function _parseICSDate(key, val){
