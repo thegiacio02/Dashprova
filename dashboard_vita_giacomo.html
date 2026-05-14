@@ -751,15 +751,15 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div id="today-todos-list"></div>
     </div>
 
-    <div style="display:flex;flex-direction:column;gap:16px">
-      <div class="card" style="margin:0">
-        <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🔥</span> Abitudini oggi</span><span class="card-badge" id="oggi-habits-count">0</span></h2>
-        <div id="oggi-habits-list"></div>
-      </div>
-      <div class="card" style="margin:0">
-        <h2><span class="ico">🎯</span> Focus del giorno</h2>
-        <input type="text" id="oggi-focus" placeholder="Una cosa sola da portare a casa oggi…" onblur="saveFocus()" onkeydown="if(event.key==='Enter')this.blur()" style="font-size:.9rem"/>
-      </div>
+    <div class="card" style="margin:0">
+      <h2 style="justify-content:space-between">
+        <span style="display:flex;align-items:center;gap:8px"><span class="ico">📅</span> Calendario</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span id="cal-meta" style="font-size:.72rem;color:var(--muted2)"></span>
+          <button class="btn ghost sm" onclick="fetchCalendar(true)" title="Aggiorna" style="padding:2px 8px">↻</button>
+        </span>
+      </h2>
+      <div id="cal-events"><div style="color:var(--muted);font-size:.82rem">⏳ Carico calendario…</div></div>
     </div>
   </div>
 
@@ -3208,8 +3208,6 @@ function renderAll(){
   try { renderFinanceLab(); } catch(e){ console.error('renderFinanceLab error:', e); }
   try { renderDiario();      } catch(e){ console.error('renderDiario error:', e); }
   try { renderTodayTodos();  } catch(e){ console.error('renderTodayTodos error:', e); }
-  try { renderOggiHabits();  } catch(e){ console.error('renderOggiHabits error:', e); }
-  try { renderFocus();       } catch(e){ console.error('renderFocus error:', e); }
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
 }
 
@@ -3358,9 +3356,12 @@ function dashInit() {
   renderAll();
   pullFromFirebase().then(loaded => { if(loaded) renderAll(); });
   setInterval(async ()=>{ const loaded = await pullFromFirebase(); if(loaded) renderAll(); }, 60000);
-  // AI briefing: try generating on boot if stale, then check hourly
+  // AI briefing
   setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
   scheduleAIBriefing();
+  // iCloud Calendar
+  fetchCalendar(false);
+  setInterval(()=>fetchCalendar(false), 15*60*1000);
 }
 
 // Start auth check — dashboard boots only after successful login
@@ -4460,6 +4461,131 @@ function saveFocus(){
   state.focus = state.focus || {};
   state.focus[todayISO()] = input.value.trim();
   save();
+}
+
+// ============ ICAL CALENDAR ============
+const ICAL_URL = 'https://p186-caldav.icloud.com/published/2/ODM1NTc4OTI0NzgzNTU3OEsQlXBnsFPUcJc6WkO-CG1RYhzw_Vy38tOdVyjRWkF5';
+const ICAL_CACHE_MS = 15 * 60 * 1000;
+let _icalCache = null;
+
+async function fetchCalendar(force=false){
+  if(!force && _icalCache && (Date.now()-_icalCache.timestamp < ICAL_CACHE_MS)){
+    renderCalendar(_icalCache.events); return;
+  }
+  const wrap = document.getElementById('cal-events');
+  if(wrap) wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem">⏳ Carico calendario…</div>';
+  try {
+    const encoded = encodeURIComponent(ICAL_URL);
+    let text = null;
+    try {
+      const r = await fetch(`https://api.allorigins.win/raw?url=${encoded}`);
+      if(r.ok) text = await r.text();
+    } catch(e){}
+    if(!text){
+      const r2 = await fetch(`https://corsproxy.io/?url=${encoded}`);
+      if(r2.ok) text = await r2.text();
+    }
+    if(!text) throw new Error('Impossibile raggiungere il calendario iCloud');
+    const events = parseICS(text);
+    _icalCache = { events, timestamp: Date.now() };
+    renderCalendar(events);
+  } catch(e){
+    if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:.82rem">Errore caricamento: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function parseICS(text){
+  text = text.replace(/\r\n[ \t]/g,'').replace(/\r/g,'');
+  const lines = text.split('\n');
+  const events = [];
+  let cur = null;
+  for(const raw of lines){
+    const line = raw.trim();
+    if(line==='BEGIN:VEVENT'){ cur={}; continue; }
+    if(line==='END:VEVENT'){ if(cur) events.push(cur); cur=null; continue; }
+    if(!cur) continue;
+    const col = line.indexOf(':');
+    if(col<0) continue;
+    const key = line.slice(0,col).toUpperCase();
+    const val = line.slice(col+1);
+    const base = key.split(';')[0];
+    if(base==='DTSTART') cur.dtstart = _parseICSDate(key,val);
+    else if(base==='DTEND') cur.dtend = _parseICSDate(key,val);
+    else if(base==='SUMMARY') cur.summary = _unescapeICS(val);
+    else if(base==='LOCATION') cur.location = _unescapeICS(val);
+    else if(base==='UID') cur.uid = val;
+    else if(base==='RRULE') cur.rrule = val;
+  }
+  const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
+  const limit = new Date(todayMidnight); limit.setDate(limit.getDate()+14);
+  return events
+    .filter(e=>e.dtstart && e.dtstart>=todayMidnight && e.dtstart<=limit)
+    .sort((a,b)=>a.dtstart-b.dtstart);
+}
+
+function _parseICSDate(key, val){
+  const isDate = key.includes('VALUE=DATE') && !key.includes('DATE-TIME');
+  if(isDate){
+    const y=+val.slice(0,4), m=+val.slice(4,6)-1, d=+val.slice(6,8);
+    return new Date(y,m,d,0,0,0);
+  }
+  const mt = val.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(Z?)$/);
+  if(mt){
+    const [,yr,mo,dy,hh,mm,ss,z] = mt;
+    if(z==='Z') return new Date(Date.UTC(+yr,+mo-1,+dy,+hh,+mm,+ss));
+    return new Date(+yr,+mo-1,+dy,+hh,+mm,+ss);
+  }
+  return null;
+}
+
+function _unescapeICS(s){
+  return s.replace(/\\n/g,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
+}
+
+function renderCalendar(events){
+  const wrap = document.getElementById('cal-events');
+  const meta = document.getElementById('cal-meta');
+  if(!wrap) return;
+  if(!events||!events.length){
+    wrap.innerHTML = '<div style="color:var(--muted);text-align:center;padding:12px;font-size:.82rem">Nessun evento nei prossimi 14 giorni 🎉</div>';
+    if(meta) meta.textContent='';
+    return;
+  }
+  const dayFmt = {weekday:'short',day:'numeric',month:'short'};
+  const todayStr = new Date().toLocaleDateString('it-IT',dayFmt);
+  const tomorrowStr = new Date(Date.now()+864e5).toLocaleDateString('it-IT',dayFmt);
+  const groups = {};
+  events.forEach(e=>{
+    const k = e.dtstart.toLocaleDateString('it-IT',dayFmt);
+    if(!groups[k]) groups[k]=[];
+    groups[k].push(e);
+  });
+  const now = new Date();
+  let html='';
+  Object.entries(groups).forEach(([day,evts])=>{
+    const label = day===todayStr
+      ? '<strong style="color:var(--accent)">Oggi</strong>'
+      : day===tomorrowStr ? '<strong>Domani</strong>' : day;
+    html+=`<div style="margin-bottom:12px"><div style="font-size:.71rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted2);margin-bottom:4px;padding-bottom:3px;border-bottom:1px solid var(--border)">${label}</div>`;
+    evts.forEach(e=>{
+      const dur = e.dtend ? e.dtend.getTime()-e.dtstart.getTime() : 0;
+      const allDay = e.dtstart.getHours()===0 && e.dtstart.getMinutes()===0 && dur>=864e5;
+      const timeStr = allDay ? 'Tutto il giorno'
+        : e.dtstart.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})
+          +(e.dtend?' – '+e.dtend.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'');
+      const isNow = !allDay && e.dtstart<=now && e.dtend && e.dtend>now;
+      html+=`<div style="display:flex;align-items:flex-start;gap:8px;padding:5px ${isNow?'6px':'0'};border-bottom:1px solid var(--border);${isNow?'background:rgba(var(--accent-rgb,99,102,241),.07);border-radius:5px':''}">
+        <span style="flex:0 0 auto;font-size:.72rem;color:${isNow?'var(--accent)':'var(--muted2)'};min-width:90px;padding-top:2px;line-height:1.3">${timeStr}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.86rem;font-weight:${isNow?'600':'400'};line-height:1.3;word-break:break-word">${escapeHtml(e.summary||'(senza titolo)')}</div>
+          ${e.location?`<div style="font-size:.72rem;color:var(--muted2);margin-top:1px">📍 ${escapeHtml(e.location)}</div>`:''}
+        </div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  wrap.innerHTML=html;
+  if(meta&&_icalCache) meta.textContent=`aggiornato ${formatTimeAgo(new Date(_icalCache.timestamp))}`;
 }
 
 // ============ RICH TEXT EDITOR ============
