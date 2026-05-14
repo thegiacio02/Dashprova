@@ -4614,7 +4614,7 @@ function parseICS(text){
     for(const o of occ) expanded.push(o);
   }
 
-  return expanded.sort((a,b)=>a.dtstart-b.dtstart).slice(0, 80);
+  return expanded.sort((a,b)=>a.dtstart-b.dtstart).slice(0, 12);
 }
 
 function _expandRRule(event, from, to){
@@ -4718,8 +4718,10 @@ function renderCalendar(events){
     if(meta) meta.textContent='';
     return;
   }
+  const now = new Date();
+  const currentYear = now.getFullYear();
   const dayFmt = {weekday:'short',day:'numeric',month:'short'};
-  const todayStr = new Date().toLocaleDateString('it-IT',dayFmt);
+  const todayStr = now.toLocaleDateString('it-IT',dayFmt);
   const tomorrowStr = new Date(Date.now()+864e5).toLocaleDateString('it-IT',dayFmt);
   const groups = {};
   events.forEach(e=>{
@@ -4727,12 +4729,13 @@ function renderCalendar(events){
     if(!groups[k]) groups[k]=[];
     groups[k].push(e);
   });
-  const now = new Date();
   let html='';
   Object.entries(groups).forEach(([day,evts])=>{
+    const evYear = evts[0].dtstart.getFullYear();
+    const yearSuffix = evYear !== currentYear ? ` ${evYear}` : '';
     const label = day===todayStr
       ? '<strong style="color:var(--accent)">Oggi</strong>'
-      : day===tomorrowStr ? '<strong>Domani</strong>' : day;
+      : day===tomorrowStr ? '<strong>Domani</strong>' : `${day}${yearSuffix}`;
     html+=`<div style="margin-bottom:12px"><div style="font-size:.71rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted2);margin-bottom:4px;padding-bottom:3px;border-bottom:1px solid var(--border)">${label}</div>`;
     evts.forEach(e=>{
       const dur = e.dtend ? e.dtend.getTime()-e.dtstart.getTime() : 0;
