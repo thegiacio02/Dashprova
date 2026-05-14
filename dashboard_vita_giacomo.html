@@ -97,20 +97,71 @@ nav.tabs .badge.zero{background:var(--surface2);color:var(--muted)}
 .habit-today-btn:hover{border-color:var(--teal)}
 
 /* === OBIETTIVI === */
-.goal-card{background:var(--surface2);padding:16px;border-radius:10px;margin-bottom:12px;border-left:4px solid var(--teal)}
-.goal-card.done{border-left-color:var(--green)}
+.goal-card{background:var(--surface2);padding:14px 16px;border-radius:10px;margin-bottom:10px;border-left:4px solid var(--teal);transition:border-color .2s}
+.goal-card.done{border-left-color:var(--green);opacity:.85}
 .goal-card.late{border-left-color:var(--red)}
-.goal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px}
-.goal-head .title{font-size:1rem;color:#fff;font-weight:700}
-.goal-head .deadline{font-size:.72rem;color:var(--muted2);white-space:nowrap}
-.goal-desc{font-size:.78rem;color:var(--muted2);margin-bottom:10px}
-.goal-progress{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.goal-progress .vals{font-size:.85rem;font-weight:700;color:#fff;flex:0 0 auto}
-.goal-progress .pct{font-size:.72rem;color:var(--teal);font-weight:700;flex:0 0 auto;min-width:48px;text-align:right}
-.goal-progress .bar{flex:1}
+.goal-card.behind{border-left-color:#f59e0b}
+.goal-card.ahead{border-left-color:#8b5cf6}
+.goal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px}
+.goal-head .title{font-size:.95rem;color:var(--text);font-weight:700;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.goal-head .deadline{font-size:.72rem;color:var(--muted2);white-space:nowrap;text-align:right}
+.goal-head .deadline .days{display:block;font-weight:700;color:var(--text);font-size:.78rem;margin-top:1px}
+.goal-head .deadline .days.late{color:var(--red)}
+.goal-head .deadline .days.soon{color:#f59e0b}
+.goal-desc{font-size:.76rem;color:var(--muted2);margin-bottom:10px;font-style:italic;line-height:1.45}
+.goal-progress{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.goal-progress .vals{font-size:.82rem;font-weight:700;color:var(--text);flex:0 0 auto}
+.goal-progress .pct{font-size:.72rem;color:var(--teal);font-weight:700;flex:0 0 auto;min-width:46px;text-align:right}
+.goal-progress .bar{flex:1;position:relative}
+.goal-progress .bar .expected-marker{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--accent);opacity:.7;z-index:2;border-radius:2px}
+.goal-pace-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:4px 0 10px;font-size:.7rem;color:var(--muted2)}
+.goal-pace-badge{font-weight:700;padding:2px 8px;border-radius:10px;font-size:.66rem;letter-spacing:.04em;text-transform:uppercase}
+.goal-pace-badge.in-linea{background:rgba(20,184,166,.18);color:var(--teal)}
+.goal-pace-badge.in-anticipo{background:rgba(139,92,246,.18);color:#a78bfa}
+.goal-pace-badge.in-ritardo{background:rgba(245,158,11,.18);color:#f59e0b}
+.goal-pace-badge.completato{background:rgba(34,197,94,.18);color:var(--green)}
+.goal-pace-badge.scaduto{background:rgba(239,68,68,.18);color:var(--red)}
 .goal-controls{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 .goal-controls button{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:6px;font-size:.74rem;cursor:pointer;font-weight:600}
 .goal-controls button:hover{border-color:var(--teal);color:var(--teal)}
+.goal-controls .gc-danger:hover{color:var(--red);border-color:var(--red)}
+.goal-details{display:none;border-top:1px solid var(--border);margin-top:12px;padding-top:12px}
+.goal-card.open .goal-details{display:block}
+.goal-card.open .goal-chevron{transform:rotate(180deg)}
+.goal-chevron{display:inline-block;font-size:.65rem;transition:transform .2s;opacity:.6;margin-left:4px;cursor:pointer}
+.goal-section-title{font-size:.7rem;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px;display:flex;align-items:center;gap:6px}
+.goal-milestones{margin-bottom:8px}
+.goal-ms-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:.8rem}
+.goal-ms-row input[type=checkbox]{width:14px;height:14px;cursor:pointer}
+.goal-ms-row.done .ms-text{text-decoration:line-through;color:var(--muted)}
+.goal-ms-row .ms-text{flex:1;cursor:pointer}
+.goal-ms-row .ms-del{cursor:pointer;color:var(--muted);font-size:.85rem;opacity:.5}
+.goal-ms-row .ms-del:hover{color:var(--red);opacity:1}
+.goal-ms-add{display:flex;gap:6px;margin-top:6px}
+.goal-ms-add input{flex:1;font-size:.78rem;padding:5px 8px}
+.goal-log{max-height:200px;overflow-y:auto}
+.goal-log-entry{font-size:.74rem;padding:6px 8px;border-left:2px solid var(--border);margin-bottom:6px;background:var(--surface);border-radius:0 4px 4px 0}
+.goal-log-entry .gle-head{display:flex;justify-content:space-between;align-items:center;color:var(--muted2);font-size:.68rem;margin-bottom:2px}
+.goal-log-entry .gle-delta.pos{color:var(--green);font-weight:700}
+.goal-log-entry .gle-delta.neg{color:var(--red);font-weight:700}
+.goal-log-entry .gle-note{color:var(--text);line-height:1.4}
+/* Stats header */
+.goals-overview{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px}
+.go-stat{background:var(--surface2);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--border)}
+.go-stat .v{font-size:1.6rem;font-weight:800;line-height:1;color:var(--text)}
+.go-stat .l{font-size:.66rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.05em;margin-top:6px}
+.go-stat.accent .v{color:var(--accent)}
+.go-stat.green .v{color:var(--green)}
+.go-stat.red  .v{color:var(--red)}
+.go-stat.amber .v{color:#f59e0b}
+.goals-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.goals-toolbar select{font-size:.78rem;padding:5px 8px;width:auto}
+.goals-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.goals-filter-bar .chip{padding:4px 12px;border-radius:20px;font-size:.74rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted2);transition:all .15s}
+.goals-filter-bar .chip.active{background:var(--teal);color:#fff;border-color:var(--teal);font-weight:700}
+.goal-add-form{background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--accent);display:none}
+.goal-add-form.open{display:block}
+.goal-prio-icon{font-size:.85rem;opacity:.9}
 
 /* === NETWORK === */
 .contact-card{background:var(--surface2);padding:12px;border-radius:8px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
@@ -604,6 +655,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 [data-theme="light"] header h1,
 [data-theme="light"] .habit-info .h-name,
 [data-theme="light"] .goal-head .title,
+[data-theme="light"] .go-stat .v,
 [data-theme="light"] .goal-progress .vals,
 [data-theme="light"] .contact-info .c-name,
 [data-theme="light"] .decision-head .d-title,
@@ -1255,31 +1307,85 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 <!-- ============ OBIETTIVI ============ -->
 <section class="tab" id="tab-obiettivi">
   <div class="card">
-    <h2><span class="ico">🎯</span> Obiettivi a 6 mesi</h2>
-    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">I tuoi grandi obiettivi misurabili (Maggio → Novembre 2026). Aggiorna il progresso ogni volta che fai un passo avanti.</p>
-
-    <div class="row" style="margin-bottom:8px">
-      <input type="text" id="goal-title" placeholder="Titolo (es. 12 libri letti)" style="flex:2"/>
-      <input type="number" id="goal-target" placeholder="Target" min="1" style="flex:0 0 100px"/>
-      <input type="text" id="goal-unit" placeholder="unità" style="flex:0 0 110px"/>
-      <input type="date" id="goal-deadline" style="flex:0 0 auto"/>
-    </div>
-    <div class="row" style="margin-bottom:14px">
-      <input type="text" id="goal-desc" placeholder="Descrizione / perché conta" style="flex:3"/>
-      <select id="goal-area" style="flex:0 0 160px">
-        <option value="">— Area —</option>
-        <option value="double">💼 Double</option>
-        <option value="como">⛵ Como</option>
-        <option value="francese">🇫🇷 Francese</option>
-        <option value="lettura">📚 Lettura</option>
-        <option value="sport">🏋️ Sport</option>
-        <option value="social">🤝 Social</option>
-        <option value="personale">👤 Personale</option>
-      </select>
-      <button class="btn" onclick="addGoal()" style="flex:0 0 auto">+ Obiettivo</button>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;flex-wrap:wrap">
+      <div>
+        <h2 style="margin:0"><span class="ico">🎯</span> Obiettivi a 6 mesi</h2>
+        <p style="font-size:.76rem;color:var(--muted2);margin:4px 0 0">Aggiorna il progresso ogni volta che fai un passo avanti. La barra mostra dove dovresti essere oggi.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button class="btn sm" onclick="toggleAddGoalForm()" id="goal-add-btn">+ Obiettivo</button>
+        <button class="btn ghost sm" onclick="loadDefaultGoals()" title="Carica i 6 obiettivi suggeriti dal documento">📌 Suggeriti</button>
+      </div>
     </div>
 
-    <button class="btn ghost sm" onclick="loadDefaultGoals()" style="margin-bottom:14px">📌 Carica obiettivi suggeriti dal documento</button>
+    <!-- Stats overview -->
+    <div class="goals-overview" id="goals-overview" style="margin-top:14px"></div>
+
+    <!-- Add goal form -->
+    <div class="goal-add-form" id="goal-add-form">
+      <div style="font-size:.8rem;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">Nuovo obiettivo</div>
+      <div class="row" style="margin-bottom:10px">
+        <input type="text" id="goal-title" placeholder="Titolo (es. 12 libri letti) *" style="flex:2;min-width:200px"/>
+        <input type="number" id="goal-target" placeholder="Target *" min="1" style="flex:0 0 110px"/>
+        <input type="text" id="goal-unit" placeholder="unità (libri, %, …)" style="flex:0 0 130px"/>
+      </div>
+      <div class="row" style="margin-bottom:10px">
+        <input type="text" id="goal-desc" placeholder="Perché conta? (motivazione)" style="flex:3;min-width:200px"/>
+        <select id="goal-area" style="flex:0 0 160px">
+          <option value="">— Area —</option>
+          <option value="double">💼 Double</option>
+          <option value="como">⛵ Como</option>
+          <option value="francese">🇫🇷 Francese</option>
+          <option value="lettura">📚 Lettura</option>
+          <option value="sport">🏋️ Sport</option>
+          <option value="social">🤝 Social</option>
+          <option value="personale">👤 Personale</option>
+        </select>
+      </div>
+      <div class="row" style="margin-bottom:10px">
+        <input type="date" id="goal-deadline" style="flex:0 0 auto"/>
+        <select id="goal-priority" style="flex:0 0 160px">
+          <option value="medium">⚡ Priorità media</option>
+          <option value="high">🔥 Priorità alta</option>
+          <option value="low">💫 Priorità bassa</option>
+        </select>
+        <button class="btn" onclick="addGoal()" style="flex:0 0 auto">+ Aggiungi</button>
+        <button class="btn ghost" onclick="toggleAddGoalForm()" style="flex:0 0 auto">Annulla</button>
+      </div>
+    </div>
+
+    <!-- Filters / sort -->
+    <div class="goals-toolbar">
+      <div class="goals-filter-bar" id="goals-filter-bar" style="margin:0">
+        <button class="chip active" data-filter="tutti" onclick="setGoalFilter('tutti',this)">Tutti</button>
+        <button class="chip" data-filter="attivi" onclick="setGoalFilter('attivi',this)">In corso</button>
+        <button class="chip" data-filter="in-ritardo" onclick="setGoalFilter('in-ritardo',this)">⚠️ In ritardo</button>
+        <button class="chip" data-filter="in-anticipo" onclick="setGoalFilter('in-anticipo',this)">🚀 In anticipo</button>
+        <button class="chip" data-filter="completati" onclick="setGoalFilter('completati',this)">✓ Completati</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+        <label style="font-size:.72rem;color:var(--muted2)">Area:</label>
+        <select id="goals-area-filter" onchange="renderGoals()">
+          <option value="">Tutte</option>
+          <option value="double">💼 Double</option>
+          <option value="como">⛵ Como</option>
+          <option value="francese">🇫🇷 Francese</option>
+          <option value="lettura">📚 Lettura</option>
+          <option value="sport">🏋️ Sport</option>
+          <option value="social">🤝 Social</option>
+          <option value="personale">👤 Personale</option>
+        </select>
+        <label style="font-size:.72rem;color:var(--muted2)">Ordina:</label>
+        <select id="goals-sort" onchange="renderGoals()">
+          <option value="pace">Per urgenza</option>
+          <option value="deadline">Per deadline</option>
+          <option value="progress-asc">Progresso ↑</option>
+          <option value="progress-desc">Progresso ↓</option>
+          <option value="priority">Per priorità</option>
+          <option value="name">Per nome</option>
+        </select>
+      </div>
+    </div>
 
     <div id="goals-list"></div>
   </div>
@@ -3278,87 +3384,379 @@ function renderHabits(){
 }
 
 // ============ OBIETTIVI ============
+let _goalFilter = 'tutti';
+
+function _goalEnsureShape(g){
+  if(g.priority === undefined) g.priority = 'medium';
+  if(!Array.isArray(g.milestones)) g.milestones = [];
+  if(!Array.isArray(g.log)) g.log = [];
+  if(!g.created) g.created = todayISO();
+  return g;
+}
+
+function _goalDaysBetween(a, b){
+  const da = new Date(a+'T00:00:00');
+  const db = new Date(b+'T00:00:00');
+  return Math.round((db - da) / 86400000);
+}
+
+function _goalPace(g){
+  // Restituisce {state:'in-linea'|'in-anticipo'|'in-ritardo'|'completato'|'scaduto', expected, daysLeft}
+  const pct = g.target > 0 ? (g.current/g.target)*100 : 0;
+  const today = todayISO();
+  if(pct >= 100) return {state:'completato', expected:g.target, daysLeft:null};
+  const daysLeft = g.deadline ? _goalDaysBetween(today, g.deadline) : null;
+  if(daysLeft !== null && daysLeft < 0) return {state:'scaduto', expected:g.target, daysLeft};
+  if(!g.deadline || !g.created) return {state:'in-linea', expected:null, daysLeft};
+  const totalDays = _goalDaysBetween(g.created, g.deadline);
+  if(totalDays <= 0) return {state:'in-linea', expected:null, daysLeft};
+  const elapsed = _goalDaysBetween(g.created, today);
+  const expected = Math.min(g.target, g.target * (elapsed/totalDays));
+  if(elapsed <= 0) return {state:'in-linea', expected:0, daysLeft};
+  const ratio = g.current / expected;
+  let stateName;
+  if(ratio >= 1.10) stateName = 'in-anticipo';
+  else if(ratio < 0.85) stateName = 'in-ritardo';
+  else stateName = 'in-linea';
+  return {state:stateName, expected, daysLeft};
+}
+
+function toggleAddGoalForm(){
+  const f = document.getElementById('goal-add-form');
+  const b = document.getElementById('goal-add-btn');
+  const open = f.classList.toggle('open');
+  b.textContent = open ? '× Chiudi' : '+ Obiettivo';
+  if(open) document.getElementById('goal-title').focus();
+}
+
 function addGoal(){
   ensureState();
   const title = document.getElementById('goal-title').value.trim();
   const target = parseFloat(document.getElementById('goal-target').value);
   if(!title || !target) { alert('Titolo e target obbligatori'); return; }
-  state.goals.push({
+  const g = {
     id:uid(), title,
     desc: document.getElementById('goal-desc').value.trim(),
     target, current:0,
     unit: document.getElementById('goal-unit').value.trim() || '',
     deadline: document.getElementById('goal-deadline').value || null,
     area: document.getElementById('goal-area').value || null,
+    priority: document.getElementById('goal-priority').value || 'medium',
+    milestones: [],
+    log: [],
     created: todayISO()
-  });
+  };
+  state.goals.push(g);
   ['goal-title','goal-desc','goal-target','goal-unit','goal-deadline'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('goal-area').value='';
+  document.getElementById('goal-priority').value='medium';
+  toggleAddGoalForm();
   save(); renderGoals();
 }
+
 function loadDefaultGoals(){
   if(state.goals.length && !confirm('Aggiungere obiettivi suggeriti agli esistenti?')) return;
   const defaults = [
-    {title:'12 libri letti', target:12, unit:'libri', area:'lettura', desc:'Bibliografia 6 mesi del documento'},
-    {title:'Fluenza francese professionale', target:100, unit:'%', area:'francese', desc:'Colloqui 1h, riunioni con madrelingua, vocabolario finance'},
-    {title:'Stage Double convertito in assunzione', target:1, unit:'offer', area:'double', desc:'Ottenere offerta a fine stage'},
-    {title:'Sport almeno 12 volte/mese', target:72, unit:'sessioni', area:'sport', desc:'3+ sessioni a settimana per 6 mesi'},
-    {title:'Pomodori focus completati', target:500, unit:'pomodori', area:'double', desc:'~20 pomodori/settimana per 6 mesi'},
-    {title:'Vocaboli francese attivi', target:300, unit:'termini', area:'francese', desc:'Glossario professionale finance'}
+    {title:'12 libri letti', target:12, unit:'libri', area:'lettura', priority:'medium', desc:'Bibliografia 6 mesi del documento'},
+    {title:'Fluenza francese professionale', target:100, unit:'%', area:'francese', priority:'high', desc:'Colloqui 1h, riunioni con madrelingua, vocabolario finance'},
+    {title:'Stage Double convertito in assunzione', target:1, unit:'offer', area:'double', priority:'high', desc:'Ottenere offerta a fine stage'},
+    {title:'Sport almeno 12 volte/mese', target:72, unit:'sessioni', area:'sport', priority:'medium', desc:'3+ sessioni a settimana per 6 mesi'},
+    {title:'Pomodori focus completati', target:500, unit:'pomodori', area:'double', priority:'medium', desc:'~20 pomodori/settimana per 6 mesi'},
+    {title:'Vocaboli francese attivi', target:300, unit:'termini', area:'francese', priority:'low', desc:'Glossario professionale finance'}
   ];
   const deadline = '2026-11-30';
-  defaults.forEach(d=>state.goals.push({id:uid(),...d,current:0,deadline,created:todayISO()}));
+  defaults.forEach(d=>state.goals.push({id:uid(),...d,current:0,deadline,created:todayISO(),milestones:[],log:[]}));
   save(); renderGoals();
 }
+
 function updateGoalProgress(id, delta){
   const g = state.goals.find(x=>x.id===id); if(!g) return;
-  g.current = Math.max(0, (g.current||0) + delta);
+  _goalEnsureShape(g);
+  const prev = g.current||0;
+  g.current = Math.max(0, prev + delta);
+  g.log.push({id:uid(), date:todayISO(), delta:g.current-prev, value:g.current, note:''});
   save(); renderGoals();
 }
+
 function setGoalProgress(id){
   const g = state.goals.find(x=>x.id===id); if(!g) return;
+  _goalEnsureShape(g);
   const v = prompt(`Imposta progresso (target ${g.target} ${g.unit||''}):`, g.current);
   if(v===null) return;
-  const n = parseFloat(v); if(!isNaN(n)){ g.current = Math.max(0,n); save(); renderGoals(); }
+  const n = parseFloat(v);
+  if(isNaN(n)) return;
+  const prev = g.current||0;
+  g.current = Math.max(0, n);
+  if(g.current !== prev) g.log.push({id:uid(), date:todayISO(), delta:g.current-prev, value:g.current, note:''});
+  save(); renderGoals();
 }
+
+function logGoalProgress(id){
+  const g = state.goals.find(x=>x.id===id); if(!g) return;
+  _goalEnsureShape(g);
+  const v = prompt(`Aggiungi un aggiornamento di progresso.\nProgresso attuale: ${g.current}/${g.target} ${g.unit||''}\nInserisci il NUOVO valore (o lascia uguale per solo nota):`, g.current);
+  if(v===null) return;
+  const n = parseFloat(v);
+  if(isNaN(n)) return;
+  const note = prompt('Nota su questo aggiornamento (opzionale):', '') || '';
+  const prev = g.current||0;
+  g.current = Math.max(0, n);
+  g.log.push({id:uid(), date:todayISO(), delta:g.current-prev, value:g.current, note:note.trim()});
+  save(); renderGoals();
+}
+
+function setGoalPriority(id, prio){
+  const g = state.goals.find(x=>x.id===id); if(!g) return;
+  g.priority = prio;
+  save(); renderGoals();
+}
+
+function editGoalField(id, field){
+  const g = state.goals.find(x=>x.id===id); if(!g) return;
+  const labels = {title:'Titolo', desc:'Descrizione', target:'Target', unit:'Unità', deadline:'Deadline (YYYY-MM-DD)'};
+  const v = prompt(labels[field]||field, g[field]||'');
+  if(v===null) return;
+  if(field==='target'){ const n=parseFloat(v); if(!isNaN(n) && n>0) g[field]=n; }
+  else g[field] = v.trim();
+  save(); renderGoals();
+}
+
 function delGoal(id){
-  if(!confirm('Eliminare obiettivo?')) return;
+  if(!confirm('Eliminare obiettivo? L\'azione non è reversibile.')) return;
   state.goals = state.goals.filter(g=>g.id!==id);
   save(); renderGoals();
 }
+
+function toggleGoalDetails(id){
+  document.getElementById('goal-card-'+id)?.classList.toggle('open');
+}
+
+function addGoalMilestone(id){
+  const inp = document.getElementById('goal-ms-input-'+id);
+  if(!inp) return;
+  const text = inp.value.trim();
+  if(!text) return;
+  const g = state.goals.find(x=>x.id===id); if(!g) return;
+  _goalEnsureShape(g);
+  g.milestones.push({id:uid(), text, done:false});
+  inp.value='';
+  save(); renderGoals();
+  document.getElementById('goal-card-'+id)?.classList.add('open');
+  setTimeout(()=>document.getElementById('goal-ms-input-'+id)?.focus(), 50);
+}
+
+function toggleGoalMilestone(goalId, msId){
+  const g = state.goals.find(x=>x.id===goalId); if(!g) return;
+  const m = (g.milestones||[]).find(x=>x.id===msId); if(!m) return;
+  m.done = !m.done;
+  save(); renderGoals();
+  document.getElementById('goal-card-'+goalId)?.classList.add('open');
+}
+
+function delGoalMilestone(goalId, msId){
+  const g = state.goals.find(x=>x.id===goalId); if(!g) return;
+  g.milestones = (g.milestones||[]).filter(m=>m.id!==msId);
+  save(); renderGoals();
+  document.getElementById('goal-card-'+goalId)?.classList.add('open');
+}
+
+function delGoalLogEntry(goalId, logId){
+  const g = state.goals.find(x=>x.id===goalId); if(!g) return;
+  g.log = (g.log||[]).filter(l=>l.id!==logId);
+  save(); renderGoals();
+  document.getElementById('goal-card-'+goalId)?.classList.add('open');
+}
+
+function setGoalFilter(f, el){
+  _goalFilter = f;
+  document.querySelectorAll('#goals-filter-bar .chip').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderGoals();
+}
+
+function _renderGoalsOverview(){
+  const w = document.getElementById('goals-overview');
+  if(!w) return;
+  const all = state.goals;
+  const today = todayISO();
+  const done = all.filter(g=>g.target>0 && (g.current/g.target)>=1).length;
+  const late = all.filter(g=>g.deadline && g.deadline<today && (g.target<=0 || g.current/g.target<1)).length;
+  const behind = all.filter(g=>_goalPace(g).state==='in-ritardo').length;
+  const ahead = all.filter(g=>_goalPace(g).state==='in-anticipo').length;
+  const avgPct = all.length ? Math.round(all.reduce((a,g)=>a+Math.min(100,(g.target>0?(g.current/g.target)*100:0)),0)/all.length) : 0;
+  // Earliest deadline for "days left"
+  const upcoming = all.filter(g=>g.deadline && g.deadline>=today).sort((a,b)=>a.deadline.localeCompare(b.deadline));
+  const nextDeadline = upcoming[0]?.deadline;
+  const daysToNext = nextDeadline ? _goalDaysBetween(today, nextDeadline) : null;
+
+  w.innerHTML = `
+    <div class="go-stat"><div class="v">${all.length}</div><div class="l">Totali</div></div>
+    <div class="go-stat green"><div class="v">${done}</div><div class="l">Completati</div></div>
+    <div class="go-stat amber"><div class="v">${behind}</div><div class="l">In ritardo</div></div>
+    <div class="go-stat" style="background:rgba(139,92,246,.08)"><div class="v" style="color:#a78bfa">${ahead}</div><div class="l">In anticipo</div></div>
+    <div class="go-stat red"><div class="v">${late}</div><div class="l">Scaduti</div></div>
+    <div class="go-stat accent"><div class="v">${avgPct}%</div><div class="l">Progresso medio</div></div>
+    ${daysToNext!==null?`<div class="go-stat"><div class="v" style="color:${daysToNext<14?'#f59e0b':'var(--text)'}">${daysToNext}</div><div class="l">Giorni a prox dead.</div></div>`:''}`;
+}
+
+function _goalSortFn(a,b){
+  const mode = document.getElementById('goals-sort')?.value || 'pace';
+  const pctA = a.target>0?(a.current/a.target):0;
+  const pctB = b.target>0?(b.current/b.target):0;
+  const prioMap = {high:0, medium:1, low:2};
+  const paceOrder = {'scaduto':0,'in-ritardo':1,'in-linea':2,'in-anticipo':3,'completato':4};
+  switch(mode){
+    case 'deadline': return (a.deadline||'9999').localeCompare(b.deadline||'9999');
+    case 'progress-asc': return pctA - pctB;
+    case 'progress-desc': return pctB - pctA;
+    case 'priority': return (prioMap[a.priority]??1) - (prioMap[b.priority]??1);
+    case 'name': return (a.title||'').localeCompare(b.title||'');
+    case 'pace':
+    default:
+      return paceOrder[_goalPace(a).state] - paceOrder[_goalPace(b).state];
+  }
+}
+
 function renderGoals(){
   ensureState();
+  state.goals.forEach(_goalEnsureShape);
+  _renderGoalsOverview();
   const c = document.getElementById('goals-list');
+  if(!c) return;
   if(!state.goals.length){
-    c.innerHTML = '<p style="color:var(--muted);font-size:.85rem;text-align:center;padding:20px">Nessun obiettivo. Carica i suggeriti o aggiungi i tuoi.</p>';
+    c.innerHTML = '<div class="bs-empty" style="color:var(--muted);font-size:.85rem;text-align:center;padding:24px">Nessun obiettivo. Clicca <strong>+ Obiettivo</strong> oppure carica i 6 suggeriti.</div>';
     return;
   }
   const today = todayISO();
-  c.innerHTML = state.goals.map(g=>{
-    const pct = Math.min(100, (g.current/g.target)*100);
-    const done = pct>=100;
-    const late = !done && g.deadline && g.deadline<today;
+  const areaFilter = document.getElementById('goals-area-filter')?.value || '';
+
+  let filtered = state.goals.slice();
+  if(areaFilter) filtered = filtered.filter(g=>g.area===areaFilter);
+  if(_goalFilter !== 'tutti'){
+    filtered = filtered.filter(g=>{
+      const p = _goalPace(g);
+      if(_goalFilter==='completati') return p.state==='completato';
+      if(_goalFilter==='in-ritardo') return p.state==='in-ritardo' || p.state==='scaduto';
+      if(_goalFilter==='in-anticipo') return p.state==='in-anticipo';
+      if(_goalFilter==='attivi') return p.state!=='completato';
+      return true;
+    });
+  }
+  filtered.sort(_goalSortFn);
+
+  if(!filtered.length){
+    c.innerHTML = '<div style="color:var(--muted);font-size:.82rem;text-align:center;padding:20px">Nessun obiettivo in questa categoria.</div>';
+    return;
+  }
+
+  const prioIcon = {high:'🔥', medium:'⚡', low:'💫'};
+  const prioLabel = {high:'Alta', medium:'Media', low:'Bassa'};
+  const paceLabel = {'completato':'✓ Completato','in-anticipo':'🚀 In anticipo','in-linea':'✓ In linea','in-ritardo':'⚠ In ritardo','scaduto':'⛔ Scaduto'};
+
+  c.innerHTML = filtered.map(g=>{
+    const pct = g.target>0 ? Math.min(100, (g.current/g.target)*100) : 0;
+    const pace = _goalPace(g);
+    const done = pace.state==='completato';
+    const late = pace.state==='scaduto';
+    const behind = pace.state==='in-ritardo';
+    const ahead = pace.state==='in-anticipo';
     const cls = pct>=80?'green':pct>=40?'yellow':'red';
     const area = g.area && AREAS[g.area];
-    return `<div class="goal-card ${done?'done':''} ${late?'late':''}">
+    const expectedPct = (pace.expected!==null && pace.expected!==undefined && g.target>0) ? Math.min(100,(pace.expected/g.target)*100) : null;
+    const daysLeft = pace.daysLeft;
+    let daysLabel = '';
+    if(daysLeft !== null && daysLeft !== undefined){
+      if(daysLeft < 0) daysLabel = `<span class="days late">${Math.abs(daysLeft)}g di ritardo</span>`;
+      else if(daysLeft === 0) daysLabel = `<span class="days late">oggi!</span>`;
+      else if(daysLeft <= 14) daysLabel = `<span class="days soon">${daysLeft}g rimasti</span>`;
+      else daysLabel = `<span class="days">${daysLeft}g rimasti</span>`;
+    }
+    const ms = g.milestones || [];
+    const msDone = ms.filter(m=>m.done).length;
+    const logs = (g.log||[]).slice().reverse().slice(0,8);
+
+    return `<div class="goal-card ${done?'done':''} ${late?'late':''} ${behind?'behind':''} ${ahead?'ahead':''}" id="goal-card-${g.id}">
       <div class="goal-head">
-        <div>
-          <div class="title">${done?'✅ ':''}${escapeHtml(g.title)}</div>
-          ${area?`<span class="tag ${area.color}" style="margin-top:6px">${area.icon} ${area.name}</span>`:''}
+        <div style="flex:1;min-width:0">
+          <div class="title">
+            <span class="goal-prio-icon" title="Priorità ${prioLabel[g.priority]||''}">${prioIcon[g.priority]||'⚡'}</span>
+            ${done?'✅ ':''}${escapeHtml(g.title)}
+            ${area?`<span class="tag ${area.color}" style="font-size:.62rem">${area.icon} ${area.name}</span>`:''}
+            <span class="goal-chevron" onclick="toggleGoalDetails('${g.id}')">▼</span>
+          </div>
         </div>
-        <div class="deadline">${g.deadline?'📅 '+g.deadline+(late?' ⚠️':''):''}</div>
+        <div class="deadline">
+          ${g.deadline?'📅 '+g.deadline:''}
+          ${daysLabel}
+        </div>
       </div>
       ${g.desc?`<div class="goal-desc">${escapeHtml(g.desc)}</div>`:''}
       <div class="goal-progress">
         <div class="vals">${g.current} / ${g.target} ${escapeHtml(g.unit||'')}</div>
-        <div class="bar"><div class="fill ${cls}" style="width:${pct}%"></div></div>
+        <div class="bar">
+          <div class="fill ${cls}" style="width:${pct}%"></div>
+          ${expectedPct!==null?`<div class="expected-marker" style="left:${expectedPct}%" title="Atteso oggi: ${pace.expected.toFixed(1)}"></div>`:''}
+        </div>
         <div class="pct">${pct.toFixed(0)}%</div>
       </div>
+      <div class="goal-pace-row">
+        <span class="goal-pace-badge ${pace.state}">${paceLabel[pace.state]||pace.state}</span>
+        ${pace.expected!==null&&pace.expected!==undefined&&!done&&!late?`<span>Atteso oggi: <strong>${pace.expected.toFixed(1)}</strong> ${escapeHtml(g.unit||'')}</span>`:''}
+        ${ms.length?`<span>📋 ${msDone}/${ms.length} milestone</span>`:''}
+        ${(g.log||[]).length?`<span>📝 ${(g.log||[]).length} update</span>`:''}
+      </div>
       <div class="goal-controls">
-        <button onclick="updateGoalProgress('${g.id}',-1)">−1</button>
-        <button onclick="updateGoalProgress('${g.id}',1)">+1</button>
+        <button onclick="updateGoalProgress('${g.id}',1)" title="+1">+1</button>
+        <button onclick="updateGoalProgress('${g.id}',-1)" title="-1">−1</button>
         <button onclick="setGoalProgress('${g.id}')">Imposta…</button>
-        <button onclick="delGoal('${g.id}')" style="color:var(--red);border-color:var(--red)">🗑</button>
+        <button onclick="logGoalProgress('${g.id}')" title="Aggiorna con nota">📝 Aggiorna</button>
+        <button onclick="toggleGoalDetails('${g.id}')">Dettagli ▾</button>
+        <button class="gc-danger" onclick="delGoal('${g.id}')" title="Elimina">🗑</button>
+      </div>
+
+      <div class="goal-details">
+        <div class="goal-section-title">⚙️ Modifica rapida</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+          <button class="btn ghost sm" onclick="editGoalField('${g.id}','title')">Titolo</button>
+          <button class="btn ghost sm" onclick="editGoalField('${g.id}','desc')">Motivazione</button>
+          <button class="btn ghost sm" onclick="editGoalField('${g.id}','target')">Target</button>
+          <button class="btn ghost sm" onclick="editGoalField('${g.id}','unit')">Unità</button>
+          <button class="btn ghost sm" onclick="editGoalField('${g.id}','deadline')">Deadline</button>
+          <select onchange="setGoalPriority('${g.id}',this.value)" style="font-size:.74rem;padding:4px 8px;width:auto">
+            <option value="high"${g.priority==='high'?' selected':''}>🔥 Alta</option>
+            <option value="medium"${g.priority==='medium'?' selected':''}>⚡ Media</option>
+            <option value="low"${g.priority==='low'?' selected':''}>💫 Bassa</option>
+          </select>
+        </div>
+
+        <div class="goal-section-title">📋 Milestone / Sub-task</div>
+        <div class="goal-milestones">
+          ${ms.length ? ms.map(m=>`
+            <div class="goal-ms-row ${m.done?'done':''}">
+              <input type="checkbox" ${m.done?'checked':''} onchange="toggleGoalMilestone('${g.id}','${m.id}')"/>
+              <span class="ms-text" onclick="toggleGoalMilestone('${g.id}','${m.id}')">${escapeHtml(m.text)}</span>
+              <span class="ms-del" onclick="delGoalMilestone('${g.id}','${m.id}')" title="Elimina">×</span>
+            </div>`).join('') : '<div style="color:var(--muted);font-size:.76rem;padding:4px 0">Nessuna milestone. Spezza l\'obiettivo in passi concreti.</div>'}
+          <div class="goal-ms-add">
+            <input type="text" id="goal-ms-input-${g.id}" placeholder="Nuova milestone…" onkeydown="if(event.key==='Enter')addGoalMilestone('${g.id}')"/>
+            <button class="btn sm" onclick="addGoalMilestone('${g.id}')">+</button>
+          </div>
+        </div>
+
+        <div class="goal-section-title">📝 Storico aggiornamenti</div>
+        <div class="goal-log">
+          ${logs.length ? logs.map(l=>{
+            const sign = l.delta>0?'+':'';
+            const dCls = l.delta>0?'pos':(l.delta<0?'neg':'');
+            return `<div class="goal-log-entry">
+              <div class="gle-head">
+                <span>${l.date} · <span class="gle-delta ${dCls}">${sign}${l.delta}</span> → ${l.value} ${escapeHtml(g.unit||'')}</span>
+                <span class="ms-del" onclick="delGoalLogEntry('${g.id}','${l.id}')" title="Elimina">×</span>
+              </div>
+              ${l.note?`<div class="gle-note">${escapeHtml(l.note)}</div>`:''}
+            </div>`;
+          }).join('') : '<div style="color:var(--muted);font-size:.76rem;padding:4px 0">Nessun aggiornamento ancora. Usa <strong>📝 Aggiorna</strong> per loggare un passo avanti con una nota.</div>'}
+        </div>
       </div>
     </div>`;
   }).join('');
