@@ -4474,23 +4474,54 @@ async function fetchCalendar(force=false){
   }
   const wrap = document.getElementById('cal-events');
   if(wrap) wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem">⏳ Carico calendario…</div>';
-  try {
-    const encoded = encodeURIComponent(ICAL_URL);
-    let text = null;
+
+  const enc = encodeURIComponent(ICAL_URL);
+  const proxies = [
+    { name:'corsproxy.io',  url:`https://corsproxy.io/?url=${enc}` },
+    { name:'allorigins',    url:`https://api.allorigins.win/raw?url=${enc}` },
+    { name:'codetabs',      url:`https://api.codetabs.com/v1/proxy/?quest=${ICAL_URL}` },
+    { name:'thingproxy',    url:`https://thingproxy.freeboard.io/fetch/${ICAL_URL}` },
+    { name:'cors.lol',      url:`https://api.cors.lol/?url=${enc}` },
+  ];
+
+  const errors = [];
+  let text = null;
+  for(const p of proxies){
     try {
-      const r = await fetch(`https://api.allorigins.win/raw?url=${encoded}`);
-      if(r.ok) text = await r.text();
-    } catch(e){}
-    if(!text){
-      const r2 = await fetch(`https://corsproxy.io/?url=${encoded}`);
-      if(r2.ok) text = await r2.text();
+      const ctrl = new AbortController();
+      const t = setTimeout(()=>ctrl.abort(), 12000);
+      const r = await fetch(p.url, { signal: ctrl.signal, cache:'no-store' });
+      clearTimeout(t);
+      const body = await r.text();
+      if(r.ok && /BEGIN:VCALENDAR/i.test(body)){
+        text = body;
+        break;
+      }
+      errors.push(`${p.name}: HTTP ${r.status} — ${body.slice(0,80)}`);
+    } catch(e){
+      errors.push(`${p.name}: ${e.name==='AbortError'?'timeout':e.message}`);
     }
-    if(!text) throw new Error('Impossibile raggiungere il calendario iCloud');
+  }
+
+  if(!text){
+    if(wrap){
+      wrap.innerHTML = `<div style="color:var(--red);font-size:.78rem;line-height:1.5">
+        <strong>Calendario non raggiungibile.</strong> Nessun proxy CORS ha risposto con un file iCalendar valido.<br>
+        <details style="margin-top:6px;color:var(--muted2)"><summary style="cursor:pointer">Dettagli tecnici</summary>
+        <div style="margin-top:4px;font-family:monospace;font-size:.72rem;white-space:pre-wrap">${escapeHtml(errors.join('\n'))}</div>
+        </details>
+        <button class="btn ghost sm" onclick="fetchCalendar(true)" style="margin-top:8px">Riprova</button>
+      </div>`;
+    }
+    return;
+  }
+
+  try {
     const events = parseICS(text);
-    _icalCache = { events, timestamp: Date.now() };
+    _icalCache = { events, timestamp: Date.now(), rawSize: text.length };
     renderCalendar(events);
   } catch(e){
-    if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:.82rem">Errore caricamento: ${escapeHtml(e.message)}</div>`;
+    if(wrap) wrap.innerHTML = `<div style="color:var(--red);font-size:.82rem">Errore parsing ICS: ${escapeHtml(e.message)}</div>`;
   }
 }
 
