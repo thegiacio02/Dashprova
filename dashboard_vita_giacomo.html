@@ -3717,8 +3717,15 @@ function dashInit() {
   // AI briefing
   setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
   scheduleAIBriefing();
-  // Daily Boost: rigenera al mattino se nuova data
-  setTimeout(()=>refreshDailyMotivation(false), 2500);
+  // Daily Boost: se c'è cache di oggi, render subito; altrimenti chiama API dopo breve delay
+  try{
+    const _c = _loadDailyBoostCache();
+    if(_c && _c.date === todayISO()){
+      renderDailyMotivation(_c);
+    } else {
+      setTimeout(()=>refreshDailyMotivation(false), 2500);
+    }
+  }catch(e){ setTimeout(()=>refreshDailyMotivation(false), 2500); }
   setInterval(()=>refreshDailyMotivation(false), 60*60*1000);
 }
 
@@ -5334,7 +5341,11 @@ async function refreshDailyMotivation(force=false){
   }
   try{ localStorage.setItem('dash_dm_attempt', today); }catch(e){}
 
-  if(wrap) wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">⏳ Genero il tuo boost del giorno…</div>';
+  if(wrap) wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">⏳ Sto contattando Gemini… (max 30s)</div>';
+
+  // Timeout di sicurezza per la fetch (evita di restare appesi)
+  const _dmAbort = new AbortController();
+  const _dmTimeoutId = setTimeout(()=>_dmAbort.abort(), 30000);
 
   try {
     const ctx = _dmBuildContext();
@@ -5365,6 +5376,7 @@ Output: SOLO il JSON, niente preamboli, niente \`\`\`json.`;
     const resp = await fetch(url, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
+      signal: _dmAbort.signal,
       body: JSON.stringify({
         contents:[{parts:[{text: prompt}]}],
         generationConfig:{
@@ -5375,6 +5387,7 @@ Output: SOLO il JSON, niente preamboli, niente \`\`\`json.`;
         }
       })
     });
+    clearTimeout(_dmTimeoutId);
     if(!resp.ok){ const t=await resp.text(); throw new Error('HTTP '+resp.status+' — '+t.slice(0,200)); }
     const data = await resp.json();
     const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
@@ -5393,7 +5406,13 @@ Output: SOLO il JSON, niente preamboli, niente \`\`\`json.`;
     state.dailyMotivation = dm;
     renderDailyMotivation(dm);
   } catch(e){
-    if(wrap) wrap.innerHTML = `<div class="dm-error">Errore: ${escapeHtml(e.message)}<br>
+    clearTimeout(_dmTimeoutId);
+    // Se è timeout/abort, pulisco il flag così al prossimo reload riprova
+    if(e.name === 'AbortError'){
+      try{ localStorage.removeItem('dash_dm_attempt'); }catch(_){}
+    }
+    const msg = e.name === 'AbortError' ? 'Timeout: Gemini non ha risposto in 30s.' : ('Errore: '+e.message);
+    if(wrap) wrap.innerHTML = `<div class="dm-error">${escapeHtml(msg)}<br>
       <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" style="margin-top:8px">Riprova</button>
     </div>`;
   }
