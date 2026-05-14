@@ -643,28 +643,40 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
 /* ===== AUTH OVERLAY ===== */
 /* === AI CHAT === */
-#ai-fab{position:fixed;right:22px;bottom:22px;z-index:99998;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff;border:0;cursor:pointer;font-size:1.5rem;box-shadow:0 8px 24px rgba(99,102,241,.45);display:flex;align-items:center;justify-content:center;transition:transform .15s}
-#ai-fab:hover{transform:scale(1.08)}
+#ai-fab{position:fixed;right:24px;bottom:24px;z-index:99998;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;border:0;cursor:pointer;font-size:1.4rem;box-shadow:0 6px 20px rgba(0,0,0,.18),0 0 0 1px rgba(255,255,255,.1) inset;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
+#ai-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 10px 26px rgba(0,0,0,.22)}
 #ai-fab.hidden{display:none}
-#ai-chat-panel{position:fixed;right:22px;bottom:22px;z-index:99999;width:420px;max-width:calc(100vw - 32px);height:640px;max-height:calc(100vh - 32px);background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.25);display:none;flex-direction:column;overflow:hidden}
-#ai-chat-panel.open{display:flex}
-#ai-chat-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;background:linear-gradient(135deg,rgba(99,102,241,.08),rgba(168,85,247,.08))}
-#ai-chat-head h3{margin:0;font-size:.92rem;display:flex;align-items:center;gap:8px}
+#ai-chat-panel{position:fixed;right:24px;bottom:24px;z-index:99999;width:400px;max-width:calc(100vw - 32px);height:600px;max-height:calc(100vh - 48px);background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.22),0 4px 12px rgba(0,0,0,.08);display:none;flex-direction:column;overflow:hidden}
+#ai-chat-panel.open{display:flex;animation:aiChatIn .18s ease-out}
+@keyframes aiChatIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+#ai-chat-head{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card)}
+#ai-chat-head h3{margin:0;font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:9px;color:var(--text)}
+#ai-chat-head h3 .ai-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.15)}
 #ai-chat-head .actions{display:flex;gap:4px}
-#ai-chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
-.ai-msg{max-width:88%;padding:9px 13px;border-radius:14px;font-size:.86rem;line-height:1.5;word-break:break-word;white-space:pre-wrap}
-.ai-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
-.ai-msg.bot{align-self:flex-start;background:var(--bg);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:4px}
-.ai-msg.bot strong{color:var(--accent)}
+#ai-chat-head .actions button{background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;cursor:pointer;padding:5px 9px;font-size:.78rem;transition:all .15s}
+#ai-chat-head .actions button:hover{background:var(--bg);color:var(--text);border-color:var(--muted)}
+#ai-chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth;background:var(--bg)}
+#ai-chat-msgs::-webkit-scrollbar{width:6px}
+#ai-chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.ai-msg{max-width:85%;padding:10px 14px;border-radius:16px;font-size:.87rem;line-height:1.55;word-break:break-word;white-space:pre-wrap;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.ai-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:5px}
+.ai-msg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:5px}
+.ai-msg.bot strong{color:var(--accent);font-weight:600}
 .ai-msg.thinking{opacity:.7;font-style:italic}
-#ai-chat-form{border-top:1px solid var(--border);padding:10px;display:flex;gap:6px;background:var(--bg)}
-#ai-chat-input{flex:1;border:1px solid var(--border);background:var(--card);color:var(--text);border-radius:10px;padding:9px 12px;font-size:.86rem;resize:none;font-family:inherit;max-height:120px;line-height:1.4}
-#ai-chat-input:focus{outline:0;border-color:var(--accent)}
-#ai-chat-send{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:0 14px;cursor:pointer;font-weight:600;font-size:.85rem}
-#ai-chat-send:disabled{opacity:.5;cursor:not-allowed}
-.ai-suggestion{font-size:.78rem;background:var(--bg);border:1px solid var(--border);color:var(--muted);padding:6px 10px;border-radius:14px;cursor:pointer;margin:2px}
-.ai-suggestion:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-@media(max-width:600px){#ai-chat-panel{right:8px;left:8px;bottom:8px;width:auto;height:80vh}}
+.ai-welcome{align-self:stretch;text-align:center;padding:20px 8px 8px;color:var(--muted)}
+.ai-welcome .avatar{width:44px;height:44px;border-radius:50%;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:10px;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.ai-welcome .greet{font-size:.95rem;font-weight:600;color:var(--text);margin-bottom:4px}
+.ai-welcome .sub{font-size:.78rem;line-height:1.5;color:var(--muted2);margin-bottom:14px;max-width:300px;margin-left:auto;margin-right:auto}
+.ai-suggest-grid{display:flex;flex-direction:column;gap:6px;max-width:320px;margin:0 auto}
+.ai-suggestion{font-size:.8rem;background:var(--card);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;text-align:left;transition:all .15s;line-height:1.35}
+.ai-suggestion:hover{background:var(--accent);color:#fff;border-color:var(--accent);transform:translateX(2px)}
+#ai-chat-form{border-top:1px solid var(--border);padding:12px;display:flex;gap:8px;background:var(--card);align-items:flex-end}
+#ai-chat-input{flex:1;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:12px;padding:10px 14px;font-size:.87rem;resize:none;font-family:inherit;max-height:120px;line-height:1.45;transition:border-color .15s}
+#ai-chat-input:focus{outline:0;border-color:var(--accent);background:var(--card)}
+#ai-chat-send{background:var(--accent);color:#fff;border:0;border-radius:12px;padding:10px 16px;cursor:pointer;font-weight:600;font-size:.85rem;height:40px;transition:opacity .15s}
+#ai-chat-send:hover:not(:disabled){opacity:.9}
+#ai-chat-send:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:600px){#ai-chat-panel{right:8px;left:8px;bottom:8px;width:auto;height:82vh;max-height:82vh}}
 #auth-overlay{position:fixed;inset:0;z-index:9999999;display:flex;align-items:center;justify-content:center;background:#05080f}
 #auth-box{background:#0c1322;border:1px solid #1f2d4d;border-radius:12px;padding:48px 40px;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:24px}
 #auth-box h2{margin:0;font-size:1.3rem;color:#e8eef9;font-weight:700;letter-spacing:.04em;text-align:center}
@@ -5420,7 +5432,7 @@ async function loadFrNews(){
 <button id="ai-fab" onclick="openAIChat()" title="Chiedi a Gemini">💬</button>
 <div id="ai-chat-panel">
   <div id="ai-chat-head">
-    <h3><span>🤖</span> Chiedi a Gemini</h3>
+    <h3><span class="ai-dot"></span> Chiedi a Gemini</h3>
     <div class="actions">
       <button class="btn ghost sm" onclick="clearAIChat()" title="Nuova conversazione" style="padding:3px 8px;font-size:.7rem">↺</button>
       <button class="btn ghost sm" onclick="closeAIChat()" title="Chiudi" style="padding:3px 10px;font-size:.85rem">✕</button>
@@ -5462,15 +5474,19 @@ function renderAIChat(){
 
   if(!msgs.length){
     const sugg = [
-      'Quando è stata l\'ultima volta che ho dormito bene 3 giorni di fila?',
-      'Dammi un\'analisi della mia ultima settimana',
-      'Quali sono i miei pensieri ricorrenti negli ultimi 30 giorni?',
-      'Quanti todo ho completato questa settimana vs scorsa?'
+      '💤 Quando ho dormito bene 3 giorni di fila?',
+      '📊 Analisi della mia ultima settimana',
+      '✍️ Temi ricorrenti nel mio diario',
+      '✅ Todo completati: questa settimana vs scorsa'
     ];
     wrap.innerHTML = `
-      <div class="ai-msg bot">Ciao Giacomo. Ho accesso ai tuoi dati: sonno, attività, todo, abitudini, focus, diario, finance lab. Chiedimi quello che vuoi.</div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">
-        ${sugg.map(s=>`<button class="ai-suggestion" onclick="document.getElementById('ai-chat-input').value=this.textContent;sendAIChat()">${escapeHtml(s)}</button>`).join('')}
+      <div class="ai-welcome">
+        <div class="avatar">🤖</div>
+        <div class="greet">Ciao Giacomo</div>
+        <div class="sub">Ho accesso a sonno, attività, todo, abitudini, focus, diario e finance lab. Chiedimi quello che vuoi.</div>
+        <div class="ai-suggest-grid">
+          ${sugg.map(s=>`<button class="ai-suggestion" onclick="document.getElementById('ai-chat-input').value=this.textContent.replace(/^[^\\s]+\\s/,'');sendAIChat()">${escapeHtml(s)}</button>`).join('')}
+        </div>
       </div>`;
     return;
   }
