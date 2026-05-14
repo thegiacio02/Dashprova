@@ -3717,8 +3717,13 @@ function dashInit() {
   // AI briefing
   setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
   scheduleAIBriefing();
-  // Daily Boost: rendering immediato dalla cache + eventuale refresh se nuovo giorno
-  refreshDailyMotivation(false);
+  // Daily Boost: render IMMEDIATO e SINCRONO della cache (qualsiasi giorno)
+  try{
+    const _cachedDM = _loadDailyBoostCache();
+    if(_cachedDM){ renderDailyMotivation(_cachedDM); }
+  }catch(e){ console.error('Daily Boost cache render:', e); }
+  // Poi (async) eventuale refresh se serve un boost nuovo per oggi
+  setTimeout(()=>refreshDailyMotivation(false), 100);
   setInterval(()=>refreshDailyMotivation(false), 60*60*1000);
 }
 
@@ -5525,32 +5530,40 @@ function renderDailyMotivation(dm){
   const wrap = document.getElementById('daily-motivation');
   const meta = document.getElementById('dm-meta');
   if(!wrap || !dm) return;
+  // Difese contro cache parziali/malformate
+  const q = dm.quote || {};
+  const b = dm.book  || {};
   const formatInline = t => escapeHtml(t)
     .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
     .replace(/\*(.+?)\*/g,'<em>$1</em>');
 
-  wrap.innerHTML = `
-    <div class="dm-section">
-      <div class="dm-label">💭 Frase del giorno</div>
-      <div class="dm-quote-text">${formatInline(dm.quote.text||'')}</div>
-      <div class="dm-quote-author">— ${escapeHtml(dm.quote.author||'')}</div>
-    </div>
-    <div class="dm-section">
-      <div class="dm-label" style="justify-content:space-between;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <span>📚 Libro del giorno</span>
-        <div style="display:flex;gap:6px">
-          <button class="btn ghost sm" onclick="saveDailyBookToShelf(this)" id="dm-book-save" title="Aggiungi a 'Da leggere'" style="font-size:.62rem;padding:2px 8px;text-transform:none;letter-spacing:0;font-weight:500">+ Salva</button>
-          <button class="btn ghost sm" onclick="regenerateDailyBook()" id="dm-book-regen" title="Già letto, dammene un altro" style="font-size:.62rem;padding:2px 8px;text-transform:none;letter-spacing:0;font-weight:500">↻ Già letto</button>
-        </div>
+  try {
+    wrap.innerHTML = `
+      <div class="dm-section">
+        <div class="dm-label">💭 Frase del giorno</div>
+        <div class="dm-quote-text">${formatInline(q.text||'')}</div>
+        <div class="dm-quote-author">— ${escapeHtml(q.author||'')}</div>
       </div>
-      <div class="dm-book-title">${escapeHtml(dm.book.title||'')}</div>
-      <div class="dm-book-author">${escapeHtml(dm.book.author||'')}</div>
-      <div class="dm-book-why">${formatInline(dm.book.why||'')}</div>
-    </div>
-    <div class="dm-section">
-      <div class="dm-label">🎯 Consiglio per oggi</div>
-      <div class="dm-advice">${formatInline(dm.advice||'')}</div>
-    </div>`;
+      <div class="dm-section">
+        <div class="dm-label" style="justify-content:space-between;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span>📚 Libro del giorno</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn ghost sm" onclick="saveDailyBookToShelf(this)" id="dm-book-save" title="Aggiungi a 'Da leggere'" style="font-size:.62rem;padding:2px 8px;text-transform:none;letter-spacing:0;font-weight:500">+ Salva</button>
+            <button class="btn ghost sm" onclick="regenerateDailyBook()" id="dm-book-regen" title="Già letto, dammene un altro" style="font-size:.62rem;padding:2px 8px;text-transform:none;letter-spacing:0;font-weight:500">↻ Già letto</button>
+          </div>
+        </div>
+        <div class="dm-book-title">${escapeHtml(b.title||'')}</div>
+        <div class="dm-book-author">${escapeHtml(b.author||'')}</div>
+        <div class="dm-book-why">${formatInline(b.why||'')}</div>
+      </div>
+      <div class="dm-section">
+        <div class="dm-label">🎯 Consiglio per oggi</div>
+        <div class="dm-advice">${formatInline(dm.advice||'')}</div>
+      </div>`;
+  } catch(err){
+    console.error('renderDailyMotivation error:', err, dm);
+    return;
+  }
 
   if(meta && dm.timestamp){
     const d = new Date(dm.timestamp);
