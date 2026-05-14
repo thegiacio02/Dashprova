@@ -5477,6 +5477,35 @@ SOLO JSON, niente altro.`;
   }
 }
 
+function saveDailyBookToShelf(btn){
+  ensureState();
+  const dm = _loadDailyBoostCache() || state.dailyMotivation;
+  if(!dm || !dm.book || !dm.book.title){ alert('Nessun libro da salvare.'); return; }
+  const t = (dm.book.title||'').trim();
+  const a = (dm.book.author||'').trim();
+  state.bookshelf = state.bookshelf || [];
+  const exists = state.bookshelf.some(b => (b.title||'').trim().toLowerCase() === t.toLowerCase());
+  if(exists){
+    if(btn){ btn.disabled = true; btn.textContent = '✓ Già in lista'; }
+    return;
+  }
+  state.bookshelf.unshift({
+    id: uid(),
+    title: t,
+    author: a,
+    cat: 'Daily Boost',
+    status: 'da-leggere',
+    rating: 0,
+    startDate: null,
+    endDate: null,
+    addedDate: todayISO(),
+    notes: dm.book.why ? [{id:uid(), date:todayISO(), type:'insight', text: dm.book.why}] : []
+  });
+  save();
+  if(typeof renderBookshelf==='function') renderBookshelf();
+  if(btn){ btn.disabled = true; btn.textContent = '✓ Salvato'; }
+}
+
 function renderDailyMotivation(dm){
   const wrap = document.getElementById('daily-motivation');
   const meta = document.getElementById('dm-meta');
@@ -5492,9 +5521,12 @@ function renderDailyMotivation(dm){
       <div class="dm-quote-author">— ${escapeHtml(dm.quote.author||'')}</div>
     </div>
     <div class="dm-section">
-      <div class="dm-label" style="justify-content:space-between;display:flex">
+      <div class="dm-label" style="justify-content:space-between;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <span>📚 Libro del giorno</span>
-        <button class="btn ghost sm" onclick="regenerateDailyBook()" id="dm-book-regen" title="Già letto, dammene un altro" style="font-size:.62rem;padding:2px 8px;text-transform:none;letter-spacing:0;font-weight:500">↻ Già letto</button>
+        <div style="display:flex;gap:6px">
+          <button class="btn ghost sm" onclick="saveDailyBookToShelf(this)" id="dm-book-save" title="Aggiungi a 'Da leggere'" style="font-size:.62rem;padding:2px 8px;text-transform:none;letter-spacing:0;font-weight:500">+ Salva</button>
+          <button class="btn ghost sm" onclick="regenerateDailyBook()" id="dm-book-regen" title="Già letto, dammene un altro" style="font-size:.62rem;padding:2px 8px;text-transform:none;letter-spacing:0;font-weight:500">↻ Già letto</button>
+        </div>
       </div>
       <div class="dm-book-title">${escapeHtml(dm.book.title||'')}</div>
       <div class="dm-book-author">${escapeHtml(dm.book.author||'')}</div>
@@ -5508,6 +5540,14 @@ function renderDailyMotivation(dm){
   if(meta && dm.timestamp){
     const d = new Date(dm.timestamp);
     meta.textContent = d.toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+  }
+
+  // Se il libro è già nella libreria, marca il bottone come salvato
+  const saveBtn = document.getElementById('dm-book-save');
+  if(saveBtn && dm.book?.title){
+    const t = dm.book.title.trim().toLowerCase();
+    const exists = (state.bookshelf||[]).some(b => (b.title||'').trim().toLowerCase() === t);
+    if(exists){ saveBtn.disabled = true; saveBtn.textContent = '✓ In lista'; }
   }
 }
 
