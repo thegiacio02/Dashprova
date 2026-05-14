@@ -4937,12 +4937,74 @@ function _dmBuildContext(){
     cornice: state.cornice||'',
     goals: (state.goals||[]).map(g=>({title:g.title||g.text||'', desc:(g.desc||'').slice(0,150)})).slice(0,10),
     books_owned: Object.values(state.books||{}).map(b=>b.title).filter(Boolean).slice(0,30),
+    books_already_seen: (state.dailyMotivation?.rejectedBooks||[]).slice(-20),
     flConcepts_recent: (state.flConcepts||[]).slice(0,15).map(c=>c.name),
     diario_recent_themes: (state.diario||[]).slice(-10).map(d=>({title:d.title||'', tags:(d.tags||[]).slice(0,5)})),
     focus_recent: Object.entries(state.focus||{}).filter(([d])=>d>=ago(7)).map(([d,v])=>v).slice(0,7),
     todos_active_top: (state.todos||[]).filter(t=>!t.done).slice(0,8).map(t=>t.text),
     last_decisions: (state.decisions||[]).slice(-3).map(d=>d.title||d.question||'').filter(Boolean)
   };
+}
+
+async function regenerateDailyBook(){
+  ensureState();
+  const dm = state.dailyMotivation;
+  if(!dm) return;
+  const key = getGeminiKey();
+  if(!key){ openGeminiSetup(); return; }
+
+  // Track current book as "already seen"
+  dm.rejectedBooks = dm.rejectedBooks || [];
+  if(dm.book?.title && !dm.rejectedBooks.includes(dm.book.title)){
+    dm.rejectedBooks.push(dm.book.title);
+  }
+
+  const btn = document.getElementById('dm-book-regen');
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ …'; }
+
+  try {
+    const ctx = _dmBuildContext();
+    const ownedAndSeen = [...(ctx.books_owned||[]), ...(ctx.books_already_seen||[])];
+    const prompt = `Sei un mentor di Giacomo, professionista della finanza.
+
+CONTEXT su Giacomo:
+${JSON.stringify({cornice:ctx.cornice, goals:ctx.goals, flConcepts_recent:ctx.flConcepts_recent, diario_recent_themes:ctx.diario_recent_themes}, null, 0)}
+
+LIBRI DA NON SUGGERIRE (già letti o già proposti, NON ripeterli):
+${ownedAndSeen.length ? ownedAndSeen.join(' | ') : '(nessuno)'}
+
+Suggerisci UN libro nuovo. Output JSON puro:
+{"title":"...","author":"...","why":"..."}
+
+Regole:
+- title: deve essere un libro REALE che NON è nella lista da non suggerire sopra. Verifica titoli esatti.
+- author: nome reale.
+- why: 1 frase max 25 parole, perché PROPRIO per Giacomo collegato ai suoi interessi/cornice. Concreto.
+SOLO JSON, niente altro.`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+    const resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{parts:[{text: prompt}]}],
+        generationConfig:{ temperature:.9, maxOutputTokens:600, thinkingConfig:{thinkingBudget:0}, responseMimeType:'application/json' }
+      })
+    });
+    if(!resp.ok){ const t=await resp.text(); throw new Error('HTTP '+resp.status+' — '+t.slice(0,200)); }
+    const data = await resp.json();
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const cleaned = raw.replace(/^```json\s*/i,'').replace(/```\s*$/,'').trim();
+    const parsed = JSON.parse(cleaned);
+    if(!parsed.title || !parsed.author || !parsed.why) throw new Error('JSON incompleto');
+
+    dm.book = parsed;
+    save();
+    renderDailyMotivation(dm);
+  } catch(e){
+    if(btn){ btn.disabled = false; btn.textContent = '↻ Già letto'; }
+    alert('Errore nel rigenerare il libro: '+e.message);
+  }
 }
 
 function renderDailyMotivation(dm){
@@ -4960,7 +5022,10 @@ function renderDailyMotivation(dm){
       <div class="dm-quote-author">— ${escapeHtml(dm.quote.author||'')}</div>
     </div>
     <div class="dm-section">
-      <div class="dm-label">📚 Libro del giorno</div>
+      <div class="dm-label" style="justify-content:space-between;display:flex">
+        <span>📚 Libro del giorno</span>
+        <button class="btn ghost sm" onclick="regenerateDailyBook()" id="dm-book-regen" title="Già letto, dammene un altro" style="font-size:.62rem;padding:2px 8px;text-transform:none;letter-spacing:0;font-weight:500">↻ Già letto</button>
+      </div>
       <div class="dm-book-title">${escapeHtml(dm.book.title||'')}</div>
       <div class="dm-book-author">${escapeHtml(dm.book.author||'')}</div>
       <div class="dm-book-why">${formatInline(dm.book.why||'')}</div>
