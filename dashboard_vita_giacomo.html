@@ -884,7 +884,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
           <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" title="Rigenera" style="padding:2px 8px">↻</button>
         </span>
       </h2>
-      <div id="daily-motivation"><div style="color:var(--muted);font-size:.82rem">⏳ Genero il tuo boost del giorno…</div></div>
+      <div id="daily-motivation"></div>
     </div>
   </div>
 
@@ -3717,15 +3717,8 @@ function dashInit() {
   // AI briefing
   setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
   scheduleAIBriefing();
-  // Daily Boost: se c'è cache di oggi, render subito; altrimenti chiama API dopo breve delay
-  try{
-    const _c = _loadDailyBoostCache();
-    if(_c && _c.date === todayISO()){
-      renderDailyMotivation(_c);
-    } else {
-      setTimeout(()=>refreshDailyMotivation(false), 2500);
-    }
-  }catch(e){ setTimeout(()=>refreshDailyMotivation(false), 2500); }
+  // Daily Boost: rendering immediato dalla cache + eventuale refresh se nuovo giorno
+  refreshDailyMotivation(false);
   setInterval(()=>refreshDailyMotivation(false), 60*60*1000);
 }
 
@@ -5311,29 +5304,28 @@ async function refreshDailyMotivation(force=false){
   const wrap = document.getElementById('daily-motivation');
   const meta = document.getElementById('dm-meta');
   const key = getGeminiKey();
+  const cached = _loadDailyBoostCache();
+  const today = todayISO();
+
+  // Render SEMPRE la cache se c'è qualcosa, così l'utente non vede mai schermate vuote/bloccate
+  if(cached) renderDailyMotivation(cached);
 
   if(!key){
-    if(wrap) wrap.innerHTML = `<div style="text-align:center;padding:14px 8px">
+    if(!cached && wrap) wrap.innerHTML = `<div style="text-align:center;padding:14px 8px">
       <p style="margin:0 0 12px;color:var(--muted2);font-size:.85rem">🔑 Serve l'API Gemini per il boost giornaliero</p>
       <button class="btn sm" onclick="openGeminiSetup()">Configura</button>
     </div>`;
     return;
   }
 
-  const today = todayISO();
+  // Cache valida di oggi → niente API, niente loading
+  if(!force && cached && cached.date === today) return;
 
-  // Leggi da chiave dedicata (immune a sync Firebase)
-  const cached = _loadDailyBoostCache();
-  if(!force && cached && cached.date === today){
-    renderDailyMotivation(cached);
-    return;
-  }
-
-  // Anti-spam: se oggi ho già tentato (e fallito), NON ritento automaticamente
+  // Anti-spam: se oggi ho già tentato e non ho cache nuova, NON ritento automaticamente
   let attemptDate = '';
   try{ attemptDate = localStorage.getItem('dash_dm_attempt')||''; }catch(e){}
   if(!force && attemptDate === today){
-    if(wrap) wrap.innerHTML = `<div style="color:var(--muted);font-size:.82rem;padding:8px 0;line-height:1.5">
+    if(!cached && wrap) wrap.innerHTML = `<div style="color:var(--muted);font-size:.82rem;padding:8px 0;line-height:1.5">
       Non sono riuscito a generare il boost di oggi (probabilmente limite API raggiunto).<br>
       <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" style="margin-top:8px">Riprova manualmente</button>
     </div>`;
@@ -5341,7 +5333,8 @@ async function refreshDailyMotivation(force=false){
   }
   try{ localStorage.setItem('dash_dm_attempt', today); }catch(e){}
 
-  if(wrap) wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">⏳ Sto contattando Gemini… (max 30s)</div>';
+  // Mostra loading SOLO se non c'è già contenuto in cache da visualizzare
+  if(!cached && wrap) wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">⏳ Sto contattando Gemini… (max 30s)</div>';
 
   // Timeout di sicurezza per la fetch (evita di restare appesi)
   const _dmAbort = new AbortController();
@@ -5411,10 +5404,13 @@ Output: SOLO il JSON, niente preamboli, niente \`\`\`json.`;
     if(e.name === 'AbortError'){
       try{ localStorage.removeItem('dash_dm_attempt'); }catch(_){}
     }
-    const msg = e.name === 'AbortError' ? 'Timeout: Gemini non ha risposto in 30s.' : ('Errore: '+e.message);
-    if(wrap) wrap.innerHTML = `<div class="dm-error">${escapeHtml(msg)}<br>
-      <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" style="margin-top:8px">Riprova</button>
-    </div>`;
+    // Se c'è già una cache (anche di ieri), tienila visibile: non sostituirla con l'errore
+    if(!cached && wrap){
+      const msg = e.name === 'AbortError' ? 'Timeout: Gemini non ha risposto in 30s.' : ('Errore: '+e.message);
+      wrap.innerHTML = `<div class="dm-error">${escapeHtml(msg)}<br>
+        <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" style="margin-top:8px">Riprova</button>
+      </div>`;
+    }
   }
 }
 
