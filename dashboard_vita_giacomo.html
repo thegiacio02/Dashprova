@@ -642,6 +642,21 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 [data-theme="light"] #rich-content:empty:before{color:#aaa}
 
 /* ===== AUTH OVERLAY ===== */
+/* === DAILY MOTIVATION === */
+.daily-motivation-card{position:relative;overflow:hidden}
+.daily-motivation-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f59e0b,var(--accent),#8b5cf6);opacity:.7}
+.dm-section{padding:14px 0;border-bottom:1px dashed var(--border)}
+.dm-section:last-child{border-bottom:0;padding-bottom:0}
+.dm-section:first-of-type{padding-top:4px}
+.dm-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted2);font-weight:700;font-family:var(--mono);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.dm-quote-text{font-size:.95rem;line-height:1.5;color:var(--text);font-style:italic;font-weight:500;position:relative;padding-left:14px;border-left:2px solid var(--accent)}
+.dm-quote-author{font-size:.72rem;color:var(--muted);margin-top:6px;padding-left:14px}
+.dm-book-title{font-size:.92rem;font-weight:700;color:var(--text);line-height:1.3}
+.dm-book-author{font-size:.74rem;color:var(--muted);margin-top:2px}
+.dm-book-why{font-size:.8rem;color:var(--text);line-height:1.5;margin-top:8px}
+.dm-advice{font-size:.85rem;line-height:1.6;color:var(--text);background:linear-gradient(135deg,rgba(245,158,11,.06),rgba(139,92,246,.06));padding:10px 12px;border-radius:8px;border-left:3px solid #f59e0b}
+.dm-advice strong{color:var(--accent)}
+.dm-error{color:var(--red);font-size:.82rem;line-height:1.5}
 /* === AI CHAT === */
 #ai-fab{position:fixed;right:24px;bottom:24px;z-index:99998;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;border:0;cursor:pointer;font-size:1.4rem;box-shadow:0 6px 20px rgba(0,0,0,.18),0 0 0 1px rgba(255,255,255,.1) inset;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
 #ai-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 10px 26px rgba(0,0,0,.22)}
@@ -792,28 +807,22 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div id="today-todos-list"></div>
     </div>
 
-    <div class="card" style="margin:0">
+    <div class="card daily-motivation-card" style="margin:0">
       <h2 style="justify-content:space-between">
-        <span style="display:flex;align-items:center;gap:8px"><span class="ico">📅</span> Calendario</span>
+        <span style="display:flex;align-items:center;gap:8px"><span class="ico">✨</span> Daily Boost</span>
         <span style="display:flex;align-items:center;gap:8px">
-          <span id="cal-meta" style="font-size:.72rem;color:var(--muted2)"></span>
-          <button class="btn ghost sm" onclick="fetchCalendar(true)" title="Aggiorna" style="padding:2px 8px">↻</button>
+          <span id="dm-meta" style="font-size:.72rem;color:var(--muted2)"></span>
+          <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" title="Rigenera" style="padding:2px 8px">↻</button>
         </span>
       </h2>
-      <div id="cal-events"><div style="color:var(--muted);font-size:.82rem">⏳ Carico calendario…</div></div>
+      <div id="daily-motivation"><div style="color:var(--muted);font-size:.82rem">⏳ Genero il tuo boost del giorno…</div></div>
     </div>
   </div>
 
-  <!-- PROMEMORIA + INSIGHTS -->
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card">
-      <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📌</span> Promemoria attivi</span><span id="reminders-count" class="card-badge">0</span></h2>
-      <div id="reminders-list" class="reminders-list"></div>
-    </div>
-    <div class="card">
-      <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">💡</span> Consigli AI</span><span class="ai-pulse"></span></h2>
-      <div id="insights-list" class="insights-list"></div>
-    </div>
+  <!-- PROMEMORIA -->
+  <div class="card" style="margin-top:16px">
+    <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📌</span> Promemoria attivi</span><span id="reminders-count" class="card-badge">0</span></h2>
+    <div id="reminders-list" class="reminders-list"></div>
   </div>
 
   <!-- STATS STRIP -->
@@ -1934,7 +1943,8 @@ function defaultState(){ return {
     aiBriefing:null,
     focus:{},
     flTagFilter:'all',
-    aiChat:{messages:[]}
+    aiChat:{messages:[]},
+    dailyMotivation:null
   };}
 
 function load(){
@@ -3246,7 +3256,7 @@ function renderAll(){
   renderShutdown();
   renderProductivityStats();
   try { renderReminders(); } catch(e){ console.error('renderReminders error:', e); }
-  try { renderInsights(); } catch(e){ console.error('renderInsights error:', e); }
+  // renderInsights() rimosso: il card Consigli AI è stato sostituito da Daily Boost
   try { renderFinanceLab(); } catch(e){ console.error('renderFinanceLab error:', e); }
   try { renderDiario();      } catch(e){ console.error('renderDiario error:', e); }
   try { renderTodayTodos();  } catch(e){ console.error('renderTodayTodos error:', e); }
@@ -3401,9 +3411,9 @@ function dashInit() {
   // AI briefing
   setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
   scheduleAIBriefing();
-  // iCloud Calendar
-  fetchCalendar(false);
-  setInterval(()=>fetchCalendar(false), 15*60*1000);
+  // Daily Boost: rigenera al mattino se nuova data
+  setTimeout(()=>refreshDailyMotivation(false), 2500);
+  setInterval(()=>refreshDailyMotivation(false), 60*60*1000);
 }
 
 // Start auth check — dashboard boots only after successful login
@@ -4833,6 +4843,137 @@ function renderCalendar(events){
   });
   wrap.innerHTML=html;
   if(meta&&_icalCache) meta.textContent=`aggiornato ${formatTimeAgo(new Date(_icalCache.timestamp))}`;
+}
+
+// ============ DAILY MOTIVATION ============
+async function refreshDailyMotivation(force=false){
+  ensureState();
+  const wrap = document.getElementById('daily-motivation');
+  const meta = document.getElementById('dm-meta');
+  const key = getGeminiKey();
+
+  if(!key){
+    if(wrap) wrap.innerHTML = `<div style="text-align:center;padding:14px 8px">
+      <p style="margin:0 0 12px;color:var(--muted2);font-size:.85rem">🔑 Serve l'API Gemini per il boost giornaliero</p>
+      <button class="btn sm" onclick="openGeminiSetup()">Configura</button>
+    </div>`;
+    return;
+  }
+
+  const today = todayISO();
+  const dm = state.dailyMotivation;
+  if(!force && dm && dm.date === today){
+    renderDailyMotivation(dm);
+    return;
+  }
+
+  if(wrap) wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">⏳ Genero il tuo boost del giorno…</div>';
+
+  try {
+    const ctx = _dmBuildContext();
+    const prompt = `Sei un mentor personale di Giacomo, professionista della finanza con obiettivi chiari.
+Oggi è ${new Date().toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}.
+
+CONTEXT su Giacomo:
+${JSON.stringify(ctx, null, 0)}
+
+Genera UN SOLO oggetto JSON (niente altro, niente markdown fence, solo JSON puro) con questa struttura ESATTA:
+{
+  "quote": { "text": "...", "author": "..." },
+  "book": { "title": "...", "author": "...", "why": "..." },
+  "advice": "..."
+}
+
+Regole per ciascun campo:
+- quote.text: una frase potente, NON banale, max 25 parole. Italiano o inglese (preferisci italiano). Niente clichés tipo "vivi il presente".
+- quote.author: persona reale + (anno o "filosofo"/"scrittore" se serve contesto).
+- book.title: UN libro che Giacomo NON ha già nei suoi libri salvati. Scegli in base ai suoi interessi (finanza/macro, crescita personale, decisioni, scrittura). Varia: non solo classici, anche libri recenti.
+- book.author: nome reale.
+- book.why: PERCHÉ proprio per lui, 1 frase max 25 parole, collegata al suo cornice/obiettivi/diario. Concreto, non generico.
+- advice: 2-3 frasi (max 60 parole). DEVE basarsi sui suoi obiettivi reali (vedi context.goals). Tono diretto, motivazionale ma non zuccheroso. Usa **grassetto** su 1-2 parole chiave. NO "Forza!" o "Tu puoi!". Pensa: cosa direbbe un coach che lo conosce bene per tenerlo allineato OGGI ai suoi obiettivi a 6 mesi?
+
+Output: SOLO il JSON, niente preamboli, niente \`\`\`json.`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+    const resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{parts:[{text: prompt}]}],
+        generationConfig:{
+          temperature:0.85,
+          maxOutputTokens:1500,
+          thinkingConfig:{ thinkingBudget:0 },
+          responseMimeType:'application/json'
+        }
+      })
+    });
+    if(!resp.ok){ const t=await resp.text(); throw new Error('HTTP '+resp.status+' — '+t.slice(0,200)); }
+    const data = await resp.json();
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if(!raw) throw new Error('Risposta vuota.');
+    const cleaned = raw.replace(/^```json\s*/i,'').replace(/```\s*$/,'').trim();
+    const parsed = JSON.parse(cleaned);
+    if(!parsed.quote || !parsed.book || !parsed.advice) throw new Error('JSON incompleto');
+
+    state.dailyMotivation = {
+      date: today,
+      timestamp: new Date().toISOString(),
+      ...parsed
+    };
+    save();
+    renderDailyMotivation(state.dailyMotivation);
+  } catch(e){
+    if(wrap) wrap.innerHTML = `<div class="dm-error">Errore: ${escapeHtml(e.message)}<br>
+      <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" style="margin-top:8px">Riprova</button>
+    </div>`;
+  }
+}
+
+function _dmBuildContext(){
+  ensureState();
+  const ago = d => { const x=new Date(); x.setDate(x.getDate()-d); return x.toISOString().slice(0,10); };
+  return {
+    cornice: state.cornice||'',
+    goals: (state.goals||[]).map(g=>({title:g.title||g.text||'', desc:(g.desc||'').slice(0,150)})).slice(0,10),
+    books_owned: Object.values(state.books||{}).map(b=>b.title).filter(Boolean).slice(0,30),
+    flConcepts_recent: (state.flConcepts||[]).slice(0,15).map(c=>c.name),
+    diario_recent_themes: (state.diario||[]).slice(-10).map(d=>({title:d.title||'', tags:(d.tags||[]).slice(0,5)})),
+    focus_recent: Object.entries(state.focus||{}).filter(([d])=>d>=ago(7)).map(([d,v])=>v).slice(0,7),
+    todos_active_top: (state.todos||[]).filter(t=>!t.done).slice(0,8).map(t=>t.text),
+    last_decisions: (state.decisions||[]).slice(-3).map(d=>d.title||d.question||'').filter(Boolean)
+  };
+}
+
+function renderDailyMotivation(dm){
+  const wrap = document.getElementById('daily-motivation');
+  const meta = document.getElementById('dm-meta');
+  if(!wrap || !dm) return;
+  const formatInline = t => escapeHtml(t)
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>');
+
+  wrap.innerHTML = `
+    <div class="dm-section">
+      <div class="dm-label">💭 Frase del giorno</div>
+      <div class="dm-quote-text">${formatInline(dm.quote.text||'')}</div>
+      <div class="dm-quote-author">— ${escapeHtml(dm.quote.author||'')}</div>
+    </div>
+    <div class="dm-section">
+      <div class="dm-label">📚 Libro del giorno</div>
+      <div class="dm-book-title">${escapeHtml(dm.book.title||'')}</div>
+      <div class="dm-book-author">${escapeHtml(dm.book.author||'')}</div>
+      <div class="dm-book-why">${formatInline(dm.book.why||'')}</div>
+    </div>
+    <div class="dm-section">
+      <div class="dm-label">🎯 Consiglio per oggi</div>
+      <div class="dm-advice">${formatInline(dm.advice||'')}</div>
+    </div>`;
+
+  if(meta && dm.timestamp){
+    const d = new Date(dm.timestamp);
+    meta.textContent = d.toLocaleDateString('it-IT',{day:'numeric',month:'short'});
+  }
 }
 
 // ============ RICH TEXT EDITOR ============
