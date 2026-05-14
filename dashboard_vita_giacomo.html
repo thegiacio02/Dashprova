@@ -4189,7 +4189,7 @@ function renderDiario(){
 
 // ============ OGGI · TODAY VIEW ============
 const GEMINI_KEY_STORAGE = 'dash_gemini_key';
-const BRIEFING_REFRESH_MS = 2*60*60*1000; // 2h
+const BRIEFING_REFRESH_MS = 15*60*1000; // 15 min — breaking news cadence
 let _briefingTimer = null;
 
 function getGeminiKey(){ return localStorage.getItem(GEMINI_KEY_STORAGE) || ''; }
@@ -4231,7 +4231,8 @@ function gatherNewsHeadlines(){
   Object.entries(cache).forEach(([src, items])=>{
     if(Array.isArray(items)) items.slice(0,10).forEach(it=>{
       const t = (it.title||'').replace(/\s+-\s+(Bloomberg|Financial Times|FT|Il Sole 24 ORE|Il Sole 24 Ore|Sole 24 Ore).*$/i,'').trim();
-      if(t) titles.push(`[${src}] ${t}`);
+      const link = (it.link||'').trim();
+      if(t) titles.push(link ? `[${src}] ${t} — URL: ${link}` : `[${src}] ${t}`);
     });
   });
   return titles.slice(0,40);
@@ -4274,9 +4275,11 @@ Regole:
 - Massimo 2 righe per notizia.
 - Vai dritto al punto: cosa è successo + perché conta. NO preamboli, NO "ecco le notizie".
 - Tono professionale ma chiaro.
-- Niente markdown, solo testo semplice.
+- IMPORTANTE: alla fine di ogni notizia, cita la fonte come link HTML cliccabile usando ESATTAMENTE l'URL fornito nei titoli (quello dopo "URL:"). Formato: <a href="URL_ESATTO" target="_blank">Fonte</a>. NON inventare URL, usa SOLO quelli che vedi qui sotto.
+- Se per una notizia non c'è un URL nei titoli, scrivi solo "(Fonte: nome testata)" senza link.
+- A parte i tag <a>, niente altro markdown o HTML. Solo testo semplice + i link.
 
-TITOLI DI OGGI:
+TITOLI DI OGGI (con URL fonte):
 ${headlines.join('\n')}`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
@@ -4333,12 +4336,23 @@ function renderAIBriefing(){
     return;
   }
 
-  // Format: bold the numbering, paragraphs from newlines
-  const formatted = escapeHtml(b.text)
+  // Extract <a href="..."> tags first (only http/https URLs), then escape the rest, then re-inject sanitized links
+  const linkSlots = [];
+  let raw = (b.text||'').replace(/<a\s+href=["']?(https?:\/\/[^"'>\s]+)["']?[^>]*>([\s\S]*?)<\/a>/gi, (m, href, label)=>{
+    const idx = linkSlots.length;
+    linkSlots.push({href, label: label.replace(/<[^>]+>/g,'').trim() || 'Fonte'});
+    return `__LINK_${idx}__`;
+  });
+  let formatted = escapeHtml(raw)
     .replace(/\r/g,'')
     .replace(/\n{2,}/g, '\n\n')
     .replace(/\n/g, '<br>')
     .replace(/(^|<br>)\s*(\d+[\.\)])\s+/g, '$1<strong style="color:var(--accent)">$2</strong> ');
+  formatted = formatted.replace(/__LINK_(\d+)__/g, (_, i)=>{
+    const l = linkSlots[+i]; if(!l) return '';
+    const safeHref = l.href.replace(/"/g,'%22');
+    return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer" style="color:var(--accent);text-decoration:underline">${escapeHtml(l.label)}</a>`;
+  });
   content.innerHTML = `<div style="line-height:1.75;font-size:.92rem">${formatted}</div>`;
 
   if(meta){
@@ -4354,7 +4368,7 @@ function refreshAIBriefing(){
 
 function scheduleAIBriefing(){
   if(_briefingTimer) clearInterval(_briefingTimer);
-  _briefingTimer = setInterval(()=>{ fetchAIBriefing(false); }, 60*60*1000); // check every hour
+  _briefingTimer = setInterval(()=>{ fetchAIBriefing(false); }, 5*60*1000); // check every 5 min, refreshes if >15min old
 }
 
 // ----- TODAY TODOS -----
