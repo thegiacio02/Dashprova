@@ -5046,6 +5046,15 @@ function renderCalendar(events){
 }
 
 // ============ DAILY MOTIVATION ============
+const DAILY_BOOST_KEY = 'dash_daily_boost';
+
+function _loadDailyBoostCache(){
+  try{ const r=localStorage.getItem(DAILY_BOOST_KEY); return r?JSON.parse(r):null; }catch(e){ return null; }
+}
+function _saveDailyBoostCache(dm){
+  try{ localStorage.setItem(DAILY_BOOST_KEY, JSON.stringify(dm)); }catch(e){}
+}
+
 async function refreshDailyMotivation(force=false){
   ensureState();
   const wrap = document.getElementById('daily-motivation');
@@ -5061,21 +5070,25 @@ async function refreshDailyMotivation(force=false){
   }
 
   const today = todayISO();
-  const dm = state.dailyMotivation;
-  if(!force && dm && dm.date === today){
-    renderDailyMotivation(dm);
+
+  // Leggi da chiave dedicata (immune a sync Firebase)
+  const cached = _loadDailyBoostCache();
+  if(!force && cached && cached.date === today){
+    renderDailyMotivation(cached);
     return;
   }
+
   // Anti-spam: se oggi ho già tentato (e fallito), NON ritento automaticamente
-  if(!force && state.dmLastAttemptDate === today){
+  let attemptDate = '';
+  try{ attemptDate = localStorage.getItem('dash_dm_attempt')||''; }catch(e){}
+  if(!force && attemptDate === today){
     if(wrap) wrap.innerHTML = `<div style="color:var(--muted);font-size:.82rem;padding:8px 0;line-height:1.5">
       Non sono riuscito a generare il boost di oggi (probabilmente limite API raggiunto).<br>
       <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" style="margin-top:8px">Riprova manualmente</button>
     </div>`;
     return;
   }
-  state.dmLastAttemptDate = today;
-  save();
+  try{ localStorage.setItem('dash_dm_attempt', today); }catch(e){}
 
   if(wrap) wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">⏳ Genero il tuo boost del giorno…</div>';
 
@@ -5126,13 +5139,15 @@ Output: SOLO il JSON, niente preamboli, niente \`\`\`json.`;
     const parsed = JSON.parse(cleaned);
     if(!parsed.quote || !parsed.book || !parsed.advice) throw new Error('JSON incompleto');
 
-    state.dailyMotivation = {
+    const dm = {
       date: today,
       timestamp: new Date().toISOString(),
       ...parsed
     };
-    save();
-    renderDailyMotivation(state.dailyMotivation);
+    _saveDailyBoostCache(dm);
+    // aggiorna anche state per retrocompatibilità
+    state.dailyMotivation = dm;
+    renderDailyMotivation(dm);
   } catch(e){
     if(wrap) wrap.innerHTML = `<div class="dm-error">Errore: ${escapeHtml(e.message)}<br>
       <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" style="margin-top:8px">Riprova</button>
@@ -5158,7 +5173,7 @@ function _dmBuildContext(){
 
 async function regenerateDailyBook(){
   ensureState();
-  const dm = state.dailyMotivation;
+  const dm = _loadDailyBoostCache() || state.dailyMotivation;
   if(!dm) return;
   const key = getGeminiKey();
   if(!key){ openGeminiSetup(); return; }
@@ -5209,7 +5224,8 @@ SOLO JSON, niente altro.`;
     if(!parsed.title || !parsed.author || !parsed.why) throw new Error('JSON incompleto');
 
     dm.book = parsed;
-    save();
+    _saveDailyBoostCache(dm);
+    state.dailyMotivation = dm;
     renderDailyMotivation(dm);
   } catch(e){
     if(btn){ btn.disabled = false; btn.textContent = '↻ Già letto'; }
