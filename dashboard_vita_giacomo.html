@@ -883,12 +883,9 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div class="dropdown-menu">
         <button data-tab="settimana">📅 Settimana</button>
         <div class="dropdown-divider"></div>
-        <button data-tab="abitudini">🔥 Abitudini</button>
         <button data-tab="obiettivi">🎯 Obiettivi 6 mesi</button>
         <button data-tab="network">🤝 Network</button>
-        <button data-tab="decisioni">💭 Decisioni</button>
         <div class="dropdown-divider"></div>
-        <button data-tab="aree">📊 Aree di vita</button>
         <button data-tab="libri">📚 Libri</button>
         <button data-tab="benessere">😴 Sonno &amp; Benessere</button>
         <button data-tab="check">🔍 Check Mensile</button>
@@ -1277,34 +1274,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 </section>
 
-<!-- ============ ABITUDINI ============ -->
-<section class="tab" id="tab-abitudini">
-  <div class="card">
-    <h2><span class="ico">🔥</span> Tracker abitudini</h2>
-    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">"La coerenza batte l'intensità." Ogni casella verde = un giorno fatto. Vedi i pattern, costruisci streak.</p>
-
-    <div class="habit-today-card">
-      <h3>Oggi · spunta cosa hai fatto</h3>
-      <div class="habit-today-list" id="habit-today-list"></div>
-    </div>
-
-    <div class="row" style="margin-bottom:14px">
-      <input type="text" id="habit-name" placeholder="Nome abitudine (es. Sport, Francese 30min)" style="flex:2"/>
-      <input type="text" id="habit-icon" placeholder="🏋️" maxlength="2" style="flex:0 0 70px"/>
-      <button class="btn" onclick="addHabit()" style="flex:0 0 auto">+ Aggiungi</button>
-    </div>
-
-    <div id="habit-list"></div>
-    <div class="legend">Click su una casella passata per segnare/desegnare quel giorno. Mostro le ultime 12 settimane.</div>
-  </div>
-
-  <div class="grid grid-3" style="margin-top:16px">
-    <div class="card"><h3>Abitudini attive</h3><div class="kpi"><span class="v" id="hk-active">0</span><span class="t">tracciate</span></div></div>
-    <div class="card"><h3>Streak più lunga</h3><div class="kpi"><span class="v" id="hk-streak">0</span><span class="t">giorni</span></div><div class="kpi-sub" id="hk-streak-name">—</div></div>
-    <div class="card"><h3>Completamenti totali</h3><div class="kpi"><span class="v" id="hk-total">0</span><span class="t">check</span></div></div>
-  </div>
-</section>
-
 <!-- ============ OBIETTIVI ============ -->
 <section class="tab" id="tab-obiettivi">
   <div class="card">
@@ -1427,40 +1396,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
     <div id="contacts-list"></div>
   </div>
-</section>
-
-<!-- ============ DECISIONI ============ -->
-<section class="tab" id="tab-decisioni">
-  <div class="card">
-    <h2><span class="ico">💭</span> Decision journal</h2>
-    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">Logga le decisioni importanti adesso. Tra 30 giorni ti chiediamo come è andata. È lo strumento più formativo per chi va in finance/consulenza.</p>
-
-    <div class="field"><label>Titolo decisione</label><input type="text" id="dec-title" placeholder="es. Accettare offerta Eurizon vs valutare altro stage"/></div>
-    <div class="field"><label>Contesto · perché stai decidendo</label><textarea id="dec-context" rows="2"></textarea></div>
-    <div class="field"><label>Opzioni considerate</label><textarea id="dec-options" rows="3" placeholder="A) ...&#10;B) ...&#10;C) ..."></textarea></div>
-    <div class="field"><label>Scelta + ragione principale</label><textarea id="dec-choice" rows="2"></textarea></div>
-    <div class="field"><label>Esito atteso (cosa pensi succederà)</label><textarea id="dec-expected" rows="2"></textarea></div>
-    <div class="row">
-      <div class="field"><label>Data decisione</label><input type="date" id="dec-date"/></div>
-      <div class="field"><label>Review tra (giorni)</label><input type="number" id="dec-review-days" value="30" min="7"/></div>
-    </div>
-    <button class="btn" onclick="addDecision()">+ Salva decisione</button>
-  </div>
-
-  <div class="card" style="margin-top:16px">
-    <h2><span class="ico">⏰</span> Decisioni da rivedere</h2>
-    <div id="decisions-due"></div>
-  </div>
-
-  <div class="card" style="margin-top:16px">
-    <h2><span class="ico">📜</span> Storico decisioni</h2>
-    <div id="decisions-history"></div>
-  </div>
-</section>
-
-<!-- ============ AREE ============ -->
-<section class="tab" id="tab-aree">
-  <div class="grid grid-3" id="area-cards"></div>
 </section>
 
 <!-- ============ LIBRI ============ -->
@@ -3939,7 +3874,6 @@ function renderAll(){
   renderWeekly();
   renderTrend();
   renderReviewHistory();
-  renderAreas();
   renderBookshelf();
   renderFrancese();
   renderSleepChart();
@@ -3948,10 +3882,8 @@ function renderAll(){
   renderCheckHistory();
   renderDataSummary();
   renderTodos();
-  renderHabits();
   renderGoals();
   renderContacts();
-  renderDecisions();
   pomoRender();
   renderMIT();
   renderEnergy();
@@ -3994,14 +3926,6 @@ function renderReminders(){
   const yest = new Date(); yest.setDate(yest.getDate()-1);
   const yestISO = yest.toISOString().slice(0,10);
   if(!(state.sleep||[]).some(s=>s.date===yestISO)) items.push({type:'normal', icon:'🌙', title:'Logga il sonno di ieri', meta:'benessere'});
-
-  const habits = state.habits||[];
-  const habitLog = state.habitLog||{};
-  const habitsNotDone = habits.filter(h=>!habitLog[today]?.[h.id]);
-  if(habits.length && habitsNotDone.length) items.push({type:'normal', icon:'🔁', title:`${habitsNotDone.length}/${habits.length} abitudini da spuntare`, meta:habitsNotDone.slice(0,3).map(h=>h.name).join(' · ')});
-
-  const decisionsToReview = (state.decisions||[]).filter(d=>!d.reviewed && d.reviewDate && d.reviewDate<=today);
-  if(decisionsToReview.length) items.push({type:'warn', icon:'⚖️', title:`${decisionsToReview.length} decisione/i da rivedere`, meta:'journal'});
 
   (state.goals||[]).forEach(g=>{
     if(g.done || !g.deadline) return;
@@ -4063,20 +3987,6 @@ function renderInsights(){
     insights.push({type:'positive', icon:'🚀', text:`<strong>${areaLabels[top.k]}</strong>: <em>+${top.gap.toFixed(1)}h</em> sopra target.`, source:'analisi settimana'});
   }
 
-  const habits = state.habits||[]; const log = state.habitLog||{};
-  if(habits.length){
-    const streaks = habits.map(h=>{
-      let streak=0;
-      for(let i=0;i<60;i++){
-        const d = new Date(); d.setDate(d.getDate()-i);
-        const k = d.toISOString().slice(0,10);
-        if(log[k]?.[h.id]) streak++;
-        else if(i>0) break;
-      }
-      return {name:h.name, streak};
-    }).sort((a,b)=>b.streak-a.streak);
-    if(streaks[0]?.streak>=7) insights.push({type:'positive', icon:'🔥', text:`<strong>${escapeHtml(streaks[0].name)}</strong>: streak <em>${streaks[0].streak}gg</em>. Non rompere la catena.`, source:'abitudini'});
-  }
 
   const today = todayISO();
   const distToday = state.distractions?.[today];
@@ -4105,7 +4015,6 @@ function initDateFields(){
   document.getElementById('rev-date').value = todayISO();
   document.getElementById('ck-month').value = todayISO().slice(0,7);
   document.getElementById('todo-due').value = todayISO();
-  document.getElementById('dec-date').value = todayISO();
   document.getElementById('goal-deadline').value = '2026-11-30';
 }
 
