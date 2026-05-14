@@ -626,6 +626,15 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 [data-theme="light"] .rtb:hover{background:#e0e0e0;color:#000;border-color:#ccc}
 [data-theme="light"] .rtb.active{background:#d0d0d0;color:#000}
 [data-theme="light"] .rtb-sep{background:#ccc}
+/* ===== OGGI · TODAY TODOS ===== */
+#today-todos-list{display:block;width:100%}
+#today-todos-list .oggi-todo-row{display:flex;align-items:flex-start;justify-content:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);width:100%;box-sizing:border-box}
+#today-todos-list .oggi-todo-row:last-child{border-bottom:none}
+#today-todos-list .oggi-todo-check{flex:0 0 auto;cursor:pointer;margin:3px 0 0 0;width:16px;height:16px}
+#today-todos-list .oggi-todo-text{flex:1 1 auto;min-width:0;font-size:.86rem;line-height:1.45;color:var(--text);word-break:break-word;overflow-wrap:anywhere}
+#today-todos-list .oggi-todo-text.overdue{color:var(--red)}
+#today-todos-list .oggi-todo-due{font-size:.7rem;opacity:.6;margin-left:4px}
+#today-todos-list .oggi-todo-prio{flex:0 0 auto;font-size:.7rem;color:var(--red);font-weight:700;margin-top:4px}
 [data-theme="light"] .rtb-select{background:#fff;border-color:#ccc;color:#333}
 [data-theme="light"] #rich-content{color:#0a1426;caret-color:#cc0033}
 [data-theme="light"] #rich-content h1,[data-theme="light"] #rich-content h2{color:#000}
@@ -4367,10 +4376,10 @@ function renderTodayTodos(){
   }
   list.innerHTML = items.slice(0,12).map(t => {
     const overdue = t.due && t.due < today;
-    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <input type="checkbox" onchange="toggleTodo('${t.id}');renderTodayTodos();" style="cursor:pointer;flex-shrink:0;margin-top:2px"/>
-      <div style="flex:1;min-width:0;font-size:.86rem;line-height:1.45;${overdue?'color:var(--red)':'color:var(--text)'}">${escapeHtml(t.text)}${overdue?` <span style="font-size:.7rem;opacity:.6">(scad. ${t.due})</span>`:''}</div>
-      ${t.prio==='high'?'<span style="font-size:.65rem;color:var(--red);font-weight:700;flex-shrink:0;margin-top:4px">●</span>':''}
+    return `<div class="oggi-todo-row">
+      <input type="checkbox" onchange="toggleTodo('${t.id}');renderTodayTodos();" class="oggi-todo-check"/>
+      <div class="oggi-todo-text${overdue?' overdue':''}">${escapeHtml(t.text)}${overdue?` <span class="oggi-todo-due">(scad. ${t.due})</span>`:''}</div>
+      ${t.prio==='high'?'<span class="oggi-todo-prio">●</span>':''}
     </div>`;
   }).join('');
 }
