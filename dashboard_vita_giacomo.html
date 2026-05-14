@@ -933,7 +933,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <span style="display:flex;align-items:center;gap:8px"><span class="ico">✨</span> Daily Boost</span>
         <span style="display:flex;align-items:center;gap:8px">
           <span id="dm-meta" style="font-size:.72rem;color:var(--muted2)"></span>
-          <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" title="Rigenera" style="padding:2px 8px">↻</button>
+          <button class="btn ghost sm" onclick="renderDailyMotivation()" title="Mostra l'ultimo boost salvato (senza chiamare l'AI)" style="padding:2px 8px">👁</button>
+          <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" title="Rigenera con AI" style="padding:2px 8px">↻</button>
         </span>
       </h2>
       <div id="daily-motivation"></div>
@@ -3965,6 +3966,7 @@ function renderAll(){
   try { renderDiario();      } catch(e){ console.error('renderDiario error:', e); }
   try { renderTodayTodos();  } catch(e){ console.error('renderTodayTodos error:', e); }
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
+  try { renderDailyMotivation(); } catch(e){ console.error('renderDailyMotivation error:', e); }
 }
 
 // ============ PROMEMORIA + INSIGHTS AI ============
@@ -4115,13 +4117,9 @@ function dashInit() {
   // AI briefing
   setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
   scheduleAIBriefing();
-  // Daily Boost: render IMMEDIATO e SINCRONO della cache (qualsiasi giorno)
-  try{
-    const _cachedDM = _loadDailyBoostCache();
-    if(_cachedDM){ renderDailyMotivation(_cachedDM); }
-  }catch(e){ console.error('Daily Boost cache render:', e); }
-  // Poi (async) eventuale refresh se serve un boost nuovo per oggi
-  setTimeout(()=>refreshDailyMotivation(false), 100);
+  // Daily Boost: render immediato (renderAll lo include già). Poi tenta refresh se nuovo giorno
+  try{ renderDailyMotivation(); }catch(e){ console.error('Daily Boost render:', e); }
+  setTimeout(()=>refreshDailyMotivation(false), 1500);
   setInterval(()=>refreshDailyMotivation(false), 60*60*1000);
 }
 
@@ -5707,7 +5705,8 @@ async function refreshDailyMotivation(force=false){
   const wrap = document.getElementById('daily-motivation');
   const meta = document.getElementById('dm-meta');
   const key = getGeminiKey();
-  const cached = _loadDailyBoostCache();
+  // Cerca prima in state, poi in localStorage (più resistente)
+  const cached = _getDailyBoost() || _loadDailyBoostCache();
   const today = todayISO();
 
   // Render SEMPRE la cache se c'è qualcosa, così l'utente non vede mai schermate vuote/bloccate
@@ -5798,8 +5797,8 @@ Output: SOLO il JSON, niente preamboli, niente \`\`\`json.`;
       ...parsed
     };
     _saveDailyBoostCache(dm);
-    // aggiorna anche state per retrocompatibilità
     state.dailyMotivation = dm;
+    save(); // <-- persiste anche su Firebase, come fa il Briefing AI
     renderDailyMotivation(dm);
   } catch(e){
     clearTimeout(_dmTimeoutId);
@@ -5888,6 +5887,7 @@ SOLO JSON, niente altro.`;
     dm.book = parsed;
     _saveDailyBoostCache(dm);
     state.dailyMotivation = dm;
+    save();
     renderDailyMotivation(dm);
   } catch(e){
     if(btn){ btn.disabled = false; btn.textContent = '↻ Già letto'; }
@@ -5924,10 +5924,40 @@ function saveDailyBookToShelf(btn){
   if(btn){ btn.disabled = true; btn.textContent = '✓ Salvato'; }
 }
 
+// Legge il boost da state oppure dalla cache localStorage (fallback)
+function _getDailyBoost(){
+  if(state && state.dailyMotivation && (state.dailyMotivation.quote || state.dailyMotivation.book || state.dailyMotivation.advice)){
+    return state.dailyMotivation;
+  }
+  try{
+    const r = localStorage.getItem(DAILY_BOOST_KEY);
+    if(r){
+      const parsed = JSON.parse(r);
+      if(parsed && (parsed.quote || parsed.book || parsed.advice)) return parsed;
+    }
+  }catch(e){}
+  return null;
+}
+
 function renderDailyMotivation(dm){
   const wrap = document.getElementById('daily-motivation');
   const meta = document.getElementById('dm-meta');
-  if(!wrap || !dm) return;
+  if(!wrap) return;
+  // Se non passato esplicitamente, leggi da state/cache (come fa renderAIBriefing)
+  if(dm === undefined) dm = _getDailyBoost();
+  if(!dm){
+    const key = getGeminiKey();
+    if(!key){
+      wrap.innerHTML = `<div style="text-align:center;padding:14px 8px">
+        <p style="margin:0 0 12px;color:var(--muted2);font-size:.85rem">🔑 Serve l'API Gemini per il boost giornaliero</p>
+        <button class="btn sm" onclick="openGeminiSetup()">Configura</button>
+      </div>`;
+    } else {
+      wrap.innerHTML = `<div style="color:var(--muted);font-size:.85rem;padding:6px 0">Nessun boost ancora generato. Clicca <strong>↻</strong> in alto per generarlo.</div>`;
+    }
+    if(meta) meta.textContent = '';
+    return;
+  }
   // Difese contro cache parziali/malformate
   const q = dm.quote || {};
   const b = dm.book  || {};
