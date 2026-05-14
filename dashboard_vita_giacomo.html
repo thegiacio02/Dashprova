@@ -287,11 +287,42 @@ ul.clean{list-style:none}
 ul.clean li{padding:8px 0;border-bottom:1px solid var(--border);font-size:.82rem;display:flex;justify-content:space-between;align-items:center;gap:10px}
 ul.clean li:last-child{border-bottom:none}
 
-.book{display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--surface2);border-radius:8px;margin-bottom:8px;gap:10px}
-.book .info{flex:1;min-width:0}
-.book .title{font-size:.85rem;color:#fff;font-weight:600}
-.book .meta{font-size:.7rem;color:var(--muted2);margin-top:2px}
-.book select{width:auto;flex-shrink:0}
+/* === BOOKSHELF === */
+.bs-card{background:var(--surface2);border-radius:10px;margin-bottom:8px;overflow:hidden;border:1px solid var(--border)}
+.bs-header{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.bs-header:hover{background:rgba(255,255,255,.03)}
+.bs-info{flex:1;min-width:0}
+.bs-title{font-size:.87rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-meta{font-size:.7rem;color:var(--muted2);margin-top:2px}
+.bs-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.bs-chevron{font-size:.65rem;color:var(--muted);transition:transform .2s;margin-left:2px}
+.bs-card.open .bs-chevron{transform:rotate(180deg)}
+.bs-notes-panel{display:none;padding:0 14px 14px;border-top:1px solid var(--border);background:var(--surface)}
+.bs-card.open .bs-notes-panel{display:block}
+.bs-add-note{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding-top:12px}
+.bs-add-note select{width:auto;font-size:.75rem;padding:5px 8px}
+.bs-add-note textarea{flex:1;min-width:160px;font-size:.78rem;resize:vertical;min-height:56px}
+.bs-note-entry{border-left:2px solid var(--accent);padding:6px 10px;margin-bottom:8px;font-size:.79rem;line-height:1.5;background:var(--surface2);border-radius:0 6px 6px 0}
+.bs-note-entry .bs-note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;font-size:.68rem;color:var(--muted2)}
+.bs-note-type-nota{border-color:#60a5fa}
+.bs-note-type-insight{border-color:#f59e0b}
+.bs-note-type-citazione{border-color:#a78bfa}
+.bs-note-type-highlight{border-color:#34d399}
+.bs-stars{display:flex;gap:2px;cursor:pointer}
+.bs-star{font-size:.9rem;opacity:.35;transition:opacity .15s}
+.bs-star.on{opacity:1}
+.bs-stats-bar{display:flex;gap:20px;flex-wrap:wrap;align-items:center;font-size:.8rem}
+.bs-stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+.bs-stat-val{font-size:1.4rem;font-weight:800;color:var(--accent);line-height:1}
+.bs-stat-lbl{font-size:.65rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.04em}
+.bs-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.bs-filter-bar .chip{padding:4px 12px;border-radius:20px;font-size:.74rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted2);transition:all .15s}
+.bs-filter-bar .chip.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
+.bs-add-form{background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--accent);display:none}
+.bs-add-form.open{display:block}
+.bs-add-form .form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.bs-add-form .form-row > *{flex:1;min-width:140px}
+.bs-empty{color:var(--muted);font-size:.82rem;text-align:center;padding:28px 0}
 
 .checkbox{display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface2);border-radius:6px;margin-bottom:6px;cursor:pointer;font-size:.82rem}
 .checkbox input{width:auto}
@@ -584,6 +615,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 [data-theme="light"] .stat-value,
 [data-theme="light"] .kpi .v,
 [data-theme="light"] .bar-row .lbl .name,
+[data-theme="light"] .bs-title,
 [data-theme="light"] .book .title,
 [data-theme="light"] .todo-content .text,
 [data-theme="light"] .timer-display,
@@ -1326,24 +1358,47 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
 <!-- ============ LIBRI ============ -->
 <section class="tab" id="tab-libri">
-  <div class="card">
-    <h2><span class="ico">📚</span> Bibliografia 6 mesi (12 libri)</h2>
-    <div id="books-list"></div>
+
+  <!-- Stats + add button -->
+  <div class="card" style="padding:14px 18px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:space-between">
+      <div class="bs-stats-bar" id="bs-stats"></div>
+      <button class="btn sm" onclick="toggleAddBookForm()" id="bs-add-btn" style="margin-top:4px">+ Aggiungi libro</button>
+    </div>
   </div>
 
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card">
-      <h2><span class="ico">✍️</span> Reading log</h2>
-      <div class="field"><label>Libro / Articolo</label><input type="text" id="rl-title"/></div>
-      <div class="field"><label>Punti chiave (3-5 righe)</label><textarea id="rl-notes" rows="3"></textarea></div>
-      <div class="field"><label>Citazione preferita</label><textarea id="rl-quote" rows="2"></textarea></div>
-      <button class="btn" onclick="addReadingLog()">+ Salva nota lettura</button>
+  <!-- Add book form -->
+  <div class="bs-add-form" id="bs-add-form">
+    <div style="font-size:.8rem;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">Nuovo libro</div>
+    <div class="form-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <input type="text" id="bs-new-title" placeholder="Titolo *" style="flex:2;min-width:160px"/>
+      <input type="text" id="bs-new-author" placeholder="Autore *" style="flex:1;min-width:120px"/>
     </div>
-    <div class="card">
-      <h2><span class="ico">🗂️</span> Note salvate</h2>
-      <div id="reading-log-list" style="max-height:400px;overflow-y:auto"></div>
+    <div class="form-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <input type="text" id="bs-new-cat" placeholder="Categoria (es. Finanza, Mentalità…)" style="flex:2;min-width:140px"/>
+      <select id="bs-new-status" style="flex:1;min-width:120px">
+        <option value="da-leggere">🔖 Da leggere</option>
+        <option value="in-corso">📖 In corso</option>
+        <option value="letto">✅ Letto</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn sm" onclick="addBookToShelf()">+ Aggiungi</button>
+      <button class="btn ghost sm" onclick="toggleAddBookForm()">Annulla</button>
     </div>
   </div>
+
+  <!-- Filters -->
+  <div class="bs-filter-bar" id="bs-filters">
+    <button class="chip active" data-filter="tutti" onclick="setBsFilter('tutti',this)">Tutti</button>
+    <button class="chip" data-filter="in-corso" onclick="setBsFilter('in-corso',this)">📖 In corso</button>
+    <button class="chip" data-filter="da-leggere" onclick="setBsFilter('da-leggere',this)">🔖 Da leggere</button>
+    <button class="chip" data-filter="letto" onclick="setBsFilter('letto',this)">✅ Letti</button>
+  </div>
+
+  <!-- Books list -->
+  <div id="bookshelf-list"></div>
+
 </section>
 
 <!-- ============ FRANCESE ============ -->
@@ -1925,20 +1980,6 @@ const AREAS = {
   vuoto:     {name:'Tempo vuoto',    color:'yellow', icon:'🌿'}
 };
 
-const BOOKS = [
-  {month:'Maggio 2026',    title:'Trillions',                 author:'Robin Wigglesworth', cat:'Asset mgmt'},
-  {month:'Maggio 2026',    title:'Range',                     author:'David Epstein',      cat:'Mentalità'},
-  {month:'Giugno 2026',    title:'Too Big to Fail',           author:'Andrew Ross Sorkin', cat:'Finanza'},
-  {month:'Giugno 2026',    title:'Money Stuff (Levine)',      author:'Matt Levine',        cat:'Newsletter'},
-  {month:'Luglio 2026',    title:'Value(s)',                  author:'Mark Carney',        cat:'ESG'},
-  {month:'Luglio 2026',    title:"Liar's Poker",              author:'Michael Lewis',      cat:'Finanza'},
-  {month:'Agosto 2026',    title:'The Bond King',             author:'Mary Childs',        cat:'Asset mgmt'},
-  {month:'Agosto 2026',    title:'Working Backwards',         author:'Bryar/Carr',         cat:'Mentalità'},
-  {month:'Settembre 2026', title:'Investing for Good',        author:'Steven Lydenberg',   cat:'ESG'},
-  {month:'Settembre 2026', title:'When Genius Failed',        author:'Roger Lowenstein',   cat:'Finanza'},
-  {month:'Ottobre 2026',   title:'More Money Than God',       author:'Sebastian Mallaby',  cat:'Asset mgmt'},
-  {month:'Ottobre 2026',   title:'Hard Thing About Hard…',    author:'Ben Horowitz',       cat:'Mentalità'}
-];
 
 const SIGNALS = [
   'Difficoltà ad addormentarmi anche se stanco',
@@ -1978,6 +2019,7 @@ function defaultState(){ return {
     checks:[],
     books:{},
     readingLog:[],
+    bookshelf:[],
     vocab:[],
     signals:[],
     fitness:{},
@@ -2156,21 +2198,252 @@ function saveCheck(){
   alert('Check mensile salvato.');
 }
 
+// ============ BOOKSHELF ============
+
+let _bsFilter = 'tutti';
+
+function _bsMigrateOnce(){
+  if(state.bookshelf.length) return;
+  const oldBooks = [
+    {month:'Maggio 2026',    title:'Trillions',                 author:'Robin Wigglesworth', cat:'Asset mgmt'},
+    {month:'Maggio 2026',    title:'Range',                     author:'David Epstein',      cat:'Mentalità'},
+    {month:'Giugno 2026',    title:'Too Big to Fail',           author:'Andrew Ross Sorkin', cat:'Finanza'},
+    {month:'Giugno 2026',    title:'Money Stuff (Levine)',      author:'Matt Levine',        cat:'Newsletter'},
+    {month:'Luglio 2026',    title:'Value(s)',                  author:'Mark Carney',        cat:'ESG'},
+    {month:'Luglio 2026',    title:"Liar's Poker",              author:'Michael Lewis',      cat:'Finanza'},
+    {month:'Agosto 2026',    title:'The Bond King',             author:'Mary Childs',        cat:'Asset mgmt'},
+    {month:'Agosto 2026',    title:'Working Backwards',         author:'Bryar/Carr',         cat:'Mentalità'},
+    {month:'Settembre 2026', title:'Investing for Good',        author:'Steven Lydenberg',   cat:'ESG'},
+    {month:'Settembre 2026', title:'When Genius Failed',        author:'Roger Lowenstein',   cat:'Finanza'},
+    {month:'Ottobre 2026',   title:'More Money Than God',       author:'Sebastian Mallaby',  cat:'Asset mgmt'},
+    {month:'Ottobre 2026',   title:'Hard Thing About Hard…',    author:'Ben Horowitz',       cat:'Mentalità'}
+  ];
+  const statusMap = {'letto':'letto','in-corso':'in-corso','da-leggere':'da-leggere'};
+  state.bookshelf = oldBooks.map((b,i) => ({
+    id: uid(),
+    title: b.title,
+    author: b.author,
+    cat: b.cat,
+    status: statusMap[state.books[i]] || 'da-leggere',
+    rating: 0,
+    startDate: null,
+    endDate: null,
+    addedDate: todayISO(),
+    notes: []
+  }));
+  // Migrate old readingLog entries as notes on a special "Senza libro" entry if present
+  if(state.readingLog && state.readingLog.length){
+    state.bookshelf.unshift({
+      id: uid(),
+      title: '(Note senza libro)',
+      author: '—',
+      cat: '',
+      status: 'letto',
+      rating: 0,
+      startDate: null,
+      endDate: null,
+      addedDate: todayISO(),
+      notes: state.readingLog.map(r=>({
+        id: uid(),
+        date: r.date||todayISO(),
+        type: 'nota',
+        text: [r.title, r.notes, r.quote?`"${r.quote}"`:null].filter(Boolean).join('\n')
+      }))
+    });
+  }
+  save();
+}
+
+function toggleAddBookForm(){
+  const f = document.getElementById('bs-add-form');
+  const btn = document.getElementById('bs-add-btn');
+  const open = f.classList.toggle('open');
+  btn.textContent = open ? '× Chiudi' : '+ Aggiungi libro';
+  if(open) document.getElementById('bs-new-title').focus();
+}
+
+function addBookToShelf(){
+  const title = document.getElementById('bs-new-title').value.trim();
+  const author = document.getElementById('bs-new-author').value.trim();
+  if(!title){ document.getElementById('bs-new-title').focus(); return; }
+  const book = {
+    id: uid(),
+    title,
+    author: author||'',
+    cat: document.getElementById('bs-new-cat').value.trim(),
+    status: document.getElementById('bs-new-status').value,
+    rating: 0,
+    startDate: null,
+    endDate: null,
+    addedDate: todayISO(),
+    notes: []
+  };
+  state.bookshelf.unshift(book);
+  ['bs-new-title','bs-new-author','bs-new-cat'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('bs-new-status').value = 'da-leggere';
+  toggleAddBookForm();
+  save(); renderBookshelf();
+}
+
+function setBsStatus(id, status){
+  const b = state.bookshelf.find(b=>b.id===id);
+  if(!b) return;
+  b.status = status;
+  if(status==='in-corso' && !b.startDate) b.startDate = todayISO();
+  if(status==='letto' && !b.endDate) b.endDate = todayISO();
+  save(); renderBookshelf();
+}
+
+function setBsRating(id, r){
+  const b = state.bookshelf.find(b=>b.id===id);
+  if(!b) return;
+  b.rating = (b.rating===r) ? 0 : r;
+  save(); renderBookshelf();
+}
+
+function deleteBook(id){
+  const b = state.bookshelf.find(b=>b.id===id);
+  if(!b) return;
+  if(!confirm(`Eliminare "${b.title}"?`)) return;
+  state.bookshelf = state.bookshelf.filter(b=>b.id!==id);
+  save(); renderBookshelf();
+}
+
+function toggleBookNotes(id){
+  const card = document.getElementById('bsc-'+id);
+  if(card) card.classList.toggle('open');
+}
+
+function addBookNote(id){
+  const b = state.bookshelf.find(b=>b.id===id);
+  if(!b) return;
+  const txt = document.getElementById('bstxt-'+id).value.trim();
+  if(!txt) return;
+  const type = document.getElementById('bsnt-'+id).value;
+  b.notes = b.notes||[];
+  b.notes.push({id:uid(), date:todayISO(), type, text:txt});
+  document.getElementById('bstxt-'+id).value='';
+  save(); _renderBookNotes(id);
+}
+
+function deleteBookNote(bookId, noteId){
+  const b = state.bookshelf.find(b=>b.id===bookId);
+  if(!b) return;
+  b.notes = (b.notes||[]).filter(n=>n.id!==noteId);
+  save(); _renderBookNotes(bookId);
+}
+
+function setBsFilter(f, el){
+  _bsFilter = f;
+  document.querySelectorAll('.bs-filter-bar .chip').forEach(c=>c.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderBookshelf();
+}
+
+function _renderBookNotes(id){
+  const b = state.bookshelf.find(b=>b.id===id);
+  if(!b) return;
+  const panel = document.getElementById('bsn-'+id);
+  if(!panel) return;
+  const typeIcon = {nota:'📝',insight:'💡',citazione:'💬',highlight:'⭐'};
+  const notesHtml = (b.notes||[]).length ? [...(b.notes||[])].reverse().map(n=>`
+    <div class="bs-note-entry bs-note-type-${escapeHtml(n.type)}">
+      <div class="bs-note-head">
+        <span>${typeIcon[n.type]||'📝'} ${escapeHtml(n.type)} · ${n.date}</span>
+        <button class="btn sm danger" onclick="deleteBookNote('${escapeHtml(b.id)}','${escapeHtml(n.id)}')" style="padding:1px 6px;font-size:.65rem">×</button>
+      </div>
+      <div style="white-space:pre-wrap">${escapeHtml(n.text)}</div>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:.77rem;padding:4px 0">Nessuna nota ancora — aggiungi un appunto, citazione o insight.</div>';
+  panel.querySelector('.bs-notes-list').innerHTML = notesHtml;
+}
+
+function renderBookshelf(){
+  _bsMigrateOnce();
+  ensureState();
+  const list = document.getElementById('bookshelf-list');
+  if(!list) return;
+
+  // Stats
+  const all = state.bookshelf;
+  const letti = all.filter(b=>b.status==='letto').length;
+  const inCorso = all.filter(b=>b.status==='in-corso').length;
+  const daLegg = all.filter(b=>b.status==='da-leggere').length;
+  const statsEl = document.getElementById('bs-stats');
+  if(statsEl) statsEl.innerHTML = `
+    <div class="bs-stat"><span class="bs-stat-val">${all.length}</span><span class="bs-stat-lbl">Totale</span></div>
+    <div class="bs-stat"><span class="bs-stat-val" style="color:#34d399">${letti}</span><span class="bs-stat-lbl">Letti</span></div>
+    <div class="bs-stat"><span class="bs-stat-val" style="color:#f59e0b">${inCorso}</span><span class="bs-stat-lbl">In corso</span></div>
+    <div class="bs-stat"><span class="bs-stat-val" style="color:var(--muted2)">${daLegg}</span><span class="bs-stat-lbl">Da leggere</span></div>`;
+
+  // Filter
+  const filtered = _bsFilter==='tutti' ? all : all.filter(b=>b.status===_bsFilter);
+  if(!filtered.length){ list.innerHTML=`<div class="bs-empty">Nessun libro in questa categoria.</div>`; return; }
+
+  const statusLabel = {letto:'✅ Letto','in-corso':'📖 In corso','da-leggere':'🔖 Da leggere'};
+  const statusTagClass = {letto:'green','in-corso':'yellow','da-leggere':''};
+  const typeIcon = {nota:'📝',insight:'💡',citazione:'💬',highlight:'⭐'};
+
+  list.innerHTML = filtered.map(b=>{
+    const noteCount = (b.notes||[]).length;
+    const stars = [1,2,3,4,5].map(i=>`<span class="bs-star${b.rating>=i?' on':''}" onclick="event.stopPropagation();setBsRating('${b.id}',${i})">★</span>`).join('');
+    const notesHtml = (b.notes||[]).length ? [...(b.notes||[])].reverse().map(n=>`
+      <div class="bs-note-entry bs-note-type-${escapeHtml(n.type)}">
+        <div class="bs-note-head">
+          <span>${typeIcon[n.type]||'📝'} ${escapeHtml(n.type)} · ${n.date}</span>
+          <button class="btn sm danger" onclick="deleteBookNote('${escapeHtml(b.id)}','${escapeHtml(n.id)}')" style="padding:1px 6px;font-size:.65rem">×</button>
+        </div>
+        <div style="white-space:pre-wrap">${escapeHtml(n.text)}</div>
+      </div>`).join('') : '<div style="color:var(--muted);font-size:.77rem;padding:4px 0">Nessuna nota ancora.</div>';
+
+    return `<div class="bs-card" id="bsc-${b.id}">
+      <div class="bs-header" onclick="toggleBookNotes('${b.id}')">
+        <div class="bs-info">
+          <div class="bs-title">${escapeHtml(b.title)} <span class="tag ${statusTagClass[b.status]||''}" style="font-size:.62rem">${statusLabel[b.status]||b.status}</span></div>
+          <div class="bs-meta">${escapeHtml(b.author)}${b.cat?` · ${escapeHtml(b.cat)}`:''}${b.endDate?` · finito ${b.endDate}`:''}${noteCount?` · ${noteCount} nota${noteCount>1?'e':''}`:''}
+          </div>
+        </div>
+        <div class="bs-actions" onclick="event.stopPropagation()">
+          ${b.status==='letto'?`<div class="bs-stars" title="Rating">${stars}</div>`:''}
+          <select style="font-size:.72rem;padding:3px 6px" onchange="setBsStatus('${b.id}',this.value)">
+            <option value="da-leggere"${b.status==='da-leggere'?' selected':''}>🔖 Da leggere</option>
+            <option value="in-corso"${b.status==='in-corso'?' selected':''}>📖 In corso</option>
+            <option value="letto"${b.status==='letto'?' selected':''}>✅ Letto</option>
+          </select>
+          <button class="btn sm danger" onclick="deleteBook('${b.id}')" title="Elimina" style="padding:2px 7px">×</button>
+          <span class="bs-chevron">▼</span>
+        </div>
+      </div>
+      <div class="bs-notes-panel" id="bsn-${b.id}">
+        <div class="bs-add-note">
+          <select id="bsnt-${b.id}" style="font-size:.74rem">
+            <option value="nota">📝 Nota</option>
+            <option value="insight">💡 Insight</option>
+            <option value="citazione">💬 Citazione</option>
+            <option value="highlight">⭐ Highlight</option>
+          </select>
+          <textarea id="bstxt-${b.id}" placeholder="Aggiungi un appunto, citazione, insight…" rows="2"></textarea>
+          <button class="btn sm" onclick="addBookNote('${b.id}')" style="align-self:flex-end">+ Aggiungi</button>
+        </div>
+        <div class="bs-notes-list">${notesHtml}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function setBookStatus(idx, status){
-  state.books[idx]=status; save(); renderBooks();
+  state.books[idx]=status; save();
 }
 
 function addReadingLog(){
-  const t=document.getElementById('rl-title').value.trim();
+  const t=document.getElementById('rl-title')?.value?.trim();
   if(!t) return;
   state.readingLog.push({id:uid(),title:t,
-    notes:document.getElementById('rl-notes').value,
-    quote:document.getElementById('rl-quote').value,
+    notes:document.getElementById('rl-notes')?.value||'',
+    quote:document.getElementById('rl-quote')?.value||'',
     date:todayISO()});
-  ['rl-title','rl-notes','rl-quote'].forEach(i=>document.getElementById(i).value='');
-  save(); renderAll();
+  save();
 }
-function delReadingLog(id){ state.readingLog=state.readingLog.filter(r=>r.id!==id); save(); renderAll(); }
+function delReadingLog(id){ state.readingLog=state.readingLog.filter(r=>r.id!==id); save(); }
 
 function addVocab(){
   const it=document.getElementById('v-it').value.trim();
@@ -2311,34 +2584,6 @@ function renderAreas(){
   }).join('');
 }
 
-function renderBooks(){
-  const c=document.getElementById('books-list');
-  c.innerHTML = BOOKS.map((b,i)=>{
-    const st = state.books[i] || 'da-leggere';
-    const tagClass = st==='letto'?'green':st==='in-corso'?'yellow':'';
-    return `<div class="book">
-      <div class="info">
-        <div class="title">${b.title} <span class="tag ${tagClass}">${st}</span></div>
-        <div class="meta">${b.author} · ${b.cat} · ${b.month}</div>
-      </div>
-      <select onchange="setBookStatus(${i}, this.value)">
-        <option value="da-leggere"${st==='da-leggere'?' selected':''}>Da leggere</option>
-        <option value="in-corso"${st==='in-corso'?' selected':''}>In corso</option>
-        <option value="letto"${st==='letto'?' selected':''}>Letto</option>
-      </select>
-    </div>`;
-  }).join('');
-}
-
-function renderReadingLog(){
-  const c=document.getElementById('reading-log-list');
-  if(!state.readingLog.length){ c.innerHTML='<p style="color:var(--muted);font-size:.78rem">Nessuna nota ancora.</p>'; return; }
-  c.innerHTML = [...state.readingLog].reverse().map(r=>`<div class="history-entry">
-    <div class="date">📖 ${escapeHtml(r.title)} · ${r.date} <button class="btn sm danger" style="float:right" onclick="delReadingLog('${r.id}')">×</button></div>
-    ${r.notes?`<div class="a">${escapeHtml(r.notes)}</div>`:''}
-    ${r.quote?`<div class="q">Citazione:</div><div class="a" style="font-style:italic">"${escapeHtml(r.quote)}"</div>`:''}
-  </div>`).join('');
-}
 
 function renderFrancese(){
   const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30);
@@ -2442,7 +2687,7 @@ function renderDataSummary(){
       <li><span>Check mensili</span><strong>${state.checks.length}</strong></li>
       <li><span>Reading log</span><strong>${state.readingLog.length}</strong></li>
       <li><span>Vocaboli francese</span><strong>${state.vocab.length}</strong></li>
-      <li><span>Libri (status)</span><strong>${Object.keys(state.books).length}/${BOOKS.length}</strong></li>
+      <li><span>Libreria</span><strong>${(state.bookshelf||[]).length} libri · ${(state.bookshelf||[]).filter(b=>b.status==='letto').length} letti</strong></li>
     </ul>`;
 }
 
@@ -3296,8 +3541,7 @@ function renderAll(){
   renderTrend();
   renderReviewHistory();
   renderAreas();
-  renderBooks();
-  renderReadingLog();
+  renderBookshelf();
   renderFrancese();
   renderSleepChart();
   renderSignals();
@@ -5161,7 +5405,7 @@ function _dmBuildContext(){
   return {
     cornice: state.cornice||'',
     goals: (state.goals||[]).map(g=>({title:g.title||g.text||'', desc:(g.desc||'').slice(0,150)})).slice(0,10),
-    books_owned: Object.values(state.books||{}).map(b=>b.title).filter(Boolean).slice(0,30),
+    books_owned: (state.bookshelf||[]).filter(b=>b.status==='letto'||b.status==='in-corso').map(b=>b.title).slice(0,30),
     books_already_seen: (state.dailyMotivation?.rejectedBooks||[]).slice(-20),
     flConcepts_recent: (state.flConcepts||[]).slice(0,15).map(c=>c.name),
     diario_recent_themes: (state.diario||[]).slice(-10).map(d=>({title:d.title||'', tags:(d.tags||[]).slice(0,5)})),
