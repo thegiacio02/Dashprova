@@ -717,24 +717,45 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
 <!-- ============ OGGI ============ -->
 <section class="tab active" id="tab-oggi">
-  <div class="grid grid-2" style="margin-bottom:16px">
-    <div class="card" id="weather-card">
-      <h2 style="margin-bottom:10px"><span class="ico">🌤️</span> Meteo Milano</h2>
-      <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
-      <div id="weather-forecast" class="weather-forecast"></div>
-      <div id="weather-detail" class="weather-detail"></div>
+
+  <!-- AI BRIEFING -->
+  <div class="card" id="ai-briefing-card" style="border-left:3px solid var(--accent)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap">
+      <h2 style="margin:0"><span class="ico">🤖</span> Briefing AI <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· situazione mondiale</span></h2>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span id="briefing-meta" style="font-size:.72rem;color:var(--muted)"></span>
+        <button class="btn ghost sm" onclick="refreshAIBriefing()" id="briefing-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
+        <button class="btn ghost sm" onclick="openGeminiSetup()" title="Impostazioni AI" style="font-size:.75rem;padding:4px 10px">⚙️</button>
+      </div>
     </div>
-    <div class="card" id="quotes-card">
-      <h2 style="margin-bottom:10px"><span class="ico">📈</span> Mercati</h2>
-      <div id="quotes-content">
-        <div class="quote-row" data-sym="QQQ"><span class="quote-label">QQQ <span class="quote-sub">Nasdaq 100 ETF</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
-        <div class="quote-row" data-sym="FTSEMIB.MI"><span class="quote-label">FTSE MIB <span class="quote-sub">Milano</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
-        <div class="quote-row" data-sym="EURUSD=X"><span class="quote-label">EUR/USD <span class="quote-sub">Forex</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+    <div id="briefing-content"></div>
+  </div>
+
+  <!-- TODOS OGGI / HABITS / FOCUS -->
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">✅</span> Da fare oggi</span><span class="card-badge" id="today-todos-count">0</span></h2>
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <input type="text" id="oggi-quick-todo" placeholder="Aggiungi al volo… (Invio)" style="flex:1" onkeydown="if(event.key==='Enter')quickAddTodo()"/>
+        <button class="btn sm" onclick="quickAddTodo()" style="padding:0 14px">+</button>
+      </div>
+      <ul class="clean" id="today-todos-list"></ul>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="card" style="margin:0">
+        <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🔥</span> Abitudini oggi</span><span class="card-badge" id="oggi-habits-count">0</span></h2>
+        <div id="oggi-habits-list"></div>
+      </div>
+      <div class="card" style="margin:0">
+        <h2><span class="ico">🎯</span> Focus del giorno</h2>
+        <input type="text" id="oggi-focus" placeholder="Una cosa sola da portare a casa oggi…" onblur="saveFocus()" onkeydown="if(event.key==='Enter')this.blur()" style="font-size:.9rem"/>
       </div>
     </div>
   </div>
 
-  <div class="grid grid-2" style="margin-bottom:16px">
+  <!-- PROMEMORIA + INSIGHTS -->
+  <div class="grid grid-2" style="margin-top:16px">
     <div class="card">
       <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📌</span> Promemoria attivi</span><span id="reminders-count" class="card-badge">0</span></h2>
       <div id="reminders-list" class="reminders-list"></div>
@@ -744,14 +765,30 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div id="insights-list" class="insights-list"></div>
     </div>
   </div>
-  <div class="stats-strip" id="stats-strip">
+
+  <!-- STATS STRIP -->
+  <div class="stats-strip" id="stats-strip" style="margin-top:16px">
     <div class="stat-item"><span class="stat-label">SETTIMANA</span><span class="stat-value" id="kpi-week">-</span><span class="stat-sub" id="kpi-week-date">—</span></div>
     <div class="stat-item"><span class="stat-label">SESSIONI 7GG</span><span class="stat-value" id="kpi-sessions">0</span><span class="stat-sub">log attività</span></div>
     <div class="stat-item"><span class="stat-label">SONNO 7GG</span><span class="stat-value"><span id="kpi-sleep">—</span><span class="stat-unit">h</span></span><span class="stat-sub" id="kpi-sleep-status">—</span></div>
     <div class="stat-item"><span class="stat-label">CORNICE</span><span class="stat-value"><span id="kpi-cornice">B</span></span><span class="stat-sub"><span id="kpi-cornice-name">Media</span> · <span id="kpi-cornice-desc">Apr / Ott</span></span></div>
   </div>
 
-  <div class="grid grid-2">
+  <!-- NEWS LIVE -->
+  <div class="card" style="margin-top:16px" id="news-card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="margin:0"><span class="ico">📰</span> Rassegna stampa</h2>
+      <button class="btn ghost sm" onclick="loadNews(true)" id="news-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
+    </div>
+    <div class="news-grid" id="news-grid">
+      <div id="news-bloomberg"></div>
+      <div id="news-ft"></div>
+      <div id="news-sole24"></div>
+    </div>
+  </div>
+
+  <!-- LOG SESSIONI + SONNO -->
+  <div class="grid grid-2" style="margin-top:16px">
     <div class="card">
       <h2><span class="ico">⚡</span> Log rapido</h2>
       <div class="field">
@@ -786,15 +823,21 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <div class="card" style="margin-top:16px" id="news-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <h2 style="margin:0"><span class="ico">📰</span> Rassegna stampa</h2>
-      <button class="btn ghost sm" onclick="loadNews(true)" id="news-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
+  <!-- METEO + MERCATI (bottom) -->
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card" id="weather-card">
+      <h2 style="margin-bottom:10px"><span class="ico">🌤️</span> Meteo Milano</h2>
+      <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
+      <div id="weather-forecast" class="weather-forecast"></div>
+      <div id="weather-detail" class="weather-detail"></div>
     </div>
-    <div class="news-grid" id="news-grid">
-      <div id="news-bloomberg"></div>
-      <div id="news-ft"></div>
-      <div id="news-sole24"></div>
+    <div class="card" id="quotes-card">
+      <h2 style="margin-bottom:10px"><span class="ico">📈</span> Mercati</h2>
+      <div id="quotes-content">
+        <div class="quote-row" data-sym="QQQ"><span class="quote-label">QQQ <span class="quote-sub">Nasdaq 100 ETF</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+        <div class="quote-row" data-sym="FTSEMIB.MI"><span class="quote-label">FTSE MIB <span class="quote-sub">Milano</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+        <div class="quote-row" data-sym="EURUSD=X"><span class="quote-label">EUR/USD <span class="quote-sub">Forex</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+      </div>
     </div>
   </div>
 
@@ -1838,6 +1881,8 @@ function defaultState(){ return {
     flThoughts:[],
     flConcepts:[],
     diario:[],
+    aiBriefing:null,
+    focus:{},
     flTagFilter:'all'
   };}
 
@@ -3153,6 +3198,10 @@ function renderAll(){
   try { renderInsights(); } catch(e){ console.error('renderInsights error:', e); }
   try { renderFinanceLab(); } catch(e){ console.error('renderFinanceLab error:', e); }
   try { renderDiario();      } catch(e){ console.error('renderDiario error:', e); }
+  try { renderTodayTodos();  } catch(e){ console.error('renderTodayTodos error:', e); }
+  try { renderOggiHabits();  } catch(e){ console.error('renderOggiHabits error:', e); }
+  try { renderFocus();       } catch(e){ console.error('renderFocus error:', e); }
+  try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
 }
 
 // ============ PROMEMORIA + INSIGHTS AI ============
@@ -3300,6 +3349,9 @@ function dashInit() {
   renderAll();
   pullFromFirebase().then(loaded => { if(loaded) renderAll(); });
   setInterval(async ()=>{ const loaded = await pullFromFirebase(); if(loaded) renderAll(); }, 60000);
+  // AI briefing: try generating on boot if stale, then check hourly
+  setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
+  scheduleAIBriefing();
 }
 
 // Start auth check — dashboard boots only after successful login
@@ -3351,10 +3403,11 @@ async function fetchFeedXML(rssUrl){
   return null;
 }
 
+window._newsCache = {};
 async function fetchSource(src){
   for(const feed of src.feeds){
     const items = await fetchFeedXML(feed);
-    if(items && items.length) return items;
+    if(items && items.length){ window._newsCache[src.id] = items; return items; }
   }
   return null;
 }
@@ -4123,6 +4176,263 @@ function renderDiario(){
       ${e.body ? `<div class="fl-thought-body">${looksLikeHtml(e.body) ? e.body : escapeHtml(e.body)}</div>` : ''}
     </div>
   `).join('');
+}
+
+// ============ OGGI · TODAY VIEW ============
+const GEMINI_KEY_STORAGE = 'dash_gemini_key';
+const BRIEFING_REFRESH_MS = 2*60*60*1000; // 2h
+let _briefingTimer = null;
+
+function getGeminiKey(){ return localStorage.getItem(GEMINI_KEY_STORAGE) || ''; }
+function setGeminiKey(k){ localStorage.setItem(GEMINI_KEY_STORAGE, k); }
+
+function formatTimeAgo(date){
+  const diffMin = Math.floor((Date.now() - date.getTime())/60000);
+  if(diffMin < 1)  return 'adesso';
+  if(diffMin < 60) return `${diffMin} min fa`;
+  const h = Math.floor(diffMin/60);
+  if(h < 24) return `${h}h fa`;
+  return `${Math.floor(h/24)}g fa`;
+}
+
+function openGeminiSetup(){
+  const current = getGeminiKey();
+  const msg = `Inserisci la tua API key Google Gemini.
+
+Per ottenerla (gratis):
+1) Vai su https://aistudio.google.com/apikey
+2) Accedi con il tuo account Google
+3) Clicca "Create API key"
+4) Copia la key e incollala qui sotto
+
+(Limite gratuito: 1500 richieste/giorno — il briefing usa solo ~12/giorno)`;
+  const k = prompt(msg, current);
+  if(k === null) return;
+  setGeminiKey(k.trim());
+  if(k.trim()){
+    fetchAIBriefing(true);
+  } else {
+    renderAIBriefing();
+  }
+}
+
+function gatherNewsHeadlines(){
+  const cache = window._newsCache || {};
+  const titles = [];
+  Object.entries(cache).forEach(([src, items])=>{
+    if(Array.isArray(items)) items.slice(0,10).forEach(it=>{
+      const t = (it.title||'').replace(/\s+-\s+(Bloomberg|Financial Times|FT|Il Sole 24 ORE|Il Sole 24 Ore|Sole 24 Ore).*$/i,'').trim();
+      if(t) titles.push(`[${src}] ${t}`);
+    });
+  });
+  return titles.slice(0,40);
+}
+
+async function fetchAIBriefing(force=false){
+  ensureState();
+  const content = document.getElementById('briefing-content');
+  const key = getGeminiKey();
+  if(!key){ renderAIBriefing(); return; }
+
+  const last = state.aiBriefing;
+  if(!force && last && last.timestamp){
+    const age = Date.now() - new Date(last.timestamp).getTime();
+    if(age < BRIEFING_REFRESH_MS){ renderAIBriefing(); return; }
+  }
+
+  // Make sure news are loaded first
+  if(!Object.keys(window._newsCache||{}).length){
+    try { await loadNews(true); } catch(e){}
+  }
+  const headlines = gatherNewsHeadlines();
+  if(!headlines.length){
+    if(content) content.innerHTML = '<div style="color:var(--muted)">Nessun titolo disponibile per generare il briefing. Riprova tra qualche secondo.</div>';
+    return;
+  }
+
+  if(content) content.innerHTML = '<div style="color:var(--muted)">⏳ Genero il briefing… (qualche secondo)</div>';
+  const btn = document.getElementById('briefing-refresh-btn');
+  if(btn) btn.disabled = true;
+
+  try {
+    const today = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    const prompt = `Sei un analista che scrive briefing finanziari per Giacomo, un professionista che lavora nel mondo della finanza.
+
+Da questi titoli pubblicati oggi (${today}), seleziona e sintetizza in italiano LE 3 NOTIZIE PIU' IMPORTANTI per chi si occupa di finanza e attualità globale.
+
+Regole:
+- Esattamente 3 notizie, numerate 1. 2. 3.
+- Massimo 2 righe per notizia.
+- Vai dritto al punto: cosa è successo + perché conta. NO preamboli, NO "ecco le notizie".
+- Tono professionale ma chiaro.
+- Niente markdown, solo testo semplice.
+
+TITOLI DI OGGI:
+${headlines.join('\n')}`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${encodeURIComponent(key)}`;
+    const resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{parts:[{text: prompt}]}],
+        generationConfig:{ temperature:0.4, maxOutputTokens:600 }
+      })
+    });
+    if(!resp.ok){
+      const errText = await resp.text();
+      throw new Error('HTTP '+resp.status+' — '+errText.slice(0,200));
+    }
+    const data = await resp.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if(!text) throw new Error('Risposta vuota dal modello.');
+
+    state.aiBriefing = { text: text.trim(), timestamp: new Date().toISOString(), model:'gemini-1.5-flash' };
+    save();
+    renderAIBriefing();
+  } catch(e){
+    if(content) content.innerHTML = `<div style="color:var(--red);font-size:.85rem">Errore: ${escapeHtml(e.message)}<br><br><button class="btn ghost sm" onclick="openGeminiSetup()">Controlla API key</button></div>`;
+  } finally {
+    if(btn) btn.disabled = false;
+  }
+}
+
+function renderAIBriefing(){
+  const content = document.getElementById('briefing-content');
+  const meta    = document.getElementById('briefing-meta');
+  if(!content) return;
+
+  const key = getGeminiKey();
+  if(!key){
+    content.innerHTML = `
+      <div style="text-align:center;padding:14px 8px">
+        <p style="margin:0 0 12px;color:var(--muted2);font-size:.88rem">🔑 Configura la tua API key Gemini (gratis) per attivare il briefing AI</p>
+        <button class="btn sm" onclick="openGeminiSetup()">Configura ora</button>
+      </div>`;
+    if(meta) meta.textContent = '';
+    return;
+  }
+
+  const b = state.aiBriefing;
+  if(!b || !b.text){
+    content.innerHTML = `<div style="color:var(--muted);font-size:.88rem">Nessun briefing ancora generato. Clicca <strong>↻ Aggiorna</strong> per iniziare.</div>`;
+    if(meta) meta.textContent = '';
+    return;
+  }
+
+  // Format: bold the numbering, paragraphs from newlines
+  const formatted = escapeHtml(b.text)
+    .replace(/\r/g,'')
+    .replace(/\n{2,}/g, '\n\n')
+    .replace(/\n/g, '<br>')
+    .replace(/(^|<br>)\s*(\d+[\.\)])\s+/g, '$1<strong style="color:var(--accent)">$2</strong> ');
+  content.innerHTML = `<div style="line-height:1.75;font-size:.92rem">${formatted}</div>`;
+
+  if(meta){
+    const ago = formatTimeAgo(new Date(b.timestamp));
+    meta.textContent = `aggiornato ${ago}`;
+  }
+}
+
+function refreshAIBriefing(){
+  if(!getGeminiKey()){ openGeminiSetup(); return; }
+  fetchAIBriefing(true);
+}
+
+function scheduleAIBriefing(){
+  if(_briefingTimer) clearInterval(_briefingTimer);
+  _briefingTimer = setInterval(()=>{ fetchAIBriefing(false); }, 60*60*1000); // check every hour
+}
+
+// ----- TODAY TODOS -----
+function renderTodayTodos(){
+  const list  = document.getElementById('today-todos-list');
+  const count = document.getElementById('today-todos-count');
+  if(!list) return;
+  ensureState();
+  const today = todayISO();
+  const items = (state.todos||[])
+    .filter(t => !t.done && (!t.due || t.due <= today))
+    .sort((a,b)=>{
+      const ao = (a.due && a.due < today) ? 0 : 1;
+      const bo = (b.due && b.due < today) ? 0 : 1;
+      if(ao !== bo) return ao - bo;
+      const prioOrder = {high:0, med:1, low:2};
+      return (prioOrder[a.prio]||1) - (prioOrder[b.prio]||1);
+    });
+  if(count) count.textContent = items.length;
+  if(!items.length){
+    list.innerHTML = '<li style="color:var(--muted);text-align:center;padding:14px;font-size:.86rem">🎉 Niente da fare oggi!</li>';
+    return;
+  }
+  list.innerHTML = items.slice(0,12).map(t => {
+    const overdue = t.due && t.due < today;
+    return `<li style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <input type="checkbox" onchange="toggleTodo('${t.id}');renderTodayTodos();" style="cursor:pointer;flex-shrink:0"/>
+      <span style="flex:1;font-size:.86rem;line-height:1.4;${overdue?'color:var(--red)':''}">${escapeHtml(t.text)}${overdue?' <span style="font-size:.7rem;opacity:.7">(scaduta '+t.due+')</span>':''}</span>
+      ${t.prio==='high'?'<span style="font-size:.65rem;color:var(--red);font-weight:700">●</span>':''}
+    </li>`;
+  }).join('');
+}
+
+function quickAddTodo(){
+  const input = document.getElementById('oggi-quick-todo');
+  if(!input) return;
+  const text = input.value.trim();
+  if(!text) return;
+  ensureState();
+  state.todos = state.todos || [];
+  state.todos.push({
+    id: uid(), text, done:false,
+    area: null, prio: 'med',
+    due: todayISO(),
+    created: new Date().toISOString()
+  });
+  input.value = '';
+  save();
+  renderTodayTodos();
+  try { renderTodos(); } catch(e){}
+  try { renderReminders(); } catch(e){}
+}
+
+// ----- HABITS TODAY -----
+function renderOggiHabits(){
+  const wrap  = document.getElementById('oggi-habits-list');
+  const count = document.getElementById('oggi-habits-count');
+  if(!wrap) return;
+  ensureState();
+  const habits = state.habits || [];
+  const today  = todayISO();
+  const log    = state.habitLog || {};
+  if(count) count.textContent = `${habits.filter(h=>log[today]?.[h.id]).length}/${habits.length}`;
+  if(!habits.length){
+    wrap.innerHTML = '<div style="color:var(--muted);text-align:center;padding:8px;font-size:.82rem">Nessuna abitudine. Aggiungile in <strong>Altro → 🔥 Abitudini</strong></div>';
+    return;
+  }
+  wrap.innerHTML = habits.map(h => {
+    const done = !!log[today]?.[h.id];
+    return `<label style="display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;border-bottom:1px solid var(--border)">
+      <input type="checkbox" ${done?'checked':''} onchange="toggleHabit('${h.id}','${today}');renderOggiHabits();" style="cursor:pointer;flex-shrink:0"/>
+      <span style="font-size:.86rem;${done?'opacity:.55;text-decoration:line-through':''}">${h.icon||'🔁'} ${escapeHtml(h.name)}</span>
+    </label>`;
+  }).join('');
+}
+
+// ----- FOCUS DEL GIORNO -----
+function renderFocus(){
+  const input = document.getElementById('oggi-focus');
+  if(!input) return;
+  ensureState();
+  state.focus = state.focus || {};
+  input.value = state.focus[todayISO()] || '';
+}
+function saveFocus(){
+  const input = document.getElementById('oggi-focus');
+  if(!input) return;
+  ensureState();
+  state.focus = state.focus || {};
+  state.focus[todayISO()] = input.value.trim();
+  save();
 }
 
 // ============ RICH TEXT EDITOR ============
