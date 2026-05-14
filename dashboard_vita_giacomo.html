@@ -3945,8 +3945,85 @@ function renderConcepts(){
       <div class="fl-concept-body">
         ${looksLikeHtml(c.body) ? c.body : escapeHtml(c.body||'')}
         ${c.source?`<div class="fl-concept-source">📖 ${escapeHtml(c.source)}</div>`:''}
+        <div class="fl-ai-block" id="fl-ai-block-${c.id}">${renderConceptAI(c)}</div>
       </div>
     </div>`).join('');
+}
+
+function renderConceptAI(c){
+  if(!c.aiEnhancement){
+    return `<div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)">
+      <button class="btn sm" onclick="event.stopPropagation();enhanceConceptAI('${c.id}')" style="font-size:.72rem;padding:5px 10px">✨ Approfondisci con AI</button>
+    </div>`;
+  }
+  const a = c.aiEnhancement;
+  return `<div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <span style="font-size:.68rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.5px;font-weight:700">✨ Approfondimento AI</span>
+      <button class="btn ghost sm" onclick="event.stopPropagation();enhanceConceptAI('${c.id}',true)" style="font-size:.65rem;padding:2px 7px" title="Rigenera">↻</button>
+    </div>
+    <div style="font-size:.78rem;line-height:1.6;color:var(--text)">${formatAIChatText(a.text)}</div>
+    <div style="font-size:.62rem;color:var(--muted2);margin-top:6px;font-family:var(--mono)">generato ${formatTimeAgo(new Date(a.timestamp))}</div>
+  </div>`;
+}
+
+async function enhanceConceptAI(id, force=false){
+  const c = (state.flConcepts||[]).find(c=>c.id===id);
+  if(!c) return;
+  const key = getGeminiKey();
+  if(!key){ openGeminiSetup(); return; }
+
+  if(!force && c.aiEnhancement){ return; }
+
+  const block = document.getElementById('fl-ai-block-'+id);
+  if(block) block.innerHTML = `<div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);color:var(--muted);font-size:.78rem;font-style:italic">⏳ Sto approfondendo…</div>`;
+
+  try {
+    const others = (state.flConcepts||[]).filter(x=>x.id!==id).map(x=>({name:x.name, cat:x.cat||'altro'}));
+    const otherNames = others.map(x=>x.name).slice(0,80);
+    const prompt = `Sei un mentor di finanza che approfondisce concetti già appresi da Giacomo, un professionista del settore.
+
+CONCETTO DA APPROFONDIRE:
+Nome: ${c.name}
+Categoria: ${c.cat||'altro'}
+Definizione di Giacomo: ${(c.body||'').replace(/<[^>]+>/g,' ').slice(0,800)}
+
+ALTRI CONCETTI GIÀ SALVATI DA GIACOMO (per collegamenti):
+${otherNames.join(', ') || '(nessuno)'}
+
+Genera un approfondimento in italiano strutturato così, max 200 parole totali:
+
+**Esempio pratico**: un caso reale concreto in cui il concetto si applica (numeri, ticker o scenario verosimile, non astrazioni).
+
+**Collegamenti**: 2-4 concetti dalla lista sopra che sono direttamente collegati. Usa SOLO nomi che vedi nella lista. Per ognuno spiega in una frase IL link logico. Formato: - **NomeConcetto**: come si lega.
+
+**Errore comune**: una trappola tipica o malinteso da evitare quando si usa questo concetto sul lavoro.
+
+Regole: tono diretto, niente preamboli, niente "spero di esserti stato utile". Usa cifre quando possibile.`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+    const resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{parts:[{text: prompt}]}],
+        generationConfig:{ temperature:0.55, maxOutputTokens:1500, thinkingConfig:{ thinkingBudget:0 } }
+      })
+    });
+    if(!resp.ok){ const t=await resp.text(); throw new Error('HTTP '+resp.status+' — '+t.slice(0,200)); }
+    const data = await resp.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if(!text) throw new Error('Risposta vuota.');
+
+    c.aiEnhancement = { text: text.trim(), timestamp: new Date().toISOString() };
+    save();
+    if(block) block.innerHTML = renderConceptAI(c);
+  } catch(e){
+    if(block) block.innerHTML = `<div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);color:var(--red);font-size:.78rem">
+      Errore: ${escapeHtml(e.message)}
+      <button class="btn ghost sm" onclick="event.stopPropagation();enhanceConceptAI('${id}',true)" style="margin-left:6px;font-size:.65rem;padding:2px 7px">Riprova</button>
+    </div>`;
+  }
 }
 
 function toggleConceptExpand(id){
