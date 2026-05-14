@@ -4510,7 +4510,7 @@ function renderDiario(){
 
 // ============ OGGI · TODAY VIEW ============
 const GEMINI_KEY_STORAGE = 'dash_gemini_key';
-const BRIEFING_REFRESH_MS = 15*60*1000; // 15 min — breaking news cadence
+const BRIEFING_REFRESH_MS = 60*60*1000; // 1h — bilancia freschezza e quota free tier (250 req/giorno)
 let _briefingTimer = null;
 
 function getGeminiKey(){ return localStorage.getItem(GEMINI_KEY_STORAGE) || ''; }
@@ -4570,6 +4570,10 @@ async function fetchAIBriefing(force=false){
     const age = Date.now() - new Date(last.timestamp).getTime();
     if(age < BRIEFING_REFRESH_MS){ renderAIBriefing(); return; }
   }
+  // Backoff post-429: se ho ricevuto quota error nelle ultime 2h, non ritento
+  if(!force && state.aiBriefingBackoffUntil && Date.now() < state.aiBriefingBackoffUntil){
+    renderAIBriefing(); return;
+  }
 
   // Make sure news are loaded first
   if(!Object.keys(window._newsCache||{}).length){
@@ -4628,6 +4632,11 @@ ${headlines.join('\n')}`;
     save();
     renderAIBriefing();
   } catch(e){
+    // Se è 429 (quota), backoff di 2h prima di ritentare automaticamente
+    if(/429|quota|rate/i.test(e.message)){
+      state.aiBriefingBackoffUntil = Date.now() + 2*60*60*1000;
+      save();
+    }
     if(content) content.innerHTML = `<div style="color:var(--red);font-size:.85rem">Errore: ${escapeHtml(e.message)}<br><br><button class="btn ghost sm" onclick="openGeminiSetup()">Controlla API key</button></div>`;
   } finally {
     if(btn) btn.disabled = false;
@@ -4689,7 +4698,7 @@ function refreshAIBriefing(){
 
 function scheduleAIBriefing(){
   if(_briefingTimer) clearInterval(_briefingTimer);
-  _briefingTimer = setInterval(()=>{ fetchAIBriefing(false); }, 5*60*1000); // check every 5 min, refreshes if >15min old
+  _briefingTimer = setInterval(()=>{ fetchAIBriefing(false); }, 20*60*1000); // check every 20 min, refreshes only se >1h vecchio
 }
 
 // ----- TODAY TODOS -----
@@ -5057,6 +5066,16 @@ async function refreshDailyMotivation(force=false){
     renderDailyMotivation(dm);
     return;
   }
+  // Anti-spam: se oggi ho già tentato (e fallito), NON ritento automaticamente
+  if(!force && state.dmLastAttemptDate === today){
+    if(wrap) wrap.innerHTML = `<div style="color:var(--muted);font-size:.82rem;padding:8px 0;line-height:1.5">
+      Non sono riuscito a generare il boost di oggi (probabilmente limite API raggiunto).<br>
+      <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" style="margin-top:8px">Riprova manualmente</button>
+    </div>`;
+    return;
+  }
+  state.dmLastAttemptDate = today;
+  save();
 
   if(wrap) wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">⏳ Genero il tuo boost del giorno…</div>';
 
@@ -5751,6 +5770,15 @@ async function fetchAILesson(force=false){
   if(!force && cached && cached.date===today){
     renderAILesson(cached); return;
   }
+  if(!force && state.frLessonLastAttemptDate === today){
+    wrap.innerHTML = `<div style="color:var(--muted);font-size:.82rem;padding:8px 0;line-height:1.5">
+      Lezione AI non disponibile (limite API o errore).<br>
+      <button class="btn ghost sm" onclick="fetchAILesson(true)" style="margin-top:8px">Riprova manualmente</button>
+    </div>`;
+    return;
+  }
+  state.frLessonLastAttemptDate = today;
+  save();
 
   wrap.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">⏳ Preparo la lezione di oggi…</div>';
   const btn = document.getElementById('fr-lesson-regen');
