@@ -481,6 +481,11 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
 .fl-tag-filter-btn{font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;transition:all .15s}
 .fl-tag-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.08)}
+.fl-tag-chip{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;font-family:var(--mono);letter-spacing:.3px;transition:all .15s}
+.fl-tag-chip:hover{border-color:var(--accent);color:var(--accent)}
+.fl-tag-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.08)}
+.fl-tag-chip-mini{font-size:.68rem;color:var(--muted2);cursor:pointer;font-family:var(--mono);transition:color .15s}
+.fl-tag-chip-mini:hover{color:var(--accent)}
 
 .fl-concept{background:rgba(20,29,51,.5);border:1px solid var(--border);border-radius:8px;padding:12px;transition:border-color .2s;cursor:pointer}
 .fl-concept:hover{border-color:var(--border2)}
@@ -685,6 +690,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <button data-tab="todo">📝 Cose da fare <span class="badge" id="todo-badge">0</span></button>
     <button data-tab="francese">🇫🇷 Francese</button>
     <button data-tab="financelab">📈 Finance Lab</button>
+    <button data-tab="diario">📖 Diario</button>
     <button data-tab="produttivita">⚡ Produttività</button>
     <div class="dropdown" id="more-dropdown">
       <button class="dropdown-toggle" type="button">Altro ▾</button>
@@ -1547,6 +1553,61 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
 </section>
 
+<!-- ============ DIARIO ============ -->
+<section class="tab" id="tab-diario">
+  <div class="card">
+    <h2>📖 Diario · Pensieri, riflessioni, articoli</h2>
+    <p style="font-size:.82rem;color:var(--muted2);margin:6px 0 14px">
+      Un posto dove raccogliere quello che ti colpisce, ti ispira, o vuoi ricordare. Non solo finanza — tutta la vita.
+    </p>
+    <div class="grid grid-2">
+      <div class="field"><label>Titolo</label><input type="text" id="dr-title" placeholder="Es. La gentilezza è una scelta consapevole"/></div>
+      <div class="field"><label>Tipo</label>
+        <select id="dr-type">
+          <option value="pensiero">💭 Pensiero</option>
+          <option value="riflessione">🌿 Riflessione</option>
+          <option value="articolo">📰 Articolo</option>
+          <option value="citazione">💬 Citazione</option>
+          <option value="esperienza">✨ Esperienza</option>
+          <option value="idea">💡 Idea</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <label style="margin:0">Contenuto</label>
+        <button type="button" class="btn ghost sm" style="font-size:.65rem;padding:3px 9px" onclick="openRichForField('dr-body','Contenuto')">📝 Editor avanzato</button>
+      </div>
+      <textarea id="dr-body" rows="5" placeholder="Sviluppa il pensiero, riporta la riflessione, incolla l'articolo…"></textarea>
+    </div>
+    <div class="grid grid-2">
+      <div class="field"><label>Tag (separati da virgola)</label><input type="text" id="dr-tags" placeholder="vita, lettura, persone, ispirazione…"/></div>
+      <div class="field"><label>Fonte / Link (opz.)</label><input type="text" id="dr-source" placeholder="autore, libro, URL…"/></div>
+    </div>
+    <button class="btn" onclick="addDiario()">+ Aggiungi al diario</button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+      <h2 style="margin:0">📚 Le tue voci</h2>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="dr-search" placeholder="🔎 cerca…" style="font-size:.78rem;padding:6px 10px;width:160px" oninput="renderDiario()"/>
+        <select id="dr-filter-type" style="font-size:.78rem;padding:6px 10px" onchange="renderDiario()">
+          <option value="">Tutti i tipi</option>
+          <option value="pensiero">💭 Pensieri</option>
+          <option value="riflessione">🌿 Riflessioni</option>
+          <option value="articolo">📰 Articoli</option>
+          <option value="citazione">💬 Citazioni</option>
+          <option value="esperienza">✨ Esperienze</option>
+          <option value="idea">💡 Idee</option>
+        </select>
+      </div>
+    </div>
+    <div id="dr-stats" style="font-size:.78rem;color:var(--muted2);margin-bottom:14px"></div>
+    <div id="dr-list" class="fl-thoughts-list"></div>
+  </div>
+</section>
+
 </main>
 
 <footer>
@@ -1776,6 +1837,7 @@ function defaultState(){ return {
     frStreak:{lastDate:'',count:0},
     flThoughts:[],
     flConcepts:[],
+    diario:[],
     flTagFilter:'all'
   };}
 
@@ -3090,6 +3152,7 @@ function renderAll(){
   try { renderReminders(); } catch(e){ console.error('renderReminders error:', e); }
   try { renderInsights(); } catch(e){ console.error('renderInsights error:', e); }
   try { renderFinanceLab(); } catch(e){ console.error('renderFinanceLab error:', e); }
+  try { renderDiario();      } catch(e){ console.error('renderDiario error:', e); }
 }
 
 // ============ PROMEMORIA + INSIGHTS AI ============
@@ -3895,6 +3958,173 @@ function setFlTagFilter(tag){
   renderFinanceLab();
 }
 
+// ============ DIARIO ============
+const DR_TYPE_LABELS = {
+  pensiero:    '💭 Pensiero',
+  riflessione: '🌿 Riflessione',
+  articolo:    '📰 Articolo',
+  citazione:   '💬 Citazione',
+  esperienza:  '✨ Esperienza',
+  idea:        '💡 Idea'
+};
+
+function addDiario(){
+  ensureState();
+  const title = document.getElementById('dr-title').value.trim();
+  const body  = document.getElementById('dr-body').value.trim();
+  if(!title){ alert('Aggiungi un titolo.'); return; }
+  if(!body){  alert('Scrivi qualcosa nel contenuto.'); return; }
+  const tagsRaw = document.getElementById('dr-tags').value.trim();
+  const entry = {
+    id:     uid(),
+    date:   todayISO(),
+    title,
+    body,
+    type:   document.getElementById('dr-type').value,
+    tags:   tagsRaw ? tagsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [],
+    source: document.getElementById('dr-source').value.trim()
+  };
+  state.diario = state.diario || [];
+  state.diario.unshift(entry);
+  ['dr-title','dr-body','dr-tags','dr-source'].forEach(id=>{
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+  save(); renderDiario();
+}
+
+function deleteDiario(id){
+  if(!confirm('Eliminare questa voce?')) return;
+  state.diario = (state.diario||[]).filter(e=>e.id!==id);
+  save(); renderDiario();
+}
+
+function toggleDiarioExpand(id, e){
+  if(e && (e.target.tagName==='BUTTON' || e.target.closest('button'))) return;
+  document.getElementById('dr-'+id)?.classList.toggle('expanded');
+}
+
+function startEditDiario(id){
+  const entry = (state.diario||[]).find(e=>e.id===id);
+  if(!entry) return;
+  const el = document.getElementById('dr-'+id);
+  if(!el) return;
+  const typeOpts = Object.entries(DR_TYPE_LABELS).map(([v,l])=>
+    `<option value="${v}"${entry.type===v?' selected':''}>${l}</option>`).join('');
+  el.classList.add('expanded');
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px" onclick="event.stopPropagation()">
+      <input class="fl-edit-input" value="${escapeHtml(entry.title)}" placeholder="Titolo" id="dr-edit-title-${id}" style="font-weight:700"/>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:.7rem;color:var(--muted2)">Contenuto</span>
+        <button type="button" class="btn ghost sm" style="font-size:.6rem;padding:2px 7px" onclick="openRichForEditDiario('${id}')">📝 Editor avanzato</button>
+      </div>
+      <textarea class="fl-edit-input" rows="6" id="dr-edit-body-${id}" placeholder="Contenuto…">${escapeHtml(entry.body||'')}</textarea>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select class="fl-edit-input" id="dr-edit-type-${id}" style="flex:1">${typeOpts}</select>
+        <input class="fl-edit-input" value="${escapeHtml((entry.tags||[]).join(', '))}" placeholder="Tag (virgola)" id="dr-edit-tags-${id}" style="flex:2"/>
+      </div>
+      <input class="fl-edit-input" value="${escapeHtml(entry.source||'')}" placeholder="Fonte / Link (opz.)" id="dr-edit-source-${id}"/>
+      <div style="display:flex;gap:8px">
+        <button class="btn sm" onclick="saveEditDiario('${id}')">✓ Salva</button>
+        <button class="btn ghost sm" onclick="renderDiario()">Annulla</button>
+      </div>
+    </div>`;
+}
+
+function saveEditDiario(id){
+  const entry = (state.diario||[]).find(e=>e.id===id);
+  if(!entry) return;
+  const g = s => document.getElementById(s)?.value||'';
+  const title = g(`dr-edit-title-${id}`).trim();
+  const body  = g(`dr-edit-body-${id}`).trim();
+  if(!title){ alert('Aggiungi un titolo.'); return; }
+  if(!body){  alert('Scrivi il contenuto.'); return; }
+  const tagsRaw = g(`dr-edit-tags-${id}`).trim();
+  entry.title  = title;
+  entry.body   = body;
+  entry.type   = g(`dr-edit-type-${id}`);
+  entry.tags   = tagsRaw ? tagsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  entry.source = g(`dr-edit-source-${id}`).trim();
+  save(); renderDiario();
+}
+
+function setDiarioTagFilter(tag){
+  state.diarioTagFilter = (state.diarioTagFilter === tag) ? '' : tag;
+  renderDiario();
+}
+
+function renderDiario(){
+  ensureState();
+  if(!state.diario) state.diario = [];
+  const list = document.getElementById('dr-list');
+  if(!list) return;
+
+  const search = (document.getElementById('dr-search')?.value || '').toLowerCase().trim();
+  const typeFilter = document.getElementById('dr-filter-type')?.value || '';
+  const tagFilter  = state.diarioTagFilter || '';
+
+  let entries = [...state.diario];
+  if(typeFilter) entries = entries.filter(e => e.type === typeFilter);
+  if(tagFilter)  entries = entries.filter(e => (e.tags||[]).includes(tagFilter));
+  if(search) entries = entries.filter(e =>
+    (e.title||'').toLowerCase().includes(search) ||
+    (e.body||'').toLowerCase().includes(search) ||
+    (e.tags||[]).join(' ').toLowerCase().includes(search) ||
+    (e.source||'').toLowerCase().includes(search)
+  );
+
+  // Stats
+  const stats = document.getElementById('dr-stats');
+  if(stats){
+    const total = state.diario.length;
+    const allTags = {};
+    state.diario.forEach(e => (e.tags||[]).forEach(t => { allTags[t]=(allTags[t]||0)+1; }));
+    const topTags = Object.entries(allTags).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    let bar = `<strong>${total}</strong> voci totali · mostrando <strong>${entries.length}</strong>`;
+    if(topTags.length){
+      bar += '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">';
+      bar += `<span style="color:var(--muted)">tag:</span>`;
+      topTags.forEach(([t,n])=>{
+        const active = tagFilter===t;
+        bar += `<button class="fl-tag-chip${active?' active':''}" onclick="setDiarioTagFilter('${escapeHtml(t).replace(/'/g,"\\'")}')">#${escapeHtml(t)} <span style="opacity:.6">${n}</span></button>`;
+      });
+      if(tagFilter){
+        bar += `<button class="fl-tag-chip" onclick="setDiarioTagFilter('')" style="border-color:var(--red);color:var(--red)">✕ azzera</button>`;
+      }
+      bar += '</div>';
+    }
+    stats.innerHTML = bar;
+  }
+
+  if(!entries.length){
+    list.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted)">
+      ${state.diario.length===0 ? 'Nessuna voce ancora. Inizia ad annotare qualcosa qui sopra ☝️' : 'Nessuna voce corrisponde ai filtri.'}
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = entries.map(e => `
+    <div class="fl-thought" id="dr-${e.id}">
+      <div class="fl-thought-header" onclick="toggleDiarioExpand('${e.id}', event)">
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+          <span style="font-size:.7rem;color:var(--muted2);white-space:nowrap">${DR_TYPE_LABELS[e.type]||e.type}</span>
+          <span class="fl-thought-title">${escapeHtml(e.title)}</span>
+        </div>
+        <div class="fl-thought-actions">
+          <button onclick="event.stopPropagation();startEditDiario('${e.id}')" title="Modifica">✏️</button>
+          <button onclick="event.stopPropagation();deleteDiario('${e.id}')" title="Elimina">✕</button>
+        </div>
+      </div>
+      <div class="fl-thought-meta">
+        <span>${e.date}</span>
+        ${(e.tags||[]).length ? '· ' + e.tags.map(t=>`<span class="fl-tag-chip-mini" onclick="event.stopPropagation();setDiarioTagFilter('${escapeHtml(t).replace(/'/g,"\\'")}')">#${escapeHtml(t)}</span>`).join(' ') : ''}
+        ${e.source ? '· ' + (/^https?:\/\//.test(e.source) ? `<a href="${escapeHtml(e.source)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="color:var(--accent)">${escapeHtml(e.source.length>40 ? e.source.slice(0,40)+'…' : e.source)}</a>` : escapeHtml(e.source)) : ''}
+      </div>
+      ${e.body ? `<div class="fl-thought-body">${looksLikeHtml(e.body) ? e.body : escapeHtml(e.body)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
 // ============ RICH TEXT EDITOR ============
 let _richSaveFn = null;
 let _richSavedRange = null;
@@ -4086,6 +4316,28 @@ function openRichForEditConcept(id) {
     if(src) c.source = src.value.trim();
     save();
     renderFinanceLab();
+  });
+}
+function openRichForEditDiario(id) {
+  openRichForField('dr-edit-body-'+id, 'Contenuto', () => {
+    const entry = (state.diario||[]).find(e=>e.id===id);
+    if(!entry) return;
+    const g = s => document.getElementById(s);
+    const body = g('dr-edit-body-'+id);
+    if(body) entry.body = body.value;
+    const title = g('dr-edit-title-'+id);
+    if(title && title.value.trim()) entry.title = title.value.trim();
+    const type = g('dr-edit-type-'+id);
+    if(type) entry.type = type.value;
+    const tags = g('dr-edit-tags-'+id);
+    if(tags){
+      const t = tags.value.trim();
+      entry.tags = t ? t.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    }
+    const src = g('dr-edit-source-'+id);
+    if(src) entry.source = src.value.trim();
+    save();
+    renderDiario();
   });
 }
 
