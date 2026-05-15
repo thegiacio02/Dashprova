@@ -1036,7 +1036,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
     <div class="news-grid" id="news-grid">
       <div id="news-bloomberg"></div>
-      <div id="news-ft"></div>
+      <div id="news-reuters"></div>
       <div id="news-sole24"></div>
     </div>
   </div>
@@ -4419,15 +4419,16 @@ authCheck();
 
 // ============ RASSEGNA STAMPA ============
 const NEWS_SOURCES = [
-  { id:'bloomberg', name:'Bloomberg',       color:'#FF6600', feeds:[
+  { id:'bloomberg', name:'Bloomberg', color:'#FF6600', feeds:[
       'https://feeds.bloomberg.com/markets/news.rss',
       'https://feeds.bloomberg.com/business/news.rss',
+      'https://feeds.bloomberg.com/politics/news.rss',
       'https://news.google.com/rss/search?q=when:1d+site:bloomberg.com&hl=en-US&gl=US&ceid=US:en'
   ]},
-  { id:'ft', name:'Financial Times', color:'#FCD0B1', feeds:[
-      'https://www.ft.com/?format=rss',
-      'https://www.ft.com/rss/home/uk',
-      'https://news.google.com/rss/search?q=when:1d+site:ft.com&hl=en-US&gl=US&ceid=US:en'
+  { id:'reuters', name:'Reuters', color:'#FF8000', feeds:[
+      'https://feeds.reuters.com/reuters/businessNews',
+      'https://feeds.reuters.com/reuters/topNews',
+      'https://news.google.com/rss/search?q=when:1d+site:reuters.com&hl=en-US&gl=US&ceid=US:en'
   ]},
   { id:'sole24', name:'Il Sole 24 Ore', color:'#0057A8', feeds:[
       'https://www.ilsole24ore.com/rss/notizie.xml',
@@ -4492,7 +4493,7 @@ function renderNewsCol(col, src, items){
     const when = isToday
       ? d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})
       : d.toLocaleDateString('it-IT',{day:'2-digit',month:'short'});
-    const title = item.title.replace(/\s+-\s+(Bloomberg|Bloomberg\.com|Financial Times|FT|Il Sole 24 ORE|Il Sole 24 Ore|Sole 24 Ore).*$/i,'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const title = item.title.replace(/\s+-\s+(Bloomberg|Bloomberg\.com|Reuters|Financial Times|FT|Il Sole 24 ORE|Il Sole 24 Ore|Sole 24 Ore).*$/i,'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     return `<a class="news-article" href="${item.link}" target="_blank" rel="noopener noreferrer">
       <div class="news-title">${title}</div>
       <div class="news-meta">${when}</div>
@@ -5563,12 +5564,15 @@ Per ottenerla (gratis):
 
 function gatherNewsHeadlines(){
   const cache = window._newsCache || {};
+  const srcNameMap = {};
+  NEWS_SOURCES.forEach(s => srcNameMap[s.id] = s.name);
   const titles = [];
-  Object.entries(cache).forEach(([src, items])=>{
+  Object.entries(cache).forEach(([srcId, items])=>{
+    const srcName = srcNameMap[srcId] || srcId;
     if(Array.isArray(items)) items.slice(0,10).forEach(it=>{
-      const t = (it.title||'').replace(/\s+-\s+(Bloomberg|Financial Times|FT|Il Sole 24 ORE|Il Sole 24 Ore|Sole 24 Ore).*$/i,'').trim();
+      const t = (it.title||'').replace(/\s+-\s+(Bloomberg|Reuters|Financial Times|FT|Il Sole 24 ORE|Il Sole 24 Ore|Sole 24 Ore).*$/i,'').trim();
       const link = (it.link||'').trim();
-      if(t) titles.push(link ? `[${src}] ${t} — URL: ${link}` : `[${src}] ${t}`);
+      if(t) titles.push(link ? `[${srcName}] ${t} — URL: ${link}` : `[${srcName}] ${t}`);
     });
   });
   return titles.slice(0,40);
@@ -5615,8 +5619,8 @@ Regole:
 - Massimo 2 righe per notizia.
 - Vai dritto al punto: cosa è successo + perché conta. NO preamboli, NO "ecco le notizie".
 - Tono professionale ma chiaro.
-- IMPORTANTE: alla fine di ogni notizia, cita la fonte come link HTML cliccabile usando ESATTAMENTE l'URL fornito nei titoli (quello dopo "URL:"). Formato: <a href="URL_ESATTO" target="_blank">Fonte</a>. NON inventare URL, usa SOLO quelli che vedi qui sotto.
-- Se per una notizia non c'è un URL nei titoli, scrivi solo "(Fonte: nome testata)" senza link.
+- IMPORTANTE: alla fine di ogni notizia, cita la fonte come link HTML cliccabile usando ESATTAMENTE l'URL fornito nei titoli (quello dopo "URL:"). Formato: <a href="URL_ESATTO" target="_blank">NOME_TESTATA</a> dove NOME_TESTATA è il nome reale della pubblicazione (es. Bloomberg, Reuters, Il Sole 24 Ore). NON inventare URL, usa SOLO quelli che vedi qui sotto.
+- Se per una notizia non c'è un URL nei titoli, scrivi solo "(NOME_TESTATA)" senza link.
 - A parte i tag <a>, niente altro markdown o HTML. Solo testo semplice + i link.
 
 TITOLI DI OGGI (con URL fonte):
