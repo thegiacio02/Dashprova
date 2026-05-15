@@ -339,36 +339,79 @@ ul.clean li{padding:8px 0;border-bottom:1px solid var(--border);font-size:.82rem
 ul.clean li:last-child{border-bottom:none}
 
 /* === BOOKSHELF === */
-.bs-card{background:var(--surface2);border-radius:10px;margin-bottom:8px;overflow:hidden;border:1px solid var(--border)}
-.bs-header{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none}
+.bs-card{background:var(--surface2);border-radius:10px;margin-bottom:8px;overflow:hidden;border:1px solid var(--border);transition:border-color .15s}
+.bs-card.in-corso{border-left:4px solid #f59e0b}
+.bs-card.letto{border-left:4px solid #22c55e}
+.bs-card.da-leggere{border-left:4px solid var(--muted)}
+.bs-header{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
 .bs-header:hover{background:rgba(255,255,255,.03)}
 .bs-info{flex:1;min-width:0}
-.bs-title{font-size:.87rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bs-meta{font-size:.7rem;color:var(--muted2);margin-top:2px}
+.bs-title{font-size:.92rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-meta{font-size:.7rem;color:var(--muted2);margin-top:3px}
 .bs-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .bs-chevron{font-size:.65rem;color:var(--muted);transition:transform .2s;margin-left:2px}
 .bs-card.open .bs-chevron{transform:rotate(180deg)}
 .bs-notes-panel{display:none;padding:0 14px 14px;border-top:1px solid var(--border);background:var(--surface)}
 .bs-card.open .bs-notes-panel{display:block}
-.bs-add-note{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;padding-top:12px}
-.bs-add-note select{width:auto;font-size:.75rem;padding:5px 8px}
-.bs-add-note textarea{flex:1;min-width:160px;font-size:.78rem;resize:vertical;min-height:56px}
-.bs-note-entry{border-left:2px solid var(--accent);padding:6px 10px;margin-bottom:8px;font-size:.79rem;line-height:1.5;background:var(--surface2);border-radius:0 6px 6px 0}
-.bs-note-entry .bs-note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;font-size:.68rem;color:var(--muted2)}
+/* Progress bar pagine */
+.bs-progress{padding:6px 14px 10px;background:var(--surface)}
+.bs-progress-row{display:flex;align-items:center;gap:10px;font-size:.74rem;color:var(--muted2);margin-bottom:6px}
+.bs-progress-row strong{color:var(--text);font-size:.78rem;font-weight:700}
+.bs-progress-bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;position:relative}
+.bs-progress-fill{height:100%;background:linear-gradient(90deg,#f59e0b,#fbbf24);border-radius:4px;transition:width .35s ease}
+.bs-card.letto .bs-progress-fill{background:linear-gradient(90deg,#22c55e,#34d399)}
+.bs-quick-pages{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}
+.bs-quick-pages button{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:3px 9px;border-radius:6px;font-size:.7rem;cursor:pointer;font-weight:600}
+.bs-quick-pages button:hover{border-color:var(--accent);color:var(--accent)}
+/* Sezioni dentro notes-panel */
+.bs-section{margin-top:14px}
+.bs-section-title{font-size:.7rem;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.bs-section-title .count{background:var(--surface2);padding:1px 8px;border-radius:10px;font-size:.62rem;color:var(--muted2);font-weight:600}
+/* Note */
+.bs-add-note{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;padding:10px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border)}
+.bs-add-note select,.bs-add-note input[type=number]{width:auto;font-size:.75rem;padding:5px 8px}
+.bs-add-note textarea{flex:1;min-width:200px;font-size:.82rem;resize:vertical;min-height:60px;line-height:1.5}
+.bs-add-note input[type=text]{flex:0 0 auto;font-size:.75rem;padding:5px 8px}
+.bs-note-entry{border-left:3px solid var(--accent);padding:10px 12px;margin-bottom:8px;font-size:.82rem;line-height:1.55;background:var(--surface2);border-radius:0 8px 8px 0}
+.bs-note-entry .bs-note-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:.68rem;color:var(--muted2);flex-wrap:wrap;gap:6px}
+.bs-note-entry .bs-note-head .lt{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bs-note-entry .bs-note-head .page-ref{background:var(--surface);padding:1px 7px;border-radius:8px;font-size:.62rem;font-weight:600;color:var(--text)}
+.bs-note-entry .bs-note-text{white-space:pre-wrap;color:var(--text)}
+.bs-note-entry.citazione .bs-note-text{font-style:italic;font-family:Georgia,serif;font-size:.88rem;border-left:2px solid var(--accent);padding-left:10px;margin-left:2px}
+.bs-note-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.bs-note-tag{font-size:.62rem;padding:1px 7px;border-radius:8px;background:var(--surface);color:var(--muted2);border:1px solid var(--border)}
 .bs-note-type-nota{border-color:#60a5fa}
 .bs-note-type-insight{border-color:#f59e0b}
 .bs-note-type-citazione{border-color:#a78bfa}
 .bs-note-type-highlight{border-color:#34d399}
+.bs-note-type-domanda{border-color:#ef4444}
+/* Sessioni di lettura */
+.bs-session-add{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;padding:8px 10px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border);align-items:center}
+.bs-session-add input{width:auto;font-size:.74rem;padding:4px 7px}
+.bs-session-add input[type=date]{flex:0 0 130px}
+.bs-session-add input[type=number]{width:70px}
+.bs-session-list{display:flex;flex-direction:column;gap:4px}
+.bs-session{display:flex;justify-content:space-between;align-items:center;font-size:.74rem;padding:5px 10px;background:var(--surface2);border-radius:6px;color:var(--muted2)}
+.bs-session strong{color:var(--text)}
+.bs-session .del{cursor:pointer;color:var(--muted);font-size:.95rem;opacity:.5}
+.bs-session .del:hover{opacity:1;color:var(--red)}
+/* Takeaway / verdict */
+.bs-takeaway{padding:10px;background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(34,197,94,.05));border-radius:8px;border:1px solid rgba(245,158,11,.25);margin-bottom:6px}
+.bs-takeaway textarea{width:100%;background:transparent;border:none;color:var(--text);font-size:.85rem;resize:vertical;min-height:60px;line-height:1.5;font-style:italic;outline:none}
+/* Stars */
 .bs-stars{display:flex;gap:2px;cursor:pointer}
 .bs-star{font-size:.9rem;opacity:.35;transition:opacity .15s}
 .bs-star.on{opacity:1}
-.bs-stats-bar{display:flex;gap:20px;flex-wrap:wrap;align-items:center;font-size:.8rem}
-.bs-stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+/* Stats */
+.bs-stats-bar{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:.8rem}
+.bs-stat{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px}
 .bs-stat-val{font-size:1.4rem;font-weight:800;color:var(--accent);line-height:1}
-.bs-stat-lbl{font-size:.65rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.04em}
-.bs-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.bs-stat-lbl{font-size:.65rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.04em;text-align:center}
+.bs-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
 .bs-filter-bar .chip{padding:4px 12px;border-radius:20px;font-size:.74rem;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted2);transition:all .15s}
 .bs-filter-bar .chip.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
+.bs-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.bs-toolbar select{font-size:.78rem;padding:5px 8px;width:auto}
 .bs-add-form{background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--accent);display:none}
 .bs-add-form.open{display:block}
 .bs-add-form .form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
@@ -1412,12 +1455,13 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <!-- Add book form -->
   <div class="bs-add-form" id="bs-add-form">
     <div style="font-size:.8rem;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">Nuovo libro</div>
-    <div class="form-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+    <div class="form-row">
       <input type="text" id="bs-new-title" placeholder="Titolo *" style="flex:2;min-width:160px"/>
       <input type="text" id="bs-new-author" placeholder="Autore *" style="flex:1;min-width:120px"/>
     </div>
-    <div class="form-row" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-      <input type="text" id="bs-new-cat" placeholder="Categoria (es. Finanza, Mentalità…)" style="flex:2;min-width:140px"/>
+    <div class="form-row">
+      <input type="text" id="bs-new-cat" placeholder="Categoria (Finanza, Mentalità…)" style="flex:2;min-width:140px"/>
+      <input type="number" id="bs-new-pages" placeholder="Tot. pagine" min="0" style="flex:0 0 120px"/>
       <select id="bs-new-status" style="flex:1;min-width:120px">
         <option value="da-leggere">🔖 Da leggere</option>
         <option value="in-corso">📖 In corso</option>
@@ -1430,12 +1474,26 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- Filters -->
-  <div class="bs-filter-bar" id="bs-filters">
-    <button class="chip active" data-filter="tutti" onclick="setBsFilter('tutti',this)">Tutti</button>
-    <button class="chip" data-filter="in-corso" onclick="setBsFilter('in-corso',this)">📖 In corso</button>
-    <button class="chip" data-filter="da-leggere" onclick="setBsFilter('da-leggere',this)">🔖 Da leggere</button>
-    <button class="chip" data-filter="letto" onclick="setBsFilter('letto',this)">✅ Letti</button>
+  <!-- Filters + sort -->
+  <div class="bs-toolbar">
+    <div class="bs-filter-bar" id="bs-filters" style="margin:0">
+      <button class="chip active" data-filter="tutti" onclick="setBsFilter('tutti',this)">Tutti</button>
+      <button class="chip" data-filter="in-corso" onclick="setBsFilter('in-corso',this)">📖 In corso</button>
+      <button class="chip" data-filter="da-leggere" onclick="setBsFilter('da-leggere',this)">🔖 Da leggere</button>
+      <button class="chip" data-filter="letto" onclick="setBsFilter('letto',this)">✅ Letti</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+      <label style="font-size:.72rem;color:var(--muted2)">Ordina:</label>
+      <select id="bs-sort" onchange="renderBookshelf()">
+        <option value="status">Status (in corso prima)</option>
+        <option value="recent">Aggiornati recenti</option>
+        <option value="added">Aggiunti recenti</option>
+        <option value="progress">Progresso %</option>
+        <option value="title">Titolo A-Z</option>
+        <option value="author">Autore A-Z</option>
+        <option value="rating">Rating</option>
+      </select>
+    </div>
   </div>
 
   <!-- Books list -->
@@ -2271,7 +2329,11 @@ function _bsMigrateOnce(){
     startDate: null,
     endDate: null,
     addedDate: todayISO(),
-    notes: []
+    notes: [],
+    sessions: [],
+    pages: 0,
+    currentPage: 0,
+    takeaway: ''
   }));
   // Migrate old readingLog entries as notes on a special "Senza libro" entry if present
   if(state.readingLog && state.readingLog.length){
@@ -2296,6 +2358,16 @@ function _bsMigrateOnce(){
   save();
 }
 
+function _bsEnsureShape(b){
+  if(!Array.isArray(b.notes)) b.notes = [];
+  if(!Array.isArray(b.sessions)) b.sessions = [];
+  if(b.pages === undefined || b.pages === null) b.pages = 0;
+  if(b.currentPage === undefined || b.currentPage === null) b.currentPage = 0;
+  if(b.takeaway === undefined) b.takeaway = '';
+  if(b.rating === undefined) b.rating = 0;
+  return b;
+}
+
 function toggleAddBookForm(){
   const f = document.getElementById('bs-add-form');
   const btn = document.getElementById('bs-add-btn');
@@ -2308,20 +2380,26 @@ function addBookToShelf(){
   const title = document.getElementById('bs-new-title').value.trim();
   const author = document.getElementById('bs-new-author').value.trim();
   if(!title){ document.getElementById('bs-new-title').focus(); return; }
+  const pages = parseInt(document.getElementById('bs-new-pages').value||'0',10) || 0;
+  const status = document.getElementById('bs-new-status').value;
   const book = {
     id: uid(),
     title,
     author: author||'',
     cat: document.getElementById('bs-new-cat').value.trim(),
-    status: document.getElementById('bs-new-status').value,
+    status,
     rating: 0,
-    startDate: null,
-    endDate: null,
+    pages,
+    currentPage: 0,
+    startDate: status==='in-corso' ? todayISO() : (status==='letto' ? todayISO() : null),
+    endDate: status==='letto' ? todayISO() : null,
     addedDate: todayISO(),
-    notes: []
+    notes: [],
+    sessions: [],
+    takeaway: ''
   };
   state.bookshelf.unshift(book);
-  ['bs-new-title','bs-new-author','bs-new-cat'].forEach(id=>{ document.getElementById(id).value=''; });
+  ['bs-new-title','bs-new-author','bs-new-cat','bs-new-pages'].forEach(id=>{ document.getElementById(id).value=''; });
   document.getElementById('bs-new-status').value = 'da-leggere';
   toggleAddBookForm();
   save(); renderBookshelf();
@@ -2330,9 +2408,16 @@ function addBookToShelf(){
 function setBsStatus(id, status){
   const b = state.bookshelf.find(b=>b.id===id);
   if(!b) return;
+  _bsEnsureShape(b);
   b.status = status;
   if(status==='in-corso' && !b.startDate) b.startDate = todayISO();
-  if(status==='letto' && !b.endDate) b.endDate = todayISO();
+  if(status==='letto'){
+    if(!b.endDate) b.endDate = todayISO();
+    if(b.pages>0) b.currentPage = b.pages;
+  }
+  if(status==='da-leggere'){
+    b.startDate = null; b.endDate = null;
+  }
   save(); renderBookshelf();
 }
 
@@ -2346,7 +2431,7 @@ function setBsRating(id, r){
 function deleteBook(id){
   const b = state.bookshelf.find(b=>b.id===id);
   if(!b) return;
-  if(!confirm(`Eliminare "${b.title}"?`)) return;
+  if(!confirm(`Eliminare "${b.title}"?\nVerranno cancellate anche tutte le note e sessioni.`)) return;
   state.bookshelf = state.bookshelf.filter(b=>b.id!==id);
   save(); renderBookshelf();
 }
@@ -2356,25 +2441,122 @@ function toggleBookNotes(id){
   if(card) card.classList.toggle('open');
 }
 
+// === Pagine / progresso ===
+function setBookPages(id){
+  const b = state.bookshelf.find(b=>b.id===id); if(!b) return;
+  _bsEnsureShape(b);
+  const v = prompt(`Totale pagine del libro "${b.title}":`, b.pages||'');
+  if(v===null) return;
+  const n = parseInt(v,10);
+  if(isNaN(n) || n<0) return;
+  b.pages = n;
+  if(b.currentPage > b.pages) b.currentPage = b.pages;
+  save(); renderBookshelf();
+  document.getElementById('bsc-'+id)?.classList.add('open');
+}
+
+function setBookCurrentPage(id){
+  const b = state.bookshelf.find(b=>b.id===id); if(!b) return;
+  _bsEnsureShape(b);
+  const v = prompt(`A che pagina sei arrivato?${b.pages?' (su '+b.pages+')':''}`, b.currentPage||0);
+  if(v===null) return;
+  const n = parseInt(v,10);
+  if(isNaN(n) || n<0) return;
+  _applyPageChange(b, n);
+  save(); renderBookshelf();
+  document.getElementById('bsc-'+id)?.classList.add('open');
+}
+
+function bumpBookPage(id, delta){
+  const b = state.bookshelf.find(b=>b.id===id); if(!b) return;
+  _bsEnsureShape(b);
+  _applyPageChange(b, (b.currentPage||0) + delta);
+  save(); renderBookshelf();
+  document.getElementById('bsc-'+id)?.classList.add('open');
+}
+
+function _applyPageChange(b, newPage){
+  const prev = b.currentPage||0;
+  let n = Math.max(0, newPage);
+  if(b.pages>0) n = Math.min(b.pages, n);
+  b.currentPage = n;
+  // Auto-status
+  if(n>0 && b.status==='da-leggere'){
+    b.status = 'in-corso';
+    if(!b.startDate) b.startDate = todayISO();
+  }
+  if(b.pages>0 && n>=b.pages){
+    b.status = 'letto';
+    if(!b.endDate) b.endDate = todayISO();
+  }
+  // Auto-log come sessione se incremento positivo
+  if(n > prev){
+    b.sessions = b.sessions || [];
+    b.sessions.push({id:uid(), date:todayISO(), pagesFrom: prev, pagesTo: n, minutes: 0});
+  }
+}
+
+// === Note ===
 function addBookNote(id){
-  const b = state.bookshelf.find(b=>b.id===id);
-  if(!b) return;
+  const b = state.bookshelf.find(b=>b.id===id); if(!b) return;
+  _bsEnsureShape(b);
   const txt = document.getElementById('bstxt-'+id).value.trim();
   if(!txt) return;
   const type = document.getElementById('bsnt-'+id).value;
-  b.notes = b.notes||[];
-  b.notes.push({id:uid(), date:todayISO(), type, text:txt});
+  const pageEl = document.getElementById('bspage-'+id);
+  const tagsEl = document.getElementById('bstag-'+id);
+  const page = pageEl && pageEl.value ? parseInt(pageEl.value,10) : null;
+  const tags = tagsEl && tagsEl.value ? tagsEl.value.split(',').map(t=>t.trim()).filter(Boolean) : [];
+  b.notes.push({id:uid(), date:todayISO(), type, text:txt, page: page||null, tags});
+  if(pageEl) pageEl.value='';
+  if(tagsEl) tagsEl.value='';
   document.getElementById('bstxt-'+id).value='';
-  save(); _renderBookNotes(id);
+  save(); renderBookshelf();
+  document.getElementById('bsc-'+id)?.classList.add('open');
 }
 
 function deleteBookNote(bookId, noteId){
-  const b = state.bookshelf.find(b=>b.id===bookId);
-  if(!b) return;
+  const b = state.bookshelf.find(b=>b.id===bookId); if(!b) return;
   b.notes = (b.notes||[]).filter(n=>n.id!==noteId);
-  save(); _renderBookNotes(bookId);
+  save(); renderBookshelf();
+  document.getElementById('bsc-'+bookId)?.classList.add('open');
 }
 
+// === Sessioni di lettura ===
+function addBookSession(id){
+  const b = state.bookshelf.find(b=>b.id===id); if(!b) return;
+  _bsEnsureShape(b);
+  const date = document.getElementById('bssess-date-'+id).value || todayISO();
+  const from = parseInt(document.getElementById('bssess-from-'+id).value||'0',10) || 0;
+  const to   = parseInt(document.getElementById('bssess-to-'+id).value||'0',10) || 0;
+  const min  = parseInt(document.getElementById('bssess-min-'+id).value||'0',10) || 0;
+  if(to<=0 && from<=0 && min<=0) return;
+  b.sessions.push({id:uid(), date, pagesFrom:from, pagesTo:to, minutes:min});
+  // Aggiorna currentPage se sessione punta più avanti
+  if(to > (b.currentPage||0)) _applyPageChange(b, to);
+  ['bssess-from-','bssess-to-','bssess-min-'].forEach(p=>{ const el=document.getElementById(p+id); if(el) el.value=''; });
+  save(); renderBookshelf();
+  document.getElementById('bsc-'+id)?.classList.add('open');
+}
+
+function deleteBookSession(bookId, sessId){
+  const b = state.bookshelf.find(b=>b.id===bookId); if(!b) return;
+  b.sessions = (b.sessions||[]).filter(s=>s.id!==sessId);
+  save(); renderBookshelf();
+  document.getElementById('bsc-'+bookId)?.classList.add('open');
+}
+
+// === Takeaway ===
+function saveBookTakeaway(id){
+  const b = state.bookshelf.find(b=>b.id===id); if(!b) return;
+  _bsEnsureShape(b);
+  const el = document.getElementById('bstk-'+id);
+  if(!el) return;
+  b.takeaway = el.value;
+  save();
+}
+
+// === Filtri ===
 function setBsFilter(f, el){
   _bsFilter = f;
   document.querySelectorAll('.bs-filter-bar .chip').forEach(c=>c.classList.remove('active'));
@@ -2382,67 +2564,131 @@ function setBsFilter(f, el){
   renderBookshelf();
 }
 
-function _renderBookNotes(id){
-  const b = state.bookshelf.find(b=>b.id===id);
-  if(!b) return;
-  const panel = document.getElementById('bsn-'+id);
-  if(!panel) return;
-  const typeIcon = {nota:'📝',insight:'💡',citazione:'💬',highlight:'⭐'};
-  const notesHtml = (b.notes||[]).length ? [...(b.notes||[])].reverse().map(n=>`
-    <div class="bs-note-entry bs-note-type-${escapeHtml(n.type)}">
-      <div class="bs-note-head">
-        <span>${typeIcon[n.type]||'📝'} ${escapeHtml(n.type)} · ${n.date}</span>
-        <button class="btn sm danger" onclick="deleteBookNote('${escapeHtml(b.id)}','${escapeHtml(n.id)}')" style="padding:1px 6px;font-size:.65rem">×</button>
-      </div>
-      <div style="white-space:pre-wrap">${escapeHtml(n.text)}</div>
-    </div>`).join('') : '<div style="color:var(--muted);font-size:.77rem;padding:4px 0">Nessuna nota ancora — aggiungi un appunto, citazione o insight.</div>';
-  panel.querySelector('.bs-notes-list').innerHTML = notesHtml;
+function _bsSortFn(a,b){
+  const mode = document.getElementById('bs-sort')?.value || 'status';
+  const statusOrder = {'in-corso':0,'da-leggere':1,'letto':2};
+  const pctA = a.pages>0 ? a.currentPage/a.pages : 0;
+  const pctB = b.pages>0 ? b.currentPage/b.pages : 0;
+  const _lastUpdate = (x) => {
+    const last = (x.sessions||[]).concat(x.notes||[]).map(o=>o.date).sort();
+    return last[last.length-1] || x.addedDate || '';
+  };
+  switch(mode){
+    case 'recent':   return _lastUpdate(b).localeCompare(_lastUpdate(a));
+    case 'added':    return (b.addedDate||'').localeCompare(a.addedDate||'');
+    case 'progress': return pctB - pctA;
+    case 'title':    return (a.title||'').localeCompare(b.title||'');
+    case 'author':   return (a.author||'').localeCompare(b.author||'');
+    case 'rating':   return (b.rating||0) - (a.rating||0);
+    case 'status':
+    default:
+      return (statusOrder[a.status]??3) - (statusOrder[b.status]??3) || _lastUpdate(b).localeCompare(_lastUpdate(a));
+  }
 }
 
 function renderBookshelf(){
   _bsMigrateOnce();
   ensureState();
+  state.bookshelf.forEach(_bsEnsureShape);
   const list = document.getElementById('bookshelf-list');
   if(!list) return;
 
-  // Stats
+  // Stats globali
   const all = state.bookshelf;
   const letti = all.filter(b=>b.status==='letto').length;
   const inCorso = all.filter(b=>b.status==='in-corso').length;
   const daLegg = all.filter(b=>b.status==='da-leggere').length;
+  const thisYear = new Date().getFullYear().toString();
+  const lettiQuestAnno = all.filter(b=>b.status==='letto' && (b.endDate||'').startsWith(thisYear)).length;
+  // Pagine totali lette = somma pagine raggiunte sui letti + currentPage sugli in-corso
+  let totPagesRead = 0;
+  let totMinutes = 0;
+  let totNotes = 0;
+  all.forEach(b=>{
+    if(b.status==='letto') totPagesRead += (b.pages||b.currentPage||0);
+    else totPagesRead += (b.currentPage||0);
+    (b.sessions||[]).forEach(s=>{ totMinutes += (s.minutes||0); });
+    totNotes += (b.notes||[]).length;
+  });
+
   const statsEl = document.getElementById('bs-stats');
   if(statsEl) statsEl.innerHTML = `
-    <div class="bs-stat"><span class="bs-stat-val">${all.length}</span><span class="bs-stat-lbl">Totale</span></div>
-    <div class="bs-stat"><span class="bs-stat-val" style="color:#34d399">${letti}</span><span class="bs-stat-lbl">Letti</span></div>
+    <div class="bs-stat"><span class="bs-stat-val">${all.length}</span><span class="bs-stat-lbl">Libri</span></div>
     <div class="bs-stat"><span class="bs-stat-val" style="color:#f59e0b">${inCorso}</span><span class="bs-stat-lbl">In corso</span></div>
-    <div class="bs-stat"><span class="bs-stat-val" style="color:var(--muted2)">${daLegg}</span><span class="bs-stat-lbl">Da leggere</span></div>`;
+    <div class="bs-stat"><span class="bs-stat-val" style="color:#34d399">${letti}</span><span class="bs-stat-lbl">Letti</span></div>
+    <div class="bs-stat"><span class="bs-stat-val" style="color:var(--muted2)">${daLegg}</span><span class="bs-stat-lbl">Da leggere</span></div>
+    <div class="bs-stat"><span class="bs-stat-val" style="color:var(--accent)">${lettiQuestAnno}</span><span class="bs-stat-lbl">Letti ${thisYear}</span></div>
+    <div class="bs-stat"><span class="bs-stat-val">${totPagesRead.toLocaleString('it-IT')}</span><span class="bs-stat-lbl">Pagine</span></div>
+    <div class="bs-stat"><span class="bs-stat-val">${totNotes}</span><span class="bs-stat-lbl">Note</span></div>
+    ${totMinutes>0?`<div class="bs-stat"><span class="bs-stat-val">${(totMinutes/60).toFixed(1)}h</span><span class="bs-stat-lbl">Letto</span></div>`:''}`;
 
-  // Filter
-  const filtered = _bsFilter==='tutti' ? all : all.filter(b=>b.status===_bsFilter);
-  if(!filtered.length){ list.innerHTML=`<div class="bs-empty">Nessun libro in questa categoria.</div>`; return; }
+  // Filtro + sort
+  let filtered = _bsFilter==='tutti' ? all.slice() : all.filter(b=>b.status===_bsFilter);
+  filtered.sort(_bsSortFn);
+  if(!filtered.length){ list.innerHTML=`<div class="bs-empty">Nessun libro in questa categoria. Clicca <strong>+ Aggiungi libro</strong>.</div>`; return; }
 
   const statusLabel = {letto:'✅ Letto','in-corso':'📖 In corso','da-leggere':'🔖 Da leggere'};
   const statusTagClass = {letto:'green','in-corso':'yellow','da-leggere':''};
-  const typeIcon = {nota:'📝',insight:'💡',citazione:'💬',highlight:'⭐'};
+  const typeIcon = {nota:'📝',insight:'💡',citazione:'💬',highlight:'⭐',domanda:'❓'};
+  const typeLabel = {nota:'Nota',insight:'Insight',citazione:'Citazione',highlight:'Highlight',domanda:'Domanda'};
 
   list.innerHTML = filtered.map(b=>{
     const noteCount = (b.notes||[]).length;
+    const sessCount = (b.sessions||[]).length;
+    const pct = b.pages>0 ? Math.min(100, (b.currentPage/b.pages)*100) : 0;
     const stars = [1,2,3,4,5].map(i=>`<span class="bs-star${b.rating>=i?' on':''}" onclick="event.stopPropagation();setBsRating('${b.id}',${i})">★</span>`).join('');
-    const notesHtml = (b.notes||[]).length ? [...(b.notes||[])].reverse().map(n=>`
-      <div class="bs-note-entry bs-note-type-${escapeHtml(n.type)}">
-        <div class="bs-note-head">
-          <span>${typeIcon[n.type]||'📝'} ${escapeHtml(n.type)} · ${n.date}</span>
-          <button class="btn sm danger" onclick="deleteBookNote('${escapeHtml(b.id)}','${escapeHtml(n.id)}')" style="padding:1px 6px;font-size:.65rem">×</button>
-        </div>
-        <div style="white-space:pre-wrap">${escapeHtml(n.text)}</div>
-      </div>`).join('') : '<div style="color:var(--muted);font-size:.77rem;padding:4px 0">Nessuna nota ancora.</div>';
 
-    return `<div class="bs-card" id="bsc-${b.id}">
+    // Progress block (visibile per in-corso e letto)
+    let progressBlock = '';
+    if(b.status==='in-corso' || (b.status==='letto' && b.pages>0)){
+      progressBlock = `<div class="bs-progress">
+        <div class="bs-progress-row">
+          <span><strong>Pag. ${b.currentPage||0}</strong>${b.pages>0?` / ${b.pages}`:''}</span>
+          ${b.pages>0?`<span style="color:var(--accent);font-weight:700">${pct.toFixed(0)}%</span>`:''}
+          <span style="margin-left:auto">
+            <button class="btn ghost sm" onclick="event.stopPropagation();setBookCurrentPage('${b.id}')" style="padding:2px 8px;font-size:.7rem">Imposta pagina</button>
+            ${b.pages<=0?`<button class="btn ghost sm" onclick="event.stopPropagation();setBookPages('${b.id}')" style="padding:2px 8px;font-size:.7rem;margin-left:4px">+ Tot. pagine</button>`:''}
+          </span>
+        </div>
+        ${b.pages>0?`<div class="bs-progress-bar"><div class="bs-progress-fill" style="width:${pct}%"></div></div>`:''}
+        ${b.status==='in-corso'?`<div class="bs-quick-pages" onclick="event.stopPropagation()">
+          <button onclick="bumpBookPage('${b.id}',5)">+5</button>
+          <button onclick="bumpBookPage('${b.id}',10)">+10</button>
+          <button onclick="bumpBookPage('${b.id}',25)">+25</button>
+          <button onclick="bumpBookPage('${b.id}',50)">+50</button>
+          <button onclick="bumpBookPage('${b.id}',-5)" style="opacity:.6">−5</button>
+        </div>`:''}
+      </div>`;
+    } else if(b.status==='da-leggere'){
+      // Sui "da leggere" non mostro la barra ma lascio bottone per impostare totali
+      // (è in dettagli)
+    }
+
+    // Note rendering
+    const notesHtml = (b.notes||[]).length ? [...(b.notes||[])].reverse().map(n=>`
+      <div class="bs-note-entry bs-note-type-${escapeHtml(n.type)} ${n.type==='citazione'?'citazione':''}">
+        <div class="bs-note-head">
+          <span class="lt">${typeIcon[n.type]||'📝'} ${escapeHtml(typeLabel[n.type]||n.type)} · ${n.date}${n.page?` <span class="page-ref">p. ${n.page}</span>`:''}</span>
+          <button class="btn sm danger" onclick="deleteBookNote('${b.id}','${n.id}')" style="padding:1px 6px;font-size:.65rem">×</button>
+        </div>
+        <div class="bs-note-text">${escapeHtml(n.text)}</div>
+        ${(n.tags||[]).length?`<div class="bs-note-tags">${n.tags.map(t=>`<span class="bs-note-tag">#${escapeHtml(t)}</span>`).join('')}</div>`:''}
+      </div>`).join('') : '<div style="color:var(--muted);font-size:.78rem;padding:4px 0">Ancora nessuna nota. Aggiungine una sotto.</div>';
+
+    // Sessioni rendering
+    const sessionsHtml = (b.sessions||[]).length ? [...(b.sessions||[])].reverse().slice(0,20).map(s=>{
+      const pages = (s.pagesTo>s.pagesFrom) ? (s.pagesTo - s.pagesFrom) : 0;
+      return `<div class="bs-session">
+        <span>📅 ${s.date}${pages>0?` · <strong>${pages} pag.</strong> (${s.pagesFrom}→${s.pagesTo})`:''}${s.minutes?` · ⏱ ${s.minutes}m`:''}</span>
+        <span class="del" onclick="deleteBookSession('${b.id}','${s.id}')" title="Elimina">×</span>
+      </div>`;
+    }).join('') : '<div style="color:var(--muted);font-size:.76rem;padding:4px 0">Nessuna sessione di lettura registrata.</div>';
+
+    return `<div class="bs-card ${b.status}" id="bsc-${b.id}">
       <div class="bs-header" onclick="toggleBookNotes('${b.id}')">
         <div class="bs-info">
           <div class="bs-title">${escapeHtml(b.title)} <span class="tag ${statusTagClass[b.status]||''}" style="font-size:.62rem">${statusLabel[b.status]||b.status}</span></div>
-          <div class="bs-meta">${escapeHtml(b.author)}${b.cat?` · ${escapeHtml(b.cat)}`:''}${b.endDate?` · finito ${b.endDate}`:''}${noteCount?` · ${noteCount} nota${noteCount>1?'e':''}`:''}
-          </div>
+          <div class="bs-meta">${escapeHtml(b.author)}${b.cat?` · ${escapeHtml(b.cat)}`:''}${b.endDate?` · finito ${b.endDate}`:''}${noteCount?` · 📝 ${noteCount}`:''}${sessCount?` · 📅 ${sessCount}`:''}</div>
         </div>
         <div class="bs-actions" onclick="event.stopPropagation()">
           ${b.status==='letto'?`<div class="bs-stars" title="Rating">${stars}</div>`:''}
@@ -2455,18 +2701,59 @@ function renderBookshelf(){
           <span class="bs-chevron">▼</span>
         </div>
       </div>
+      ${progressBlock}
       <div class="bs-notes-panel" id="bsn-${b.id}">
-        <div class="bs-add-note">
-          <select id="bsnt-${b.id}" style="font-size:.74rem">
-            <option value="nota">📝 Nota</option>
-            <option value="insight">💡 Insight</option>
-            <option value="citazione">💬 Citazione</option>
-            <option value="highlight">⭐ Highlight</option>
-          </select>
-          <textarea id="bstxt-${b.id}" placeholder="Aggiungi un appunto, citazione, insight…" rows="2"></textarea>
-          <button class="btn sm" onclick="addBookNote('${b.id}')" style="align-self:flex-end">+ Aggiungi</button>
+
+        ${b.status==='letto'?`<div class="bs-section">
+          <div class="bs-section-title">⭐ Verdict / Key takeaway</div>
+          <div class="bs-takeaway">
+            <textarea id="bstk-${b.id}" placeholder="Cosa porti via da questo libro? In 2-3 frasi…" onblur="saveBookTakeaway('${b.id}')">${escapeHtml(b.takeaway||'')}</textarea>
+          </div>
+        </div>`:''}
+
+        <div class="bs-section">
+          <div class="bs-section-title">📝 Le tue note <span class="count">${noteCount}</span></div>
+          <div class="bs-add-note">
+            <select id="bsnt-${b.id}">
+              <option value="nota">📝 Nota</option>
+              <option value="citazione">💬 Citazione</option>
+              <option value="insight">💡 Insight</option>
+              <option value="highlight">⭐ Highlight</option>
+              <option value="domanda">❓ Domanda</option>
+            </select>
+            <input type="number" id="bspage-${b.id}" placeholder="pag." min="1" style="width:75px"/>
+            <textarea id="bstxt-${b.id}" placeholder="Scrivi qui — un appunto, una citazione esatta, un insight, una domanda aperta…" rows="3"></textarea>
+            <input type="text" id="bstag-${b.id}" placeholder="tag,sep,virgola" style="width:160px"/>
+            <button class="btn sm" onclick="addBookNote('${b.id}')" style="align-self:flex-end">+ Salva nota</button>
+          </div>
+          <div class="bs-notes-list">${notesHtml}</div>
         </div>
-        <div class="bs-notes-list">${notesHtml}</div>
+
+        <div class="bs-section">
+          <div class="bs-section-title">📅 Sessioni di lettura <span class="count">${sessCount}</span></div>
+          <div class="bs-session-add">
+            <input type="date" id="bssess-date-${b.id}" value="${todayISO()}"/>
+            <span style="font-size:.72rem;color:var(--muted2)">da pag</span>
+            <input type="number" id="bssess-from-${b.id}" placeholder="${b.currentPage||0}" min="0"/>
+            <span style="font-size:.72rem;color:var(--muted2)">a pag</span>
+            <input type="number" id="bssess-to-${b.id}" placeholder="" min="0"/>
+            <span style="font-size:.72rem;color:var(--muted2)">·</span>
+            <input type="number" id="bssess-min-${b.id}" placeholder="min" min="0"/>
+            <button class="btn sm" onclick="addBookSession('${b.id}')">+ Sessione</button>
+          </div>
+          <div class="bs-session-list">${sessionsHtml}</div>
+        </div>
+
+        <div class="bs-section">
+          <div class="bs-section-title">⚙️ Dettagli</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;font-size:.74rem;color:var(--muted2);align-items:center">
+            <button class="btn ghost sm" onclick="setBookPages('${b.id}')">${b.pages>0?'Modifica':'+ Imposta'} totale pagine (${b.pages||'?'})</button>
+            ${b.startDate?`<span>Iniziato: <strong style="color:var(--text)">${b.startDate}</strong></span>`:''}
+            ${b.endDate?`<span>Finito: <strong style="color:var(--text)">${b.endDate}</strong></span>`:''}
+            ${b.addedDate?`<span>Aggiunto: ${b.addedDate}</span>`:''}
+          </div>
+        </div>
+
       </div>
     </div>`;
   }).join('');
