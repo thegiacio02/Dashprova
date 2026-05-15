@@ -67,7 +67,9 @@ header h1 .sub{font-size:.7rem;color:var(--muted2);font-weight:500;display:block
 .ticker-tape::after{right:0;background:linear-gradient(270deg,#070b14,transparent)}
 .ticker-track{display:inline-flex;gap:34px;white-space:nowrap;animation:ticker-scroll 90s linear infinite;will-change:transform}
 .ticker-tape:hover .ticker-track{animation-play-state:paused}
-.ticker-item{display:inline-flex;gap:8px;align-items:baseline;font-family:var(--mono);font-size:.78rem}
+.ticker-item{display:inline-flex;gap:8px;align-items:baseline;font-family:var(--mono);font-size:.78rem;text-decoration:none;color:inherit;padding:2px 6px;border-radius:5px;transition:background .15s}
+a.ticker-item:hover{background:rgba(0,229,255,.12);cursor:pointer}
+a.ticker-item:hover .ticker-sym{color:var(--accent)}
 .ticker-sym{font-weight:800;color:#fff;letter-spacing:.5px}
 .ticker-price{color:#cbd5e1;font-variant-numeric:tabular-nums}
 .ticker-change{font-weight:700;font-variant-numeric:tabular-nums}
@@ -4726,15 +4728,17 @@ async function loadTicker(){
     catch(e){ return {...t, q:null}; }
   }));
   const items = data.map(d=>{
+    const href = `https://finance.yahoo.com/quote/${encodeURIComponent(d.s)}`;
+    const title = `Apri ${d.label} su Yahoo Finance (${d.s})`;
     if(!d.q || !isFinite(d.q.price) || !isFinite(d.q.prev) || d.q.prev===0){
-      return `<span class="ticker-item"><span class="ticker-sym">${d.label}</span><span class="ticker-price">n/d</span></span>`;
+      return `<a class="ticker-item" href="${href}" target="_blank" rel="noopener noreferrer" title="${title}"><span class="ticker-sym">${d.label}</span><span class="ticker-price">n/d</span></a>`;
     }
     const diff = d.q.price - d.q.prev;
     const pct  = (diff/d.q.prev)*100;
     const dir  = diff>0?'up':diff<0?'down':'flat';
     const arr  = diff>0?'▲':diff<0?'▼':'─';
     const sign = pct>=0?'+':'';
-    return `<span class="ticker-item"><span class="ticker-sym">${d.label}</span><span class="ticker-price">${fmtPrice(d.q.price,d.s)}</span><span class="ticker-change ${dir}">${arr} ${sign}${pct.toFixed(2)}%</span></span>`;
+    return `<a class="ticker-item" href="${href}" target="_blank" rel="noopener noreferrer" title="${title}"><span class="ticker-sym">${d.label}</span><span class="ticker-price">${fmtPrice(d.q.price,d.s)}</span><span class="ticker-change ${dir}">${arr} ${sign}${pct.toFixed(2)}%</span></a>`;
   }).join('');
   // doppia copia per loop senza buco
   track.innerHTML = items + items;
