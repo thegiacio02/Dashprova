@@ -4654,9 +4654,16 @@ async function fetchYahoo(sym){
       if(!res.ok) continue;
       const text = await res.text();
       const data = JSON.parse(text);
-      const m = data?.chart?.result?.[0]?.meta;
+      const r = data?.chart?.result?.[0];
+      const m = r?.meta;
       if(!m || typeof m.regularMarketPrice!=='number') continue;
-      return { price: m.regularMarketPrice, prev: m.previousClose ?? m.chartPreviousClose };
+      const price = m.regularMarketPrice;
+      // Prev close = penultima close valida nella serie daily (l'ultima è oggi)
+      const closes = (r?.indicators?.quote?.[0]?.close || []).filter(c => typeof c === 'number');
+      let prev;
+      if(closes.length >= 2) prev = closes[closes.length - 2];
+      else prev = m.previousClose ?? m.chartPreviousClose;
+      return { price, prev };
     }catch(e){}
   }
   return null;
