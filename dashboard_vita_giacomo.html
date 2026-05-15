@@ -67,6 +67,13 @@ nav.tabs button:hover{color:#fff}
 nav.tabs .badge{background:var(--gold);color:#000;font-size:.62rem;font-weight:800;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:1px;font-family:var(--mono)}
 nav.tabs .badge.zero{background:var(--surface2);color:var(--muted)}
 
+/* Libri: top-level su desktop, dentro al dropdown su mobile */
+.tab-libri-top{display:inline-flex}
+.tab-libri-drop{display:none}
+@media (max-width: 720px){
+  .tab-libri-top{display:none !important}
+  .tab-libri-drop{display:block}
+}
 .dropdown{position:relative;display:inline-block}
 .dropdown-toggle{background:transparent;border:none;color:var(--muted2);padding:8px 14px;font-size:.72rem;border-radius:6px 6px 0 0;cursor:pointer;font-weight:700;white-space:nowrap;border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:.7px}
 .dropdown-toggle:hover,.dropdown.open .dropdown-toggle{color:#fff}
@@ -921,6 +928,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <button data-tab="financelab">📈 Finance Lab</button>
     <button data-tab="diario">📖 Diario</button>
     <button data-tab="produttivita">⚡ Produttività</button>
+    <button data-tab="libri" class="tab-libri-top">📚 Libri</button>
     <div class="dropdown" id="more-dropdown">
       <button class="dropdown-toggle" type="button">Altro ▾</button>
       <div class="dropdown-menu">
@@ -929,7 +937,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <button data-tab="obiettivi">🎯 Obiettivi 6 mesi</button>
         <button data-tab="network">🤝 Network</button>
         <div class="dropdown-divider"></div>
-        <button data-tab="libri">📚 Libri</button>
+        <button data-tab="libri" class="tab-libri-drop">📚 Libri</button>
         <button data-tab="benessere">😴 Sonno &amp; Benessere</button>
         <button data-tab="check">🔍 Check Mensile</button>
         <button data-tab="riferimenti">📅 Riferimenti</button>
@@ -2301,6 +2309,27 @@ function saveCheck(){
 // ============ BOOKSHELF ============
 
 let _bsFilter = 'tutti';
+const _bsOpenIds = new Set();       // card espanse: si preservano tra re-render
+let _bsDrafts = {};                  // bozze testo per ogni input non salvato
+const _BS_DRAFT_PREFIXES = ['bstxt-','bspage-','bstag-','bstk-','bssess-from-','bssess-to-','bssess-min-','bssess-date-','bsnt-'];
+
+function _bsCaptureDrafts(){
+  // Cattura il valore corrente di tutti gli input/textarea/select che potrebbero essere stati modificati
+  _bsDrafts = _bsDrafts || {};
+  document.querySelectorAll('#bookshelf-list textarea, #bookshelf-list input, #bookshelf-list select').forEach(el=>{
+    if(!el.id) return;
+    if(_BS_DRAFT_PREFIXES.some(p=>el.id.startsWith(p))){
+      _bsDrafts[el.id] = el.value;
+    }
+  });
+}
+
+function _bsRestoreDrafts(){
+  Object.keys(_bsDrafts).forEach(id=>{
+    const el = document.getElementById(id);
+    if(el && _bsDrafts[id] !== undefined && _bsDrafts[id] !== '') el.value = _bsDrafts[id];
+  });
+}
 
 function _bsMigrateOnce(){
   if(state.bookshelf.length) return;
@@ -2438,7 +2467,14 @@ function deleteBook(id){
 
 function toggleBookNotes(id){
   const card = document.getElementById('bsc-'+id);
-  if(card) card.classList.toggle('open');
+  if(card){
+    const open = card.classList.toggle('open');
+    if(open) _bsOpenIds.add(id); else _bsOpenIds.delete(id);
+    // pulisci le bozze del libro se l'utente chiude esplicitamente la card
+    if(!open){
+      Object.keys(_bsDrafts).forEach(k=>{ if(k.endsWith('-'+id)) delete _bsDrafts[k]; });
+    }
+  }
 }
 
 // === Pagine / progresso ===
@@ -2451,8 +2487,8 @@ function setBookPages(id){
   if(isNaN(n) || n<0) return;
   b.pages = n;
   if(b.currentPage > b.pages) b.currentPage = b.pages;
+  _bsOpenIds.add(id);
   save(); renderBookshelf();
-  document.getElementById('bsc-'+id)?.classList.add('open');
 }
 
 function setBookCurrentPage(id){
@@ -2463,16 +2499,16 @@ function setBookCurrentPage(id){
   const n = parseInt(v,10);
   if(isNaN(n) || n<0) return;
   _applyPageChange(b, n);
+  _bsOpenIds.add(id);
   save(); renderBookshelf();
-  document.getElementById('bsc-'+id)?.classList.add('open');
 }
 
 function bumpBookPage(id, delta){
   const b = state.bookshelf.find(b=>b.id===id); if(!b) return;
   _bsEnsureShape(b);
   _applyPageChange(b, (b.currentPage||0) + delta);
+  _bsOpenIds.add(id);
   save(); renderBookshelf();
-  document.getElementById('bsc-'+id)?.classList.add('open');
 }
 
 function _applyPageChange(b, newPage){
@@ -2511,15 +2547,17 @@ function addBookNote(id){
   if(pageEl) pageEl.value='';
   if(tagsEl) tagsEl.value='';
   document.getElementById('bstxt-'+id).value='';
+  // Pulisci bozze relative a questo libro per evitare di re-iniettare vecchi valori
+  ['bstxt-','bspage-','bstag-'].forEach(p=>{ delete _bsDrafts[p+id]; });
+  _bsOpenIds.add(id);
   save(); renderBookshelf();
-  document.getElementById('bsc-'+id)?.classList.add('open');
 }
 
 function deleteBookNote(bookId, noteId){
   const b = state.bookshelf.find(b=>b.id===bookId); if(!b) return;
   b.notes = (b.notes||[]).filter(n=>n.id!==noteId);
+  _bsOpenIds.add(bookId);
   save(); renderBookshelf();
-  document.getElementById('bsc-'+bookId)?.classList.add('open');
 }
 
 // === Sessioni di lettura ===
@@ -2534,16 +2572,16 @@ function addBookSession(id){
   b.sessions.push({id:uid(), date, pagesFrom:from, pagesTo:to, minutes:min});
   // Aggiorna currentPage se sessione punta più avanti
   if(to > (b.currentPage||0)) _applyPageChange(b, to);
-  ['bssess-from-','bssess-to-','bssess-min-'].forEach(p=>{ const el=document.getElementById(p+id); if(el) el.value=''; });
+  ['bssess-from-','bssess-to-','bssess-min-'].forEach(p=>{ const el=document.getElementById(p+id); if(el) el.value=''; delete _bsDrafts[p+id]; });
+  _bsOpenIds.add(id);
   save(); renderBookshelf();
-  document.getElementById('bsc-'+id)?.classList.add('open');
 }
 
 function deleteBookSession(bookId, sessId){
   const b = state.bookshelf.find(b=>b.id===bookId); if(!b) return;
   b.sessions = (b.sessions||[]).filter(s=>s.id!==sessId);
+  _bsOpenIds.add(bookId);
   save(); renderBookshelf();
-  document.getElementById('bsc-'+bookId)?.classList.add('open');
 }
 
 // === Takeaway ===
@@ -2592,6 +2630,8 @@ function renderBookshelf(){
   state.bookshelf.forEach(_bsEnsureShape);
   const list = document.getElementById('bookshelf-list');
   if(!list) return;
+  // Cattura bozze in corso PRIMA di rifare l'HTML, così non si perdono per re-render Firebase/save
+  _bsCaptureDrafts();
 
   // Stats globali
   const all = state.bookshelf;
@@ -2684,7 +2724,7 @@ function renderBookshelf(){
       </div>`;
     }).join('') : '<div style="color:var(--muted);font-size:.76rem;padding:4px 0">Nessuna sessione di lettura registrata.</div>';
 
-    return `<div class="bs-card ${b.status}" id="bsc-${b.id}">
+    return `<div class="bs-card ${b.status}${_bsOpenIds.has(b.id)?' open':''}" id="bsc-${b.id}">
       <div class="bs-header" onclick="toggleBookNotes('${b.id}')">
         <div class="bs-info">
           <div class="bs-title">${escapeHtml(b.title)} <span class="tag ${statusTagClass[b.status]||''}" style="font-size:.62rem">${statusLabel[b.status]||b.status}</span></div>
@@ -2757,6 +2797,8 @@ function renderBookshelf(){
       </div>
     </div>`;
   }).join('');
+  // Ripristina eventuali bozze (testo non ancora salvato) dopo il nuovo render
+  _bsRestoreDrafts();
 }
 
 function setBookStatus(idx, status){
