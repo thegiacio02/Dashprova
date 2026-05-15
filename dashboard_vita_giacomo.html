@@ -60,6 +60,29 @@ header h1 .sub{font-size:.7rem;color:var(--muted2);font-weight:500;display:block
 .sync-ok{color:var(--green)}
 .sync-error{color:var(--red)}
 
+/* Ticker tape stile trading room */
+.ticker-tape{position:relative;overflow:hidden;background:linear-gradient(90deg,#070b14,#0d1424 50%,#070b14);border:1px solid var(--border);border-radius:8px;padding:9px 0;margin-bottom:16px}
+.ticker-tape::before,.ticker-tape::after{content:'';position:absolute;top:0;bottom:0;width:60px;z-index:2;pointer-events:none}
+.ticker-tape::before{left:0;background:linear-gradient(90deg,#070b14,transparent)}
+.ticker-tape::after{right:0;background:linear-gradient(270deg,#070b14,transparent)}
+.ticker-track{display:inline-flex;gap:34px;white-space:nowrap;animation:ticker-scroll 90s linear infinite;will-change:transform}
+.ticker-tape:hover .ticker-track{animation-play-state:paused}
+.ticker-item{display:inline-flex;gap:8px;align-items:baseline;font-family:var(--mono);font-size:.78rem}
+.ticker-sym{font-weight:800;color:#fff;letter-spacing:.5px}
+.ticker-price{color:#cbd5e1;font-variant-numeric:tabular-nums}
+.ticker-change{font-weight:700;font-variant-numeric:tabular-nums}
+.ticker-change.up{color:var(--green)}
+.ticker-change.down{color:var(--red)}
+.ticker-change.flat{color:var(--muted2)}
+@keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* Card collassabili */
+.card.collapsible > h2{cursor:pointer;user-select:none;position:relative}
+.card.collapsible > h2 .chevron{display:inline-block;margin-left:auto;font-size:.7em;color:var(--muted2);transition:transform .2s ease;padding-left:6px}
+.card.collapsible.collapsed > h2 .chevron{transform:rotate(-90deg)}
+.card.collapsible.collapsed > .card-body{display:none}
+.card.collapsible.collapsed{padding-bottom:14px}
+
 nav.tabs{display:flex;gap:4px;flex-wrap:wrap;align-items:center;max-width:1400px;margin:14px auto 0;padding-bottom:2px;overflow:visible;position:relative}
 nav.tabs button{background:transparent;border:none;color:var(--muted2);padding:8px 14px;font-size:.72rem;border-radius:6px 6px 0 0;cursor:pointer;font-weight:700;white-space:nowrap;border-bottom:2px solid transparent;text-transform:uppercase;letter-spacing:.7px;transition:all .15s}
 nav.tabs button.active{color:var(--accent);border-bottom-color:var(--accent);text-shadow:0 0 12px rgba(0,229,255,.4)}
@@ -961,59 +984,13 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 <!-- ============ OGGI ============ -->
 <section class="tab active" id="tab-oggi">
 
-  <!-- AI BRIEFING -->
-  <div class="card" id="ai-briefing-card" style="border-left:3px solid var(--accent)">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap">
-      <h2 style="margin:0"><span class="ico">🤖</span> Briefing AI <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· situazione mondiale</span></h2>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span id="briefing-meta" style="font-size:.72rem;color:var(--muted)"></span>
-        <button class="btn ghost sm" onclick="refreshAIBriefing()" id="briefing-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
-        <button class="btn ghost sm" onclick="openGeminiSetup()" title="Impostazioni AI" style="font-size:.75rem;padding:4px 10px">⚙️</button>
-      </div>
-    </div>
-    <div id="briefing-content"></div>
-  </div>
-
-  <!-- TODOS OGGI / HABITS / FOCUS -->
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card">
-      <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">✅</span> Da fare oggi</span><span class="card-badge" id="today-todos-count">0</span></h2>
-      <div style="display:flex;gap:6px;margin-bottom:10px">
-        <input type="text" id="oggi-quick-todo" placeholder="Aggiungi al volo… (Invio)" style="flex:1" onkeydown="if(event.key==='Enter')quickAddTodo()"/>
-        <button class="btn sm" onclick="quickAddTodo()" style="padding:0 14px">+</button>
-      </div>
-      <div id="today-todos-list"></div>
-    </div>
-
-    <div class="card daily-motivation-card" style="margin:0">
-      <h2 style="justify-content:space-between">
-        <span style="display:flex;align-items:center;gap:8px"><span class="ico">✨</span> Daily Boost</span>
-        <span style="display:flex;align-items:center;gap:8px">
-          <span id="dm-meta" style="font-size:.72rem;color:var(--muted2)"></span>
-          <button class="btn ghost sm" onclick="renderDailyMotivation()" title="Mostra l'ultimo boost salvato (senza chiamare l'AI)" style="padding:2px 8px">👁</button>
-          <button class="btn ghost sm" onclick="refreshDailyMotivation(true)" title="Rigenera con AI" style="padding:2px 8px">↻</button>
-        </span>
-      </h2>
-      <div id="daily-motivation"></div>
-    </div>
-  </div>
-
-  <!-- PROMEMORIA -->
-  <div class="card" style="margin-top:16px">
-    <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📌</span> Promemoria attivi</span><span id="reminders-count" class="card-badge">0</span></h2>
-    <div id="reminders-list" class="reminders-list"></div>
-  </div>
-
-  <!-- STATS STRIP -->
-  <div class="stats-strip" id="stats-strip" style="margin-top:16px">
-    <div class="stat-item"><span class="stat-label">SETTIMANA</span><span class="stat-value" id="kpi-week">-</span><span class="stat-sub" id="kpi-week-date">—</span></div>
-    <div class="stat-item"><span class="stat-label">SESSIONI 7GG</span><span class="stat-value" id="kpi-sessions">0</span><span class="stat-sub">log attività</span></div>
-    <div class="stat-item"><span class="stat-label">SONNO 7GG</span><span class="stat-value"><span id="kpi-sleep">—</span><span class="stat-unit">h</span></span><span class="stat-sub" id="kpi-sleep-status">—</span></div>
-    <div class="stat-item"><span class="stat-label">CORNICE</span><span class="stat-value"><span id="kpi-cornice">B</span></span><span class="stat-sub"><span id="kpi-cornice-name">Media</span> · <span id="kpi-cornice-desc">Apr / Ott</span></span></div>
+  <!-- TICKER TAPE -->
+  <div class="ticker-tape" id="ticker-tape" title="Mercati in tempo reale · passa col mouse per fermare">
+    <div class="ticker-track" id="ticker-track"><span class="ticker-item"><span class="ticker-sym">···</span><span class="ticker-price">caricamento mercati</span></span></div>
   </div>
 
   <!-- NEWS LIVE -->
-  <div class="card" style="margin-top:16px" id="news-card">
+  <div class="card" id="news-card">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <h2 style="margin:0"><span class="ico">📰</span> Rassegna stampa</h2>
       <button class="btn ghost sm" onclick="loadNews(true)" id="news-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
@@ -1025,52 +1002,108 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- LOG SESSIONI + SONNO -->
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card">
-      <h2><span class="ico">⚡</span> Log rapido</h2>
-      <div class="field">
-        <label>Area</label>
-        <select id="log-area">
-          <option value="double">Lavoro Double</option>
-          <option value="como">Como On Boat</option>
-          <option value="francese">Francese</option>
-          <option value="lettura">Lettura / Finance</option>
-          <option value="sport">Sport</option>
-          <option value="social">Vita sociale</option>
-          <option value="vuoto">Tempo vuoto / decompressione</option>
-        </select>
-      </div>
-      <div class="row">
-        <div class="field"><label>Durata (ore)</label><input type="number" id="log-hours" value="1" min="0.25" step="0.25"/></div>
-        <div class="field"><label>Data</label><input type="date" id="log-date"/></div>
-      </div>
-      <div class="field"><label>Nota (opzionale)</label><input type="text" id="log-note" placeholder="es. conversazione attualità, sessione palestra…"/></div>
-      <button class="btn" onclick="addSession()">+ Aggiungi sessione</button>
+  <!-- DA FARE OGGI -->
+  <div class="card" style="margin-top:16px">
+    <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">✅</span> Da fare oggi</span><span class="card-badge" id="today-todos-count">0</span></h2>
+    <div style="display:flex;gap:6px;margin-bottom:10px">
+      <input type="text" id="oggi-quick-todo" placeholder="Aggiungi al volo… (Invio)" style="flex:1" onkeydown="if(event.key==='Enter')quickAddTodo()"/>
+      <button class="btn sm" onclick="quickAddTodo()" style="padding:0 14px">+</button>
     </div>
+    <div id="today-todos-list"></div>
+  </div>
 
-    <div class="card">
-      <h2><span class="ico">🌙</span> Log sonno</h2>
-      <div class="row">
-        <div class="field"><label>Data</label><input type="date" id="sleep-date"/></div>
-        <div class="field"><label>Ore dormite</label><input type="number" id="sleep-h" value="7.5" min="0" max="14" step="0.25"/></div>
+  <!-- AI BRIEFING (collassabile) -->
+  <div class="card collapsible" id="ai-briefing-card" data-card-id="briefing" style="border-left:3px solid var(--accent);margin-top:16px">
+    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🤖</span> Briefing AI <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· situazione mondiale</span></span><span class="chevron">▾</span></h2>
+    <div class="card-body">
+      <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <span id="briefing-meta" style="font-size:.72rem;color:var(--muted);margin-right:auto"></span>
+        <button class="btn ghost sm" onclick="event.stopPropagation();refreshAIBriefing()" id="briefing-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
+        <button class="btn ghost sm" onclick="event.stopPropagation();openGeminiSetup()" title="Impostazioni AI" style="font-size:.75rem;padding:4px 10px">⚙️</button>
       </div>
-      <div class="field"><label>Qualità (1-5)</label><input type="number" id="sleep-q" value="4" min="1" max="5"/></div>
-      <button class="btn" onclick="addSleep()">+ Salva</button>
-      <div class="legend">Target: 7-8h notte. Sotto 6h cronico = problema.</div>
+      <div id="briefing-content"></div>
     </div>
   </div>
 
-  <!-- METEO + MERCATI (bottom) -->
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card" id="weather-card">
-      <h2 style="margin-bottom:10px"><span class="ico">🌤️</span> Meteo Milano</h2>
-      <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
-      <div id="weather-forecast" class="weather-forecast"></div>
-      <div id="weather-detail" class="weather-detail"></div>
+  <!-- DAILY BOOST (collassabile) -->
+  <div class="card collapsible daily-motivation-card" data-card-id="boost" style="margin-top:16px">
+    <h2 onclick="toggleCard(this)" style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="ico">✨</span> Daily Boost</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span id="dm-meta" style="font-size:.72rem;color:var(--muted2)"></span>
+        <button class="btn ghost sm" onclick="event.stopPropagation();renderDailyMotivation()" title="Mostra l'ultimo boost salvato (senza chiamare l'AI)" style="padding:2px 8px">👁</button>
+        <button class="btn ghost sm" onclick="event.stopPropagation();refreshDailyMotivation(true)" title="Rigenera con AI" style="padding:2px 8px">↻</button>
+        <span class="chevron">▾</span>
+      </span>
+    </h2>
+    <div class="card-body">
+      <div id="daily-motivation"></div>
     </div>
-    <div class="card" id="quotes-card">
-      <h2 style="margin-bottom:10px"><span class="ico">📈</span> Mercati</h2>
+  </div>
+
+  <!-- STATS STRIP (collassabile) -->
+  <div class="card collapsible collapsed" data-card-id="stats" style="margin-top:16px">
+    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📊</span> Statistiche rapide</span><span class="chevron">▾</span></h2>
+    <div class="card-body">
+      <div class="stats-strip" id="stats-strip">
+        <div class="stat-item"><span class="stat-label">SETTIMANA</span><span class="stat-value" id="kpi-week">-</span><span class="stat-sub" id="kpi-week-date">—</span></div>
+        <div class="stat-item"><span class="stat-label">SESSIONI 7GG</span><span class="stat-value" id="kpi-sessions">0</span><span class="stat-sub">log attività</span></div>
+        <div class="stat-item"><span class="stat-label">SONNO 7GG</span><span class="stat-value"><span id="kpi-sleep">—</span><span class="stat-unit">h</span></span><span class="stat-sub" id="kpi-sleep-status">—</span></div>
+        <div class="stat-item"><span class="stat-label">CORNICE</span><span class="stat-value"><span id="kpi-cornice">B</span></span><span class="stat-sub"><span id="kpi-cornice-name">Media</span> · <span id="kpi-cornice-desc">Apr / Ott</span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOG RAPIDO + LOG SONNO (collassabili) -->
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card collapsible collapsed" data-card-id="lograpido">
+      <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">⚡</span> Log rapido</span><span class="chevron">▾</span></h2>
+      <div class="card-body">
+        <div class="field">
+          <label>Area</label>
+          <select id="log-area">
+            <option value="double">💼 Lavoro Double</option>
+            <option value="como">⛵ Como On Boat</option>
+            <option value="francese">🇫🇷 Francese</option>
+            <option value="lettura">📚 Lettura / Finance</option>
+            <option value="sport">🏋️ Sport</option>
+            <option value="social">🤝 Vita sociale</option>
+            <option value="personale">🧠 Personale</option>
+            <option value="famiglia">👨‍👩‍👦 Famiglia</option>
+            <option value="viaggio">✈️ Viaggio</option>
+            <option value="hobby">🎨 Hobby</option>
+            <option value="salute">🩺 Salute</option>
+            <option value="finanze">💰 Finanze personali</option>
+            <option value="vuoto">🌿 Tempo vuoto / decompressione</option>
+          </select>
+        </div>
+        <div class="row">
+          <div class="field"><label>Durata (ore)</label><input type="number" id="log-hours" value="1" min="0.25" step="0.25"/></div>
+          <div class="field"><label>Data</label><input type="date" id="log-date"/></div>
+        </div>
+        <div class="field"><label>Nota (opzionale)</label><input type="text" id="log-note" placeholder="es. conversazione attualità, sessione palestra…"/></div>
+        <button class="btn" onclick="addSession()">+ Aggiungi sessione</button>
+      </div>
+    </div>
+
+    <div class="card collapsible collapsed" data-card-id="logsonno">
+      <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🌙</span> Log sonno</span><span class="chevron">▾</span></h2>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>Data</label><input type="date" id="sleep-date"/></div>
+          <div class="field"><label>Ore dormite</label><input type="number" id="sleep-h" value="7.5" min="0" max="14" step="0.25"/></div>
+        </div>
+        <div class="field"><label>Qualità (1-5)</label><input type="number" id="sleep-q" value="4" min="1" max="5"/></div>
+        <button class="btn" onclick="addSleep()">+ Salva</button>
+        <div class="legend">Target: 7-8h notte. Sotto 6h cronico = problema.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MERCATI dettaglio (collassabile) -->
+  <div class="card collapsible collapsed" id="quotes-card" data-card-id="mercati" style="margin-top:16px">
+    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📈</span> Mercati · dettaglio</span><span class="chevron">▾</span></h2>
+    <div class="card-body">
       <div id="quotes-content">
         <div class="quote-row" data-sym="QQQ"><span class="quote-label">QQQ <span class="quote-sub">Nasdaq 100 ETF</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
         <div class="quote-row" data-sym="FTSEMIB.MI"><span class="quote-label">FTSE MIB <span class="quote-sub">Milano</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
@@ -1079,9 +1112,14 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <div class="card" style="margin-top:16px">
-    <h2><span class="ico">📅</span> Ultime 10 attività</h2>
-    <ul class="clean" id="recent-sessions"></ul>
+  <!-- METEO (in fondo, collassabile) -->
+  <div class="card collapsible collapsed" id="weather-card" data-card-id="meteo" style="margin-top:16px">
+    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🌤️</span> Meteo Milano</span><span class="chevron">▾</span></h2>
+    <div class="card-body">
+      <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
+      <div id="weather-forecast" class="weather-forecast"></div>
+      <div id="weather-detail" class="weather-detail"></div>
+    </div>
   </div>
 </section>
 
@@ -2094,6 +2132,12 @@ const AREAS = {
   lettura:   {name:'Lettura/Finance',color:'gold',   icon:'📚'},
   sport:     {name:'Sport',          color:'green',  icon:'🏋️'},
   social:    {name:'Vita sociale',   color:'purple', icon:'🤝'},
+  personale: {name:'Personale',      color:'teal',   icon:'🧠'},
+  famiglia:  {name:'Famiglia',       color:'pink',   icon:'👨‍👩‍👦'},
+  viaggio:   {name:'Viaggio',        color:'teal',   icon:'✈️'},
+  hobby:     {name:'Hobby',          color:'gold',   icon:'🎨'},
+  salute:    {name:'Salute',         color:'green',  icon:'🩺'},
+  finanze:   {name:'Finanze persone',color:'blue',   icon:'💰'},
   vuoto:     {name:'Tempo vuoto',    color:'yellow', icon:'🌿'}
 };
 
@@ -2863,6 +2907,7 @@ function renderTopKpis(){
 
 function renderRecent(){
   const ul = document.getElementById('recent-sessions');
+  if(!ul) return;
   const s = [...state.sessions].sort((a,b)=> (b.date+b.id).localeCompare(a.date+a.id)).slice(0,10);
   if(!s.length){ ul.innerHTML='<li style="color:var(--muted)">Nessuna sessione registrata. Inizia loggando un\'attività.</li>'; return; }
   ul.innerHTML = s.map(x=>{
@@ -4208,7 +4253,6 @@ function renderDecisionCard(d, isDue){
 function renderAll(){
   paintCornice();
   renderTopKpis();
-  renderRecent();
   renderWeekly();
   renderTrend();
   renderReviewHistory();
@@ -4230,7 +4274,7 @@ function renderAll(){
   renderTimeBlocks();
   renderShutdown();
   renderProductivityStats();
-  try { renderReminders(); } catch(e){ console.error('renderReminders error:', e); }
+  // renderReminders() rimosso: il card Promemoria è stato eliminato dalla tab Oggi
   // renderInsights() rimosso: il card Consigli AI è stato sostituito da Daily Boost
   try { renderFinanceLab(); } catch(e){ console.error('renderFinanceLab error:', e); }
   try { renderDiario();      } catch(e){ console.error('renderDiario error:', e); }
@@ -4645,6 +4689,76 @@ loadWeather();
 loadQuotes();
 setInterval(loadWeather, 15*60*1000);   // ogni 15min
 setInterval(loadQuotes,  5*60*1000);    // ogni 5min
+
+// ============ TICKER TAPE (trading room) ============
+const TICKER_SYMS = [
+  {s:'QQQ',        label:'NDX100'},
+  {s:'SPY',        label:'S&P500'},
+  {s:'DIA',        label:'DOW'},
+  {s:'FTSEMIB.MI', label:'FTSEMIB'},
+  {s:'^STOXX50E',  label:'EUROSTOXX'},
+  {s:'^GDAXI',     label:'DAX'},
+  {s:'EURUSD=X',   label:'EUR/USD'},
+  {s:'GBPUSD=X',   label:'GBP/USD'},
+  {s:'USDJPY=X',   label:'USD/JPY'},
+  {s:'GC=F',       label:'GOLD'},
+  {s:'CL=F',       label:'OIL'},
+  {s:'BTC-USD',    label:'BTC'},
+  {s:'ETH-USD',    label:'ETH'},
+  {s:'^VIX',       label:'VIX'},
+  {s:'^TNX',       label:'US10Y'}
+];
+async function loadTicker(){
+  const track = document.getElementById('ticker-track');
+  if(!track) return;
+  const data = await Promise.all(TICKER_SYMS.map(async t=>{
+    try{ const q = await fetchQuote(t.s); return {...t, q}; }
+    catch(e){ return {...t, q:null}; }
+  }));
+  const items = data.map(d=>{
+    if(!d.q || !isFinite(d.q.price) || !isFinite(d.q.prev) || d.q.prev===0){
+      return `<span class="ticker-item"><span class="ticker-sym">${d.label}</span><span class="ticker-price">n/d</span></span>`;
+    }
+    const diff = d.q.price - d.q.prev;
+    const pct  = (diff/d.q.prev)*100;
+    const dir  = diff>0?'up':diff<0?'down':'flat';
+    const arr  = diff>0?'▲':diff<0?'▼':'─';
+    const sign = pct>=0?'+':'';
+    return `<span class="ticker-item"><span class="ticker-sym">${d.label}</span><span class="ticker-price">${fmtPrice(d.q.price,d.s)}</span><span class="ticker-change ${dir}">${arr} ${sign}${pct.toFixed(2)}%</span></span>`;
+  }).join('');
+  // doppia copia per loop senza buco
+  track.innerHTML = items + items;
+}
+loadTicker();
+setInterval(loadTicker, 5*60*1000);
+
+// ============ CARD COLLASSABILI (memoria su localStorage) ============
+const COLLAPSED_KEY = 'dash_oggi_collapsed';
+function _loadCollapsedSet(){
+  try{ return new Set(JSON.parse(localStorage.getItem(COLLAPSED_KEY))||[]); }
+  catch(e){ return new Set(); }
+}
+function _saveCollapsedSet(s){
+  try{ localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...s])); }catch(e){}
+}
+function toggleCard(headerEl){
+  const card = headerEl.closest('.collapsible');
+  if(!card) return;
+  const id = card.dataset.cardId;
+  const s = _loadCollapsedSet();
+  if(card.classList.toggle('collapsed')) s.add(id); else s.delete(id);
+  _saveCollapsedSet(s);
+}
+(function applyInitialCollapsed(){
+  const s = _loadCollapsedSet();
+  // applica solo se l'utente ha mai toccato il toggle: rispetta i default impostati in HTML
+  if(!localStorage.getItem(COLLAPSED_KEY)) return;
+  document.querySelectorAll('.card.collapsible').forEach(c=>{
+    const id = c.dataset.cardId;
+    if(!id) return;
+    if(s.has(id)) c.classList.add('collapsed'); else c.classList.remove('collapsed');
+  });
+})();
 
 // ============ FINANCE LAB ============
 const FL_TAG_COLORS = {
@@ -5641,7 +5755,6 @@ function quickAddTodo(){
   save();
   renderTodayTodos();
   try { renderTodos(); } catch(e){}
-  try { renderReminders(); } catch(e){}
 }
 
 // ----- HABITS TODAY -----
