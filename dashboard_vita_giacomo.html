@@ -76,6 +76,14 @@ a.ticker-item:hover .ticker-sym{color:var(--accent)}
 .ticker-change.up{color:var(--green)}
 .ticker-change.down{color:var(--red)}
 .ticker-change.flat{color:var(--muted2)}
+.ticker-item.flash-up{animation:ticker-flash-up .9s ease-out}
+.ticker-item.flash-down{animation:ticker-flash-down .9s ease-out}
+@keyframes ticker-flash-up{0%{background:rgba(34,197,94,.55);box-shadow:0 0 12px rgba(34,197,94,.4)}100%{background:transparent;box-shadow:none}}
+@keyframes ticker-flash-down{0%{background:rgba(239,68,68,.55);box-shadow:0 0 12px rgba(239,68,68,.4)}100%{background:transparent;box-shadow:none}}
+.ticker-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:6px;vertical-align:middle}
+.ticker-dot.open{background:var(--green);box-shadow:0 0 6px var(--green);animation:ticker-pulse 2s ease-in-out infinite}
+.ticker-dot.closed{background:#475569}
+@keyframes ticker-pulse{50%{opacity:.45}}
 @keyframes ticker-scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* Card collassabili */
@@ -4704,47 +4712,126 @@ setInterval(loadQuotes,  5*60*1000);    // ogni 5min
 
 // ============ TICKER TAPE (trading room) ============
 const TICKER_SYMS = [
-  {s:'QQQ',        label:'NDX100'},
-  {s:'SPY',        label:'S&P500'},
-  {s:'DIA',        label:'DOW'},
-  {s:'FTSEMIB.MI', label:'FTSEMIB'},
-  {s:'^STOXX50E',  label:'EUROSTOXX'},
-  {s:'^GDAXI',     label:'DAX'},
-  {s:'EURUSD=X',   label:'EUR/USD'},
-  {s:'GBPUSD=X',   label:'GBP/USD'},
-  {s:'USDJPY=X',   label:'USD/JPY'},
-  {s:'GC=F',       label:'GOLD'},
-  {s:'CL=F',       label:'OIL'},
-  {s:'BTC-USD',    label:'BTC'},
-  {s:'ETH-USD',    label:'ETH'},
-  {s:'^VIX',       label:'VIX'},
-  {s:'^TNX',       label:'US10Y'}
+  {s:'QQQ',        label:'NDX100',    cat:'us'},
+  {s:'SPY',        label:'S&P500',    cat:'us'},
+  {s:'DIA',        label:'DOW',       cat:'us'},
+  {s:'FTSEMIB.MI', label:'FTSEMIB',   cat:'eu'},
+  {s:'^STOXX50E',  label:'EUROSTOXX', cat:'eu'},
+  {s:'^GDAXI',     label:'DAX',       cat:'eu'},
+  {s:'EURUSD=X',   label:'EUR/USD',   cat:'fx'},
+  {s:'GBPUSD=X',   label:'GBP/USD',   cat:'fx'},
+  {s:'USDJPY=X',   label:'USD/JPY',   cat:'fx'},
+  {s:'GC=F',       label:'GOLD',      cat:'fx'},
+  {s:'CL=F',       label:'OIL',       cat:'fx'},
+  {s:'BTC-USD',    label:'BTC',       cat:'crypto'},
+  {s:'ETH-USD',    label:'ETH',       cat:'crypto'},
+  {s:'^VIX',       label:'VIX',       cat:'us'},
+  {s:'^TNX',       label:'US10Y',     cat:'us'}
 ];
-async function loadTicker(){
+
+// Orari di mercato in ora italiana (Europe/Rome, DST gestito da Intl)
+function _romeTimeNow(){
+  const parts = new Intl.DateTimeFormat('en-GB',{
+    timeZone:'Europe/Rome', hour12:false,
+    weekday:'short', hour:'2-digit', minute:'2-digit'
+  }).formatToParts(new Date());
+  const p = {};
+  parts.forEach(x=>{ if(x.type!=='literal') p[x.type]=x.value; });
+  return { dow: p.weekday, mins: parseInt(p.hour)*60 + parseInt(p.minute) };
+}
+function isMarketOpen(cat){
+  if(cat==='crypto') return true;
+  const {dow, mins} = _romeTimeNow();
+  if(dow==='Sat' || dow==='Sun') return false;
+  if(cat==='us') return mins >= 15*60+30 && mins < 22*60;      // NYSE 15:30-22:00 IT (DST)
+  if(cat==='eu') return mins >= 9*60       && mins < 17*60+30; // 09:00-17:30 IT
+  if(cat==='fx') return true; // 24/5 — Lun-Ven
+  return false;
+}
+function anyMarketOpen(){ return TICKER_SYMS.some(t => isMarketOpen(t.cat)); }
+
+const _tickerLastPrice = {};
+
+function _renderTickerSkeleton(){
   const track = document.getElementById('ticker-track');
   if(!track) return;
-  const data = await Promise.all(TICKER_SYMS.map(async t=>{
-    try{ const q = await fetchQuote(t.s); return {...t, q}; }
-    catch(e){ return {...t, q:null}; }
-  }));
-  const items = data.map(d=>{
-    const href = `https://finance.yahoo.com/quote/${encodeURIComponent(d.s)}`;
-    const title = `Apri ${d.label} su Yahoo Finance (${d.s})`;
+  const build = TICKER_SYMS.map(t=>{
+    const href = `https://finance.yahoo.com/quote/${encodeURIComponent(t.s)}`;
+    const dot = isMarketOpen(t.cat) ? '<span class="ticker-dot open" title="mercato aperto"></span>' : '<span class="ticker-dot closed" title="mercato chiuso"></span>';
+    return `<a class="ticker-item" data-sym="${t.s}" href="${href}" target="_blank" rel="noopener noreferrer" title="Apri ${t.label} su Yahoo Finance (${t.s})"><span class="ticker-sym">${t.label}${dot}</span><span class="ticker-price">···</span><span class="ticker-change flat">···</span></a>`;
+  }).join('');
+  track.innerHTML = build + build; // doppia copia per loop senza buco
+  track.dataset.built = '1';
+}
+
+function _updateTickerItem(d){
+  const items = document.querySelectorAll(`.ticker-item[data-sym="${CSS.escape(d.s)}"]`);
+  if(!items.length) return;
+  const open = isMarketOpen(d.cat);
+  const prevPrice = _tickerLastPrice[d.s];
+  let flashClass = '';
+  if(d.q && isFinite(d.q.price) && isFinite(prevPrice)){
+    if(d.q.price > prevPrice) flashClass = 'flash-up';
+    else if(d.q.price < prevPrice) flashClass = 'flash-down';
+  }
+  if(d.q && isFinite(d.q.price)) _tickerLastPrice[d.s] = d.q.price;
+
+  items.forEach(el=>{
+    // aggiorna pallino apertura mercato (può cambiare durante la giornata)
+    const dot = el.querySelector('.ticker-dot');
+    if(dot){
+      dot.className = 'ticker-dot ' + (open?'open':'closed');
+      dot.title = open ? 'mercato aperto' : 'mercato chiuso';
+    }
+    const priceEl  = el.querySelector('.ticker-price');
+    const changeEl = el.querySelector('.ticker-change');
     if(!d.q || !isFinite(d.q.price) || !isFinite(d.q.prev) || d.q.prev===0){
-      return `<a class="ticker-item" href="${href}" target="_blank" rel="noopener noreferrer" title="${title}"><span class="ticker-sym">${d.label}</span><span class="ticker-price">n/d</span></a>`;
+      if(priceEl) priceEl.textContent = 'n/d';
+      if(changeEl){ changeEl.textContent = ''; changeEl.className = 'ticker-change flat'; }
+      return;
     }
     const diff = d.q.price - d.q.prev;
     const pct  = (diff/d.q.prev)*100;
     const dir  = diff>0?'up':diff<0?'down':'flat';
     const arr  = diff>0?'▲':diff<0?'▼':'─';
     const sign = pct>=0?'+':'';
-    return `<a class="ticker-item" href="${href}" target="_blank" rel="noopener noreferrer" title="${title}"><span class="ticker-sym">${d.label}</span><span class="ticker-price">${fmtPrice(d.q.price,d.s)}</span><span class="ticker-change ${dir}">${arr} ${sign}${pct.toFixed(2)}%</span></a>`;
-  }).join('');
-  // doppia copia per loop senza buco
-  track.innerHTML = items + items;
+    if(priceEl)  priceEl.textContent  = fmtPrice(d.q.price, d.s);
+    if(changeEl){ changeEl.textContent = `${arr} ${sign}${pct.toFixed(2)}%`; changeEl.className = `ticker-change ${dir}`; }
+    if(flashClass){
+      el.classList.remove('flash-up','flash-down');
+      void el.offsetWidth; // force reflow per ri-triggerare l'animazione
+      el.classList.add(flashClass);
+    }
+  });
 }
-loadTicker();
-setInterval(loadTicker, 5*60*1000);
+
+let _tickerInFlight = false;
+async function loadTicker(){
+  const track = document.getElementById('ticker-track');
+  if(!track) return;
+  if(_tickerInFlight) return;        // evita richieste sovrapposte
+  _tickerInFlight = true;
+  try{
+    if(!track.dataset.built) _renderTickerSkeleton();
+    // Fetch in parallelo solo dei simboli il cui mercato è aperto durante i poll veloci.
+    // In modalità lenta (mercati chiusi) aggiorna comunque tutto per non lasciare prezzi stantii.
+    const allOpenAny = anyMarketOpen();
+    const targets = allOpenAny ? TICKER_SYMS.filter(t => isMarketOpen(t.cat) || !_tickerLastPrice[t.s]) : TICKER_SYMS;
+    const data = await Promise.all(targets.map(async t=>{
+      try{ const q = await fetchQuote(t.s); return {...t, q}; }
+      catch(e){ return {...t, q:null}; }
+    }));
+    data.forEach(_updateTickerItem);
+  } finally {
+    _tickerInFlight = false;
+  }
+}
+
+function _scheduleNextTicker(){
+  const delay = anyMarketOpen() ? 20*1000 : 5*60*1000; // 20s real-time, 5min se tutto chiuso
+  setTimeout(async ()=>{ try{ await loadTicker(); }catch(e){} _scheduleNextTicker(); }, delay);
+}
+loadTicker().then(_scheduleNextTicker);
 
 
 // ============ CARD COLLASSABILI (memoria su localStorage) ============
