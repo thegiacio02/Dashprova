@@ -3353,6 +3353,53 @@ let pomoState = {
   running:false, intervalId:null, currentTask:''
 };
 
+// Persistenza pomodoro: sopravvive a reload pagina
+const POMO_LS_KEY = 'dash_pomo_state';
+function _savePomoLS(){
+  try{
+    const data = {
+      mode: pomoState.mode,
+      durationMin: pomoState.durationMin,
+      currentTask: pomoState.currentTask,
+      running: pomoState.running,
+      remaining: pomoState.remaining,
+      // Quando running: timestamp assoluto di scadenza, così possiamo ricalcolare il remaining anche dopo lunghe assenze
+      endAt: pomoState.running ? Date.now() + pomoState.remaining*1000 : null
+    };
+    localStorage.setItem(POMO_LS_KEY, JSON.stringify(data));
+  }catch(e){}
+}
+function _clearPomoLS(){ try{ localStorage.removeItem(POMO_LS_KEY); }catch(e){} }
+function _restorePomo(){
+  let saved;
+  try{ saved = JSON.parse(localStorage.getItem(POMO_LS_KEY)||'null'); }catch(e){ saved=null; }
+  if(!saved) return;
+  pomoState.mode        = saved.mode || 'focus';
+  pomoState.durationMin = saved.durationMin || 25;
+  pomoState.currentTask = saved.currentTask || '';
+  // riattiva il pulsante della modalità giusta
+  document.querySelectorAll('.pmode').forEach(b=>b.classList.toggle('active',
+    parseInt(b.dataset.min)===pomoState.durationMin && b.dataset.mode===pomoState.mode));
+  const taskInput = document.getElementById('pomo-task');
+  if(taskInput) taskInput.value = pomoState.currentTask;
+  if(saved.running && saved.endAt){
+    const remaining = Math.ceil((saved.endAt - Date.now())/1000);
+    if(remaining > 0){
+      pomoState.remaining = remaining;
+      pomoState.running = false; // pomoStart lo riporta a true
+      pomoStart(true);
+      return;
+    }
+    // scaduto mentre eri via -> completa
+    pomoState.remaining = 0;
+    pomoComplete();
+    return;
+  }
+  pomoState.remaining = (saved.remaining !== undefined ? saved.remaining : pomoState.durationMin*60);
+  pomoState.running = false;
+  pomoRender();
+}
+
 function pomoRender(){
   const m=Math.floor(pomoState.remaining/60), s=pomoState.remaining%60;
   const disp = document.getElementById('timer-display');
@@ -3372,21 +3419,28 @@ function pomoSelectMode(min, mode){
   pomoState.mode=mode; pomoState.durationMin=min; pomoState.remaining=min*60;
   document.querySelectorAll('.pmode').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.min)===min && b.dataset.mode===mode));
   pomoRender();
+  _savePomoLS();
 }
 
-function pomoStart(){
+function pomoStart(resume=false){
   if(pomoState.running) return;
-  pomoState.currentTask = document.getElementById('pomo-task').value.trim();
+  if(!resume){
+    const taskInput = document.getElementById('pomo-task');
+    pomoState.currentTask = taskInput ? taskInput.value.trim() : pomoState.currentTask;
+  }
   pomoState.running=true;
   pomoState.startedAt = Date.now();
   pomoState.intervalId = setInterval(()=>{
     pomoState.remaining--;
     if(pomoState.remaining<=0){
       pomoComplete();
+      return;
     }
     pomoRender();
+    _savePomoLS();
   },1000);
   pomoRender();
+  _savePomoLS();
 }
 
 function pomoPause(){
@@ -3394,6 +3448,7 @@ function pomoPause(){
   clearInterval(pomoState.intervalId);
   pomoState.running=false;
   pomoRender();
+  _savePomoLS();
 }
 
 function pomoReset(){
@@ -3401,11 +3456,13 @@ function pomoReset(){
   pomoState.running=false;
   pomoState.remaining=pomoState.durationMin*60;
   pomoRender();
+  _savePomoLS();
 }
 
 function pomoComplete(){
   clearInterval(pomoState.intervalId);
   pomoState.running=false;
+  _clearPomoLS();
   if(pomoState.mode==='focus'){
     state.pomodoros.push({
       id:uid(), date:todayISO(), min:pomoState.durationMin,
@@ -4606,6 +4663,8 @@ function initDateFields(){
 function dashInit() {
   initDateFields();
   renderAll();
+  // Ripristina il timer Pomodoro se era in corso prima del reload
+  try{ _restorePomo(); }catch(e){ console.error('restorePomo:', e); }
   pullFromFirebase().then(loaded => { if(loaded) renderAll(); });
   setInterval(async ()=>{ const loaded = await pullFromFirebase(); if(loaded) renderAll(); }, 60000);
   // AI briefing
