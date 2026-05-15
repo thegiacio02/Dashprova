@@ -452,6 +452,10 @@ ul.clean li:last-child{border-bottom:none}
 .bs-star.on{opacity:1}
 /* Stats */
 .bs-stats-bar{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:.8rem}
+.bs-kpi{display:flex;flex-direction:column;gap:3px;min-width:72px}
+.bs-kpi-val{font-size:1.5rem;font-weight:800;color:#fff;font-family:var(--mono);line-height:1}
+.bs-kpi-label{font-size:.64rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px}
+.bss-range.active{background:rgba(0,229,255,.15);color:var(--accent);border-color:var(--accent)}
 .bs-stat{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px}
 .bs-stat-val{font-size:1.4rem;font-weight:800;color:var(--accent);line-height:1}
 .bs-stat-lbl{font-size:.65rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.04em;text-align:center}
@@ -1564,6 +1568,26 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <!-- Books list -->
   <div id="bookshelf-list"></div>
 
+  <!-- Stats grafici lettura -->
+  <div class="card collapsible" data-card-id="bsstats" id="bs-stats-card" style="margin-top:16px">
+    <h2 onclick="toggleCard(this)" style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="ico">📈</span> Statistiche lettura</span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span id="bs-stats-range-btns" style="display:inline-flex;gap:2px">
+          <button class="btn ghost sm bss-range active" data-r="30"  onclick="event.stopPropagation();setBsStatsRange(30,this)"  style="padding:2px 7px;font-size:.7rem">30G</button>
+          <button class="btn ghost sm bss-range"        data-r="90"  onclick="event.stopPropagation();setBsStatsRange(90,this)"  style="padding:2px 7px;font-size:.7rem">3M</button>
+          <button class="btn ghost sm bss-range"        data-r="365" onclick="event.stopPropagation();setBsStatsRange(365,this)" style="padding:2px 7px;font-size:.7rem">1A</button>
+        </span>
+        <span class="chevron">▾</span>
+      </span>
+    </h2>
+    <div class="card-body">
+      <div id="bs-kpis" style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:18px"></div>
+      <div id="bs-chart-wrap" style="position:relative;width:100%;height:220px;margin-bottom:12px"></div>
+      <div id="bs-chart-legend" style="display:flex;gap:12px;flex-wrap:wrap;font-size:.72rem"></div>
+    </div>
+  </div>
+
 </section>
 
 <!-- ============ FRANCESE ============ -->
@@ -2306,7 +2330,10 @@ ddToggle.onclick = (e)=>{
   if(willOpen) positionDropdown();
 };
 document.addEventListener('click', e=>{ if(!dd.contains(e.target)) dd.classList.remove('open'); });
-window.addEventListener('resize', ()=>{ if(dd.classList.contains('open')) positionDropdown(); });
+window.addEventListener('resize', ()=>{
+  if(dd.classList.contains('open')) positionDropdown();
+  try{ renderBsStats(); }catch(e){}
+});
 window.addEventListener('scroll', ()=>{ if(dd.classList.contains('open')) positionDropdown(); }, true);
 
 // ============ CORNICE ============
@@ -3019,6 +3046,171 @@ function renderAreas(){
   }).join('');
 }
 
+// ============ BOOKSHELF STATISTICS ============
+let _bsStatsRange = 30;
+const BS_CHART_COLORS = ['#00e5ff','#22c55e','#f59e0b','#a855f7','#ef4444','#3b82f6','#f97316','#ec4899','#14b8a6','#facc15'];
+
+function setBsStatsRange(days, btn){
+  _bsStatsRange = days;
+  document.querySelectorAll('.bss-range').forEach(b => b.classList.toggle('active', b===btn));
+  renderBsStats();
+}
+
+function renderBsStats(){
+  ensureState();
+  const books = (state.bookshelf||[]);
+  books.forEach(_bsEnsureShape);
+
+  const now = new Date();
+  const fromDate = new Date(now); fromDate.setDate(fromDate.getDate() - _bsStatsRange);
+  const fromISO  = fromDate.toISOString().slice(0,10);
+
+  // Aggrega per giorno e per libro nel range
+  const dayMap = {};     // {iso: {bookId: pages}}
+  const bookTotals = {}; // {bookId: totalPages}
+  books.forEach(b => {
+    (b.sessions||[]).forEach(s => {
+      if(s.date < fromISO) return;
+      const pages = Math.max(0, (s.pagesTo||0) - (s.pagesFrom||0));
+      if(!pages) return;
+      if(!dayMap[s.date]) dayMap[s.date] = {};
+      dayMap[s.date][b.id] = (dayMap[s.date][b.id]||0) + pages;
+      bookTotals[b.id]     = (bookTotals[b.id]||0) + pages;
+    });
+  });
+
+  const activeBookIds = Object.keys(bookTotals).sort((a,b)=>bookTotals[b]-bookTotals[a]);
+  const colorMap = {};
+  activeBookIds.forEach((id,i) => colorMap[id] = BS_CHART_COLORS[i % BS_CHART_COLORS.length]);
+
+  const totalPages  = Object.values(bookTotals).reduce((a,b)=>a+b,0);
+  const activeDays  = Object.keys(dayMap).length;
+  const avgPages    = activeDays > 0 ? Math.round(totalPages/activeDays) : 0;
+
+  // Streak su tutte le sessioni (non solo range)
+  const allDatesWithPages = new Set();
+  books.forEach(b => {
+    (b.sessions||[]).forEach(s => {
+      if(Math.max(0,(s.pagesTo||0)-(s.pagesFrom||0)) > 0) allDatesWithPages.add(s.date);
+    });
+  });
+  let streak = 0;
+  const todayStr = todayISO();
+  const startOffset = allDatesWithPages.has(todayStr) ? 0 : 1;
+  for(let i=startOffset; i<365; i++){
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    if(allDatesWithPages.has(d.toISOString().slice(0,10))) streak++;
+    else break;
+  }
+
+  // Best day
+  let bestDay = 0;
+  Object.values(dayMap).forEach(dayBooks => {
+    const tot = Object.values(dayBooks).reduce((a,b)=>a+b,0);
+    if(tot>bestDay) bestDay=tot;
+  });
+
+  // KPIs
+  const kpisEl = document.getElementById('bs-kpis');
+  if(kpisEl) kpisEl.innerHTML = [
+    {v: totalPages,  l:'pagine nel periodo'},
+    {v: activeDays,  l:'giorni di lettura'},
+    {v: avgPages,    l:'pag/giorno (media)'},
+    {v: streak + (streak>0?'🔥':''), l:'streak giorni'},
+    {v: bestDay,     l:'record giornaliero'},
+  ].map(k=>`<div class="bs-kpi"><span class="bs-kpi-val">${k.v||0}</span><span class="bs-kpi-label">${k.l}</span></div>`).join('');
+
+  // Genera tutti i giorni nel range
+  const days = [];
+  for(let i=_bsStatsRange-1; i>=0; i--){
+    const d = new Date(now); d.setDate(d.getDate()-i);
+    days.push(d.toISOString().slice(0,10));
+  }
+
+  _drawBsChart(days, dayMap, activeBookIds, colorMap, books);
+
+  // Legenda
+  const legendEl = document.getElementById('bs-chart-legend');
+  if(legendEl){
+    if(!activeBookIds.length){
+      legendEl.innerHTML = '<span style="color:var(--muted)">Nessuna sessione di lettura registrata nel periodo. Aggiorna le pagine di un libro in corso per iniziare.</span>';
+    } else {
+      legendEl.innerHTML = activeBookIds.map(id => {
+        const b = books.find(x=>x.id===id);
+        return `<span style="display:inline-flex;align-items:center;gap:5px;color:var(--muted2)"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${colorMap[id]}"></span>${escapeHtml((b?.title)||id)} <span style="color:var(--muted)">(${bookTotals[id]} pag.)</span></span>`;
+      }).join('');
+    }
+  }
+}
+
+function _drawBsChart(days, dayMap, activeBookIds, colorMap, books){
+  const wrap = document.getElementById('bs-chart-wrap');
+  if(!wrap) return;
+  const W = wrap.clientWidth || 700, H = wrap.clientHeight || 220;
+  const padL=38, padR=10, padT=8, padB=30;
+  const innerW = W-padL-padR, innerH = H-padT-padB;
+
+  // scala Y
+  let maxDay = 1;
+  days.forEach(d => {
+    const tot = Object.values(dayMap[d]||{}).reduce((a,b)=>a+b,0);
+    if(tot>maxDay) maxDay=tot;
+  });
+  // arrotonda a multiplo "bello"
+  const mag = Math.pow(10, Math.floor(Math.log10(maxDay)));
+  maxDay = Math.ceil(maxDay/mag)*mag;
+
+  const gap  = innerW / (days.length || 1);
+  const barW = Math.max(2, Math.min(32, gap * 0.72));
+
+  // Barre stacked
+  let barsHtml = '';
+  days.forEach((day, i) => {
+    const dayData = dayMap[day]||{};
+    let yOffset = 0;
+    activeBookIds.forEach(id => {
+      const pages = dayData[id]||0;
+      if(!pages) return;
+      const barH = Math.max(2, (pages/maxDay)*innerH);
+      const x = padL + i*gap + (gap-barW)/2;
+      const y = padT + innerH - yOffset - barH;
+      const bTitle = books.find(b=>b.id===id)?.title||'';
+      barsHtml += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="${colorMap[id]}" rx="2" opacity=".88">
+        <title>${escapeHtml(bTitle)}: ${pages} pag. · ${day}</title></rect>`;
+      yOffset += barH;
+    });
+  });
+
+  // Griglie orizzontali + etichette Y
+  let yHtml = '';
+  const yTicks = 4;
+  for(let i=0; i<=yTicks; i++){
+    const v = Math.round(maxDay*i/yTicks);
+    const y = padT + innerH*(1-i/yTicks);
+    yHtml += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>
+      <text x="${padL-5}" y="${(y+3).toFixed(1)}" fill="#7d8aa3" font-size="9" font-family="ui-monospace,monospace" text-anchor="end">${v}</text>`;
+  }
+
+  // Etichette X (ogni N giorni)
+  let xHtml = '';
+  const step = Math.max(1, Math.ceil(days.length/7));
+  days.forEach((day, i) => {
+    if(i % step !== 0 && i !== days.length-1) return;
+    const d = new Date(day);
+    const lbl = d.toLocaleDateString('it-IT',{day:'2-digit',month:'short'});
+    const x = padL + i*gap + gap/2;
+    xHtml += `<text x="${x.toFixed(1)}" y="${H-9}" fill="#7d8aa3" font-size="9" font-family="ui-monospace,monospace" text-anchor="middle">${lbl}</text>`;
+  });
+
+  // Linea asse X
+  const baseY = (padT+innerH).toFixed(1);
+  wrap.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet" style="width:100%;height:100%;display:block;overflow:visible">
+    ${yHtml}
+    <line x1="${padL}" y1="${baseY}" x2="${W-padR}" y2="${baseY}" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+    ${barsHtml}
+    ${xHtml}
+  </svg>`;
+}
 
 function renderFrancese(){
   const monthAgo = new Date(); monthAgo.setDate(monthAgo.getDate()-30);
@@ -4267,6 +4459,7 @@ function renderAll(){
   renderTrend();
   renderReviewHistory();
   renderBookshelf();
+  try{ renderBsStats(); }catch(e){ console.error('renderBsStats:', e); }
   renderFrancese();
   renderSleepChart();
   renderSignals();
