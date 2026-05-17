@@ -5922,6 +5922,7 @@ function gatherNewsHeadlines(){
   return titles.slice(0,40);
 }
 
+let _briefingInFlight = false;
 async function fetchAIBriefing(force=false){
   ensureState();
   const content = document.getElementById('briefing-content');
@@ -5937,6 +5938,9 @@ async function fetchAIBriefing(force=false){
   if(!force && state.aiBriefingBackoffUntil && Date.now() < state.aiBriefingBackoffUntil){
     renderAIBriefing(); return;
   }
+  // Prevent concurrent calls from leaving the button permanently disabled
+  if(_briefingInFlight){ return; }
+  _briefingInFlight = true;
 
   // Make sure news are loaded first
   if(!Object.keys(window._newsCache||{}).length){
@@ -5944,6 +5948,7 @@ async function fetchAIBriefing(force=false){
   }
   const headlines = gatherNewsHeadlines();
   if(!headlines.length){
+    _briefingInFlight = false;
     if(content) content.innerHTML = '<div style="color:var(--muted)">Nessun titolo disponibile per generare il briefing. Riprova tra qualche secondo.</div>';
     return;
   }
@@ -5951,6 +5956,9 @@ async function fetchAIBriefing(force=false){
   if(content) content.innerHTML = '<div style="color:var(--muted)">⏳ Genero il briefing… (qualche secondo)</div>';
   const btn = document.getElementById('briefing-refresh-btn');
   if(btn) btn.disabled = true;
+
+  const ctrl = new AbortController();
+  const timeoutId = setTimeout(() => ctrl.abort(), 30000);
 
   try {
     const today = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
@@ -5974,6 +5982,7 @@ ${headlines.join('\n')}`;
     const resp = await fetch(url, {
       method:'POST',
       headers:{'Content-Type':'application/json'},
+      signal: ctrl.signal,
       body: JSON.stringify({
         contents:[{parts:[{text: prompt}]}],
         generationConfig:{
@@ -5995,13 +6004,19 @@ ${headlines.join('\n')}`;
     save();
     renderAIBriefing();
   } catch(e){
-    // Se è 429 (quota), backoff di 2h prima di ritentare automaticamente
-    if(/429|quota|rate/i.test(e.message)){
-      state.aiBriefingBackoffUntil = Date.now() + 2*60*60*1000;
-      save();
+    if(e.name === 'AbortError'){
+      if(content) content.innerHTML = '<div style="color:var(--red);font-size:.85rem">Timeout: il server Gemini non ha risposto entro 30s. Riprova.</div>';
+    } else {
+      // Se è 429 (quota), backoff di 2h prima di ritentare automaticamente
+      if(/429|quota|rate/i.test(e.message)){
+        state.aiBriefingBackoffUntil = Date.now() + 2*60*60*1000;
+        save();
+      }
+      if(content) content.innerHTML = `<div style="color:var(--red);font-size:.85rem">Errore: ${escapeHtml(e.message)}<br><br><button class="btn ghost sm" onclick="openGeminiSetup()">Controlla API key</button></div>`;
     }
-    if(content) content.innerHTML = `<div style="color:var(--red);font-size:.85rem">Errore: ${escapeHtml(e.message)}<br><br><button class="btn ghost sm" onclick="openGeminiSetup()">Controlla API key</button></div>`;
   } finally {
+    clearTimeout(timeoutId);
+    _briefingInFlight = false;
     if(btn) btn.disabled = false;
   }
 }
