@@ -4,3 +4,5 @@ package.json
 .DS_Store
 *.log
 legacy_dashboard_data.json
+.env.local
+.email_briefings_input.json
