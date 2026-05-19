@@ -314,9 +314,16 @@ input,select,textarea{max-width:100%}
 .news-error{font-size:.78rem;color:var(--muted2);padding:12px 0;text-align:center}
 .mail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:16px}
 @media(max-width:900px){.mail-grid{grid-template-columns:1fr}}
-.mail-box-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.mail-box-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;cursor:pointer;user-select:none}
 .mail-box-head h2{margin:0;display:flex;align-items:center;gap:8px}
 .mail-meta{font-size:.68rem;color:var(--muted2);font-family:var(--mono);text-align:right;line-height:1.35}
+.mail-head-right{display:flex;align-items:center;gap:8px}
+.mail-logo{width:22px;height:22px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:900;font-family:var(--mono);line-height:1;flex:0 0 auto}
+.mail-logo.gmail{background:linear-gradient(135deg,#ea4335 0 28%,#fbbc04 28% 50%,#34a853 50% 72%,#4285f4 72% 100%);color:#fff}
+.mail-logo.outlook{background:linear-gradient(135deg,#0078d4,#28a8ea);color:#fff}
+.mail-card .chevron{display:inline-block;color:var(--muted2);font-size:.78rem;transition:transform .2s ease}
+.mail-card.collapsed .mail-body{display:none}
+.mail-card.collapsed .chevron{transform:rotate(-90deg)}
 .mail-list{display:flex;flex-direction:column;gap:9px}
 .mail-item{display:block;text-decoration:none;color:inherit;background:rgba(255,255,255,.025);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:10px 11px;transition:background .15s,border-color .15s}
 .mail-item:hover{background:rgba(0,229,255,.05);border-color:rgba(0,229,255,.3)}
@@ -1193,23 +1200,33 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
   <!-- MAIL PRIORITARIE -->
   <div class="mail-grid">
-    <div class="card" id="gmail-priority-card">
-      <div class="mail-box-head">
-        <h2><span class="ico">📨</span> Gmail · da leggere</h2>
-        <div class="mail-meta" id="gmail-priority-meta">In attesa</div>
+    <div class="card mail-card" id="gmail-priority-card">
+      <div class="mail-box-head" onclick="toggleMailCard('gmail')">
+        <h2><span class="mail-logo gmail" aria-hidden="true">M</span> Gmail · da leggere</h2>
+        <div class="mail-head-right">
+          <div class="mail-meta" id="gmail-priority-meta">In attesa</div>
+          <span class="chevron">▾</span>
+        </div>
       </div>
-      <div class="mail-list" id="gmail-priority-list">
-        <div class="mail-empty">Nessun riepilogo Gmail ancora salvato.</div>
+      <div class="mail-body">
+        <div class="mail-list" id="gmail-priority-list">
+          <div class="mail-empty">Nessun riepilogo Gmail ancora salvato.</div>
+        </div>
       </div>
     </div>
 
-    <div class="card" id="outlook-priority-card">
-      <div class="mail-box-head">
-        <h2><span class="ico">✉️</span> Outlook · da leggere</h2>
-        <div class="mail-meta" id="outlook-priority-meta">In attesa</div>
+    <div class="card mail-card" id="outlook-priority-card">
+      <div class="mail-box-head" onclick="toggleMailCard('outlook')">
+        <h2><span class="mail-logo outlook" aria-hidden="true">O</span> Outlook · da leggere</h2>
+        <div class="mail-head-right">
+          <div class="mail-meta" id="outlook-priority-meta">In attesa</div>
+          <span class="chevron">▾</span>
+        </div>
       </div>
-      <div class="mail-list" id="outlook-priority-list">
-        <div class="mail-empty">Nessun riepilogo Outlook ancora salvato.</div>
+      <div class="mail-body">
+        <div class="mail-list" id="outlook-priority-list">
+          <div class="mail-empty">Nessun riepilogo Outlook ancora salvato.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -4844,6 +4861,28 @@ function renderMailBriefings(){
   renderMailBriefing('outlook', state.emailBriefings.outlook || {});
 }
 
+function toggleMailCard(kind){
+  const card = document.getElementById(`${kind}-priority-card`);
+  if(!card) return;
+  card.classList.toggle('collapsed');
+  try{
+    const key = `mail_collapsed_${kind}`;
+    if(card.classList.contains('collapsed')) localStorage.setItem(key, '1');
+    else localStorage.removeItem(key);
+  }catch(e){}
+}
+
+function restoreMailCards(){
+  ['gmail','outlook'].forEach(kind=>{
+    try{
+      const card = document.getElementById(`${kind}-priority-card`);
+      if(card && localStorage.getItem(`mail_collapsed_${kind}`)){
+        card.classList.add('collapsed');
+      }
+    }catch(e){}
+  });
+}
+
 function renderMailBriefing(kind, data){
   const list = document.getElementById(`${kind}-priority-list`);
   const meta = document.getElementById(`${kind}-priority-meta`);
@@ -5032,6 +5071,7 @@ function initDateFields(){
 function dashInit() {
   initDateFields();
   renderAll();
+  restoreMailCards();
   // Ripristina il timer Pomodoro se era in corso prima del reload
   try{ _restorePomo(); }catch(e){ console.error('restorePomo:', e); }
   // AI briefing
