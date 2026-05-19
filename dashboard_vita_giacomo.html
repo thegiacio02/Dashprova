@@ -1801,7 +1801,10 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <div class="card" style="margin-top:16px">
     <h2 style="justify-content:space-between">
       <span style="display:flex;align-items:center;gap:8px"><span class="ico">💳</span> Spese mensili</span>
-      <button class="btn ghost sm" style="font-size:.68rem;color:var(--down)" onclick="_clearSpese()">Svuota tutto</button>
+      <span style="display:flex;gap:6px">
+        <button class="btn sm" id="spese-ai-btn" onclick="analyzeSpending()" style="font-size:.7rem">🤖 Analisi AI</button>
+        <button class="btn ghost sm" style="font-size:.68rem;color:var(--down)" onclick="_clearSpese()">Svuota</button>
+      </span>
     </h2>
     <!-- Drop zone -->
     <div id="spese-drop" class="spese-drop"
@@ -1819,6 +1822,15 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <div class="fin-kpi-grid" id="spese-kpi" style="margin-top:12px"></div>
     <!-- Category chart -->
     <div style="position:relative;height:240px;margin-top:14px"><canvas id="spese-chart"></canvas></div>
+    <!-- AI analysis panel (hidden by default) -->
+    <div id="spese-ai-panel" style="display:none;margin-top:14px;padding:14px;background:var(--surface-2);border:1px solid var(--hair);border-radius:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <strong style="font-size:.82rem;color:var(--acc)">🤖 Analisi delle tue spese</strong>
+        <button class="btn ghost sm" style="font-size:.66rem" onclick="document.getElementById('spese-ai-panel').style.display='none'">Chiudi</button>
+      </div>
+      <div id="spese-ai-content" style="font-size:.85rem;line-height:1.55;color:var(--text-2)"></div>
+      <div id="spese-ai-meta" style="font-size:.65rem;color:var(--text-4);margin-top:8px;font-family:var(--mono)"></div>
+    </div>
     <!-- Transaction list -->
     <div id="spese-list" style="margin-top:10px;max-height:380px;overflow-y:auto"></div>
   </div>
@@ -6374,6 +6386,159 @@ function _drawSpeseCatChart(catEntries){
       }
     }
   });
+}
+
+let _spendingAnalysisInFlight = false;
+
+function _buildSpendingSummary(){
+  const txAll = (state.finance && state.finance.transactions) ? state.finance.transactions : [];
+  if(!txAll.length) return null;
+
+  // Aggregate by month
+  const byMonth = {};
+  txAll.forEach(t=>{
+    const m = t.month;
+    if(!byMonth[m]) byMonth[m] = {entrate:0, uscite:0, cat:{}, merchants:{}, count:0};
+    if(t.amount > 0) byMonth[m].entrate += t.amount;
+    else {
+      const v = Math.abs(t.amount);
+      byMonth[m].uscite += v;
+      byMonth[m].cat[t.cat] = (byMonth[m].cat[t.cat]||0) + v;
+      // Extract merchant: first 2-3 words of cleaned desc
+      const merchant = _speseCleanDesc(t.desc).split(/\s+/).slice(0,3).join(' ').replace(/[0-9]{4,}/g,'').trim();
+      if(merchant) byMonth[m].merchants[merchant] = (byMonth[m].merchants[merchant]||0) + v;
+    }
+    byMonth[m].count++;
+  });
+
+  // Detect recurring subscriptions (same merchant appearing in ≥2 months with similar amount)
+  const merchantMonths = {};
+  txAll.filter(t=>t.amount<0).forEach(t=>{
+    const m = _speseCleanDesc(t.desc).split(/\s+/).slice(0,2).join(' ').replace(/[0-9]+/g,'').trim().toLowerCase();
+    if(!m) return;
+    if(!merchantMonths[m]) merchantMonths[m] = [];
+    merchantMonths[m].push({month:t.month, amt:Math.abs(t.amount), desc:t.desc});
+  });
+  const recurring = [];
+  Object.entries(merchantMonths).forEach(([m, arr])=>{
+    const months = [...new Set(arr.map(a=>a.month))];
+    if(months.length >= 2){
+      const avg = arr.reduce((s,a)=>s+a.amt,0)/arr.length;
+      if(avg >= 5){ // skip micro
+        recurring.push({merchant:arr[0].desc.split(/\s+/).slice(0,3).join(' '), months:months.length, avg, total:arr.reduce((s,a)=>s+a.amt,0)});
+      }
+    }
+  });
+  recurring.sort((a,b)=>b.total-a.total);
+
+  return { byMonth, recurring: recurring.slice(0,15), totalTx: txAll.length };
+}
+
+async function analyzeSpending(){
+  if(_spendingAnalysisInFlight) return;
+  const panel = document.getElementById('spese-ai-panel');
+  const content = document.getElementById('spese-ai-content');
+  const meta = document.getElementById('spese-ai-meta');
+  const btn = document.getElementById('spese-ai-btn');
+
+  const summary = _buildSpendingSummary();
+  if(!summary){ alert('Carica prima qualche transazione.'); return; }
+
+  const key = getGeminiKey();
+  if(!key){
+    if(typeof openGeminiSetup === 'function') openGeminiSetup();
+    else alert('Configura prima la API key Gemini nelle impostazioni del briefing AI.');
+    return;
+  }
+
+  panel.style.display = 'block';
+  content.innerHTML = '<div style="color:var(--text-3)">⏳ Gemini sta analizzando le tue spese...</div>';
+  meta.textContent = '';
+  if(btn){ btn.disabled = true; btn.textContent = '⏳ Analisi...'; }
+  _spendingAnalysisInFlight = true;
+
+  const ctrl = new AbortController();
+  const timeoutId = setTimeout(()=>ctrl.abort(), 35000);
+
+  try {
+    // Build compact data block for the prompt
+    const monthLines = Object.entries(summary.byMonth).sort((a,b)=>a[0].localeCompare(b[0])).map(([m,d])=>{
+      const topCats = Object.entries(d.cat).sort((a,b)=>b[1]-a[1]).slice(0,8)
+        .map(([c,v])=>`${c}: €${v.toFixed(0)}`).join(' · ');
+      const topMer = Object.entries(d.merchants).sort((a,b)=>b[1]-a[1]).slice(0,5)
+        .map(([m,v])=>`${m} €${v.toFixed(0)}`).join(', ');
+      return `${m}: entrate €${d.entrate.toFixed(0)} | uscite €${d.uscite.toFixed(0)} | netto €${(d.entrate-d.uscite).toFixed(0)}\n  Categorie: ${topCats}\n  Top merchants: ${topMer}`;
+    }).join('\n\n');
+
+    const recurringLines = summary.recurring.length
+      ? summary.recurring.map(r=>`- ${r.merchant} (${r.months} mesi, media €${r.avg.toFixed(2)}/mese, totale €${r.total.toFixed(0)})`).join('\n')
+      : '(nessun pattern ricorrente rilevato)';
+
+    const prompt = `Sei un consulente finanziario personale schietto e pragmatico. Analizza le spese di Giacomo (studente/giovane professionista italiano a Parigi). Rispondi in italiano, tono diretto ma amichevole, ZERO fronzoli.
+
+DATI SPESE (${summary.totalTx} transazioni totali):
+
+${monthLines}
+
+SPESE RICORRENTI RILEVATE:
+${recurringLines}
+
+Produci un'analisi STRUTTURATA in 4 sezioni brevi, usando questo formato esatto:
+
+📊 DOVE SPENDE DI PIÙ
+[3-4 bullet points: categorie/merchant dominanti con cifre, identificando il pattern. Es: "Cibo fuori casa €X/mese, principalmente Y e Z"]
+
+🚨 SPRECHI EVIDENTI
+[2-3 bullet su spese palesemente eccessive, doppioni, abbonamenti dimenticati, micro-transazioni che sommate fanno male. Cita cifre specifiche]
+
+💡 DOVE PUÒ RISPARMIARE (con stima €/mese)
+[3-4 bullet azionabili con numeri concreti. Es: "Ridurre Uber Eats da €X a €Y → risparmio €Z/mese". Non essere generico]
+
+🎯 3 AZIONI QUESTA SETTIMANA
+[3 azioni concrete, immediate, max 1 riga ciascuna]
+
+REGOLE:
+- Usa SOLO testo semplice (no markdown, no **, no #)
+- Cifre sempre con € davanti
+- Massimo 350 parole TOTALI
+- Se i mesi sono pochi (1-2), basa l'analisi su quelli e dichiaralo
+- Sii specifico: cita nomi merchant veri presi dai dati`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`;
+    const resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      signal: ctrl.signal,
+      body: JSON.stringify({
+        contents:[{parts:[{text: prompt}]}],
+        generationConfig:{ temperature:0.5, maxOutputTokens:1500, thinkingConfig:{thinkingBudget:0} }
+      })
+    });
+    if(!resp.ok){
+      const errText = await resp.text();
+      throw new Error('HTTP '+resp.status+' — '+errText.slice(0,180));
+    }
+    const data = await resp.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if(!text) throw new Error('Risposta vuota.');
+
+    // Render with line breaks preserved + escape
+    const html = escapeHtml(text.trim())
+      .replace(/\n\n+/g,'</p><p style="margin:10px 0 0">')
+      .replace(/\n/g,'<br>');
+    content.innerHTML = '<p style="margin:0">'+html+'</p>';
+    meta.textContent = `gemini-2.5-flash · ${new Date().toLocaleString('it-IT')} · ${summary.totalTx} transazioni analizzate`;
+  } catch(e){
+    if(e.name === 'AbortError'){
+      content.innerHTML = '<div style="color:var(--down);font-size:.85rem">Timeout dopo 35s. Riprova.</div>';
+    } else {
+      content.innerHTML = `<div style="color:var(--down);font-size:.85rem">Errore: ${escapeHtml(e.message)}</div>`;
+    }
+  } finally {
+    clearTimeout(timeoutId);
+    _spendingAnalysisInFlight = false;
+    if(btn){ btn.disabled = false; btn.textContent = '🤖 Analisi AI'; }
+  }
 }
 
 function renderDiario(){
