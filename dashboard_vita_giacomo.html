@@ -312,6 +312,23 @@ input,select,textarea{max-width:100%}
 .news-skeleton.short{width:45%}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .news-error{font-size:.78rem;color:var(--muted2);padding:12px 0;text-align:center}
+.mail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:16px}
+@media(max-width:900px){.mail-grid{grid-template-columns:1fr}}
+.mail-box-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.mail-box-head h2{margin:0;display:flex;align-items:center;gap:8px}
+.mail-meta{font-size:.68rem;color:var(--muted2);font-family:var(--mono);text-align:right;line-height:1.35}
+.mail-list{display:flex;flex-direction:column;gap:9px}
+.mail-item{display:block;text-decoration:none;color:inherit;background:rgba(255,255,255,.025);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:8px;padding:10px 11px;transition:background .15s,border-color .15s}
+.mail-item:hover{background:rgba(0,229,255,.05);border-color:rgba(0,229,255,.3)}
+.mail-item.outlook{border-left-color:var(--info)}
+.mail-item.unread .mail-subject{color:var(--text);font-weight:750}
+.mail-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:3px}
+.mail-from{font-size:.72rem;color:var(--muted2);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mail-time{font-size:.68rem;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.mail-subject{font-size:.86rem;color:var(--text);line-height:1.35;overflow-wrap:anywhere}
+.mail-snippet{font-size:.76rem;color:var(--muted2);line-height:1.45;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mail-reason{font-size:.68rem;color:var(--accent);font-family:var(--mono);margin-top:7px;text-transform:uppercase;letter-spacing:.04em}
+.mail-empty{font-size:.8rem;color:var(--muted2);padding:14px 0;line-height:1.5}
 .weather-main{display:flex;align-items:center;gap:18px}
 .weather-icon{font-size:3rem;line-height:1;filter:drop-shadow(0 0 12px rgba(0,229,255,.3))}
 .weather-temp{font-size:2.4rem;font-weight:800;color:#fff;line-height:1;font-family:var(--mono);letter-spacing:-2px;background:linear-gradient(180deg,#fff,#a8c5e3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -1171,6 +1188,29 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
       <div id="weather-forecast" class="weather-forecast"></div>
       <div id="weather-detail" class="weather-detail"></div>
+    </div>
+  </div>
+
+  <!-- MAIL PRIORITARIE -->
+  <div class="mail-grid">
+    <div class="card" id="gmail-priority-card">
+      <div class="mail-box-head">
+        <h2><span class="ico">📨</span> Gmail · da leggere</h2>
+        <div class="mail-meta" id="gmail-priority-meta">In attesa</div>
+      </div>
+      <div class="mail-list" id="gmail-priority-list">
+        <div class="mail-empty">Nessun riepilogo Gmail ancora salvato.</div>
+      </div>
+    </div>
+
+    <div class="card" id="outlook-priority-card">
+      <div class="mail-box-head">
+        <h2><span class="ico">✉️</span> Outlook · da leggere</h2>
+        <div class="mail-meta" id="outlook-priority-meta">In attesa</div>
+      </div>
+      <div class="mail-list" id="outlook-priority-list">
+        <div class="mail-empty">Nessun riepilogo Outlook ancora salvato.</div>
+      </div>
     </div>
   </div>
 
@@ -2530,6 +2570,7 @@ function defaultState(){ return {
     aiChat:{messages:[]},
     dailyMotivation:null,
     frAILesson:null,
+    emailBriefings:{gmail:{updatedAt:null,items:[]},outlook:{updatedAt:null,items:[]}},
     finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null}}
   };}
 
@@ -4786,6 +4827,52 @@ function renderDecisionCard(d, isDue){
   </div>`;
 }
 
+// ============ MAIL PRIORITARIE ============
+function mailTimeLabel(ts){
+  if(!ts) return '';
+  try{
+    const d = new Date(ts);
+    if(isNaN(d)) return '';
+    return d.toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+  }catch(e){ return ''; }
+}
+
+function renderMailBriefings(){
+  ensureState();
+  state.emailBriefings = state.emailBriefings || {};
+  renderMailBriefing('gmail', state.emailBriefings.gmail || {});
+  renderMailBriefing('outlook', state.emailBriefings.outlook || {});
+}
+
+function renderMailBriefing(kind, data){
+  const list = document.getElementById(`${kind}-priority-list`);
+  const meta = document.getElementById(`${kind}-priority-meta`);
+  if(!list || !meta) return;
+
+  const items = Array.isArray(data.items) ? data.items.slice(0,5) : [];
+  const updated = data.updatedAt ? mailTimeLabel(data.updatedAt) : '';
+  meta.textContent = updated ? `Agg. ${updated}` : 'In attesa';
+
+  if(!items.length){
+    list.innerHTML = `<div class="mail-empty">Nessuna mail ${kind==='gmail'?'Gmail':'Outlook'} selezionata. Chiedi a Codex di aggiornare questo box.</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(m=>{
+    const href = m.url ? `href="${escapeHtml(m.url)}" target="_blank" rel="noopener"` : '';
+    const tag = href ? 'a' : 'div';
+    return `<${tag} class="mail-item ${kind} ${m.unread?'unread':''}" ${href}>
+      <div class="mail-top">
+        <div class="mail-from">${escapeHtml(m.from || 'Mittente')}</div>
+        <div class="mail-time">${escapeHtml(mailTimeLabel(m.ts))}</div>
+      </div>
+      <div class="mail-subject">${escapeHtml(m.subject || 'Senza oggetto')}</div>
+      ${m.snippet?`<div class="mail-snippet">${escapeHtml(m.snippet)}</div>`:''}
+      ${m.reason?`<div class="mail-reason">${escapeHtml(m.reason)}</div>`:''}
+    </${tag}>`;
+  }).join('');
+}
+
 // ============ MASTER RENDER ============
 function renderAll(){
   paintCornice();
@@ -4818,6 +4905,7 @@ function renderAll(){
   try { renderDiario();      } catch(e){ console.error('renderDiario error:', e); }
   try { renderTodayTodos();  } catch(e){ console.error('renderTodayTodos error:', e); }
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
+  try { renderMailBriefings(); } catch(e){ console.error('renderMailBriefings error:', e); }
   try { renderDailyMotivation(); } catch(e){ console.error('renderDailyMotivation error:', e); }
   try { renderFinance();         } catch(e){ console.error('renderFinance error:', e); }
   try { renderSpese();           } catch(e){ console.error('renderSpese error:', e); }
