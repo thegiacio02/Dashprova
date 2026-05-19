@@ -6437,6 +6437,17 @@ function _ensureEtoro(){
   if(!state.finance.etoro || !Array.isArray(state.finance.etoro.holdings)){
     state.finance.etoro = {holdings:[], quotes:{}, eurusd:null, quotesAt:null};
   }
+  // Migration: legacy holdings (from Excel import) had investedUsd but no avgPrice
+  let migrated = false;
+  state.finance.etoro.holdings.forEach(h=>{
+    if(!h.id){ h.id = uid(); migrated = true; }
+    if(!isFinite(h.avgPrice) && isFinite(h.investedUsd) && isFinite(h.units) && h.units>0){
+      h.avgPrice = h.investedUsd / h.units;
+      migrated = true;
+    }
+    if(h.positions == null) h.positions = 0;
+  });
+  if(migrated) save();
   return state.finance.etoro;
 }
 
@@ -6561,10 +6572,11 @@ async function refreshEtoroQuotes(){
 }
 
 function renderEtoro(){
-  const et = state.finance && state.finance.etoro;
   const kpiEl   = document.getElementById('etoro-kpi');
   const tableEl = document.getElementById('etoro-table');
   const metaEl  = document.getElementById('etoro-meta');
+  if(!tableEl) return; // not on this tab yet
+  const et = _ensureEtoro();
 
   if(!et || !et.holdings || !et.holdings.length){
     if(kpiEl)   kpiEl.innerHTML='';
