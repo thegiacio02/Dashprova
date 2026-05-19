@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -733,6 +734,13 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fin-range-btn{background:transparent;border:1px solid var(--hair-2);color:var(--text-3);padding:4px 10px;border-radius:5px;font-size:.7rem;cursor:pointer;font-family:var(--mono);font-weight:600;transition:all .12s}
 .fin-range-btn:hover{color:var(--text);border-color:var(--hair-3)}
 .fin-range-btn.active{background:var(--acc-bg);color:var(--acc);border-color:rgba(110,240,255,.25)}
+.spese-drop{border:1.5px dashed var(--hair-2);border-radius:8px;padding:20px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:4px}
+.spese-drop:hover,.spese-drop.over{border-color:var(--acc);background:var(--acc-bg)}
+.spese-tx{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--hair);font-size:.78rem;min-width:0}
+.spese-tx-cat{font-size:.62rem;padding:2px 6px;border-radius:3px;background:var(--surface-3);color:var(--text-3);white-space:nowrap;flex-shrink:0}
+.spese-tx-desc{flex:1;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.spese-tx-amt{font-family:var(--mono);font-size:.82rem;font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0}
+.spese-tx-date{font-size:.65rem;color:var(--text-4);min-width:40px;text-align:right;flex-shrink:0}
 .fin-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--hair);font-size:.8rem}
 .fin-row:last-child{border-bottom:none}
 .fin-row .fin-date{color:var(--text-2);font-family:var(--mono);font-size:.74rem;width:88px}
@@ -1788,6 +1796,32 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div id="fin-list" style="max-height:320px;overflow-y:auto"></div>
     </div>
   </div>
+
+  <!-- ── Spese mensili ── -->
+  <div class="card" style="margin-top:16px">
+    <h2 style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="ico">💳</span> Spese mensili</span>
+      <button class="btn ghost sm" style="font-size:.68rem;color:var(--down)" onclick="_clearSpese()">Svuota tutto</button>
+    </h2>
+    <!-- Drop zone -->
+    <div id="spese-drop" class="spese-drop"
+         onclick="document.getElementById('spese-file').click()"
+         ondragover="event.preventDefault();this.classList.add('over')"
+         ondragleave="this.classList.remove('over')"
+         ondrop="event.preventDefault();this.classList.remove('over');importSpese(event.dataTransfer.files[0])">
+      <div style="font-size:.82rem;color:var(--text-3)">Trascina qui l'Excel Fineco · Movimenti conto <span style="opacity:.5">(.xlsx)</span></div>
+      <div style="font-size:.68rem;color:var(--text-4);margin-top:4px">oppure clicca per scegliere il file</div>
+      <input type="file" id="spese-file" accept=".xlsx,.xls" style="display:none" onchange="importSpese(this.files[0]);this.value=''">
+    </div>
+    <!-- Month tabs -->
+    <div id="spese-months" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px"></div>
+    <!-- KPI strip -->
+    <div class="fin-kpi-grid" id="spese-kpi" style="margin-top:12px"></div>
+    <!-- Category chart -->
+    <div style="position:relative;height:240px;margin-top:14px"><canvas id="spese-chart"></canvas></div>
+    <!-- Transaction list -->
+    <div id="spese-list" style="margin-top:10px;max-height:380px;overflow-y:auto"></div>
+  </div>
 </section>
 
 <!-- ============ BENESSERE ============ -->
@@ -2337,7 +2371,7 @@ function defaultState(){ return {
     aiChat:{messages:[]},
     dailyMotivation:null,
     frAILesson:null,
-    finance:{netWorth:[],seeded:false}
+    finance:{netWorth:[],seeded:false,transactions:[]}
   };}
 
 function load(){
@@ -4645,6 +4679,7 @@ function renderAll(){
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
   try { renderDailyMotivation(); } catch(e){ console.error('renderDailyMotivation error:', e); }
   try { renderFinance();         } catch(e){ console.error('renderFinance error:', e); }
+  try { renderSpese();           } catch(e){ console.error('renderSpese error:', e); }
 }
 
 // ============ PROMEMORIA + INSIGHTS AI ============
@@ -6137,6 +6172,209 @@ function _drawFinanceChart(list){
     };
   });
 })();
+
+// ============ SPESE MENSILI (import Fineco) ============
+
+const _SPESE_CAT_COLORS = {
+  'Alimentari':                    'rgba(74,222,128,.75)',
+  'Hotel Ristoranti e Viaggi':     'rgba(240,184,110,.75)',
+  'Trasporti':                     'rgba(138,169,255,.75)',
+  'Internet Telefono e Tecnologia':'rgba(184,156,255,.75)',
+  'Giochi Cultura e Spettacoli':   'rgba(110,240,255,.75)',
+  'Casa':                          'rgba(74,222,128,.5)',
+  'E-Commerce':                    'rgba(240,184,110,.55)',
+  'Sport':                         'rgba(138,169,255,.5)',
+  'Prelievo Contante':             'rgba(160,160,160,.5)',
+  'Rimborsi':                      'rgba(74,222,128,.35)',
+  'Altre Entrate':                 'rgba(74,222,128,.3)',
+  'Altre spese':                   'rgba(200,200,200,.4)',
+};
+
+let _speseActiveMonth = new Date().toISOString().slice(0,7);
+let _speseCatChart = null;
+
+function importSpese(file){
+  if(!file) return;
+  if(typeof XLSX === 'undefined'){ alert('Libreria XLSX non caricata, riprova tra un secondo.'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, raw:false});
+
+      // Find header row (contains "Data_Operazione")
+      let hIdx = rows.findIndex(r => r && r.some(c => typeof c==='string' && c.trim()==='Data_Operazione'));
+      if(hIdx < 0){
+        // Fallback: look for partial match
+        hIdx = rows.findIndex(r => r && r.some(c => typeof c==='string' && c.includes('Data_Operazione')));
+      }
+      if(hIdx < 0){ alert('Formato non riconosciuto.\nAssicurati di usare "Movimenti conto" da Fineco.'); return; }
+
+      const hdr = rows[hIdx].map(h => h ? String(h).trim() : '');
+      const ci = name => hdr.findIndex(h => h.includes(name));
+      const iDate    = ci('Data_Operazione');
+      const iEntrate = ci('Entrate');
+      const iUscite  = ci('Uscite');
+      const iDesc    = ci('Descrizione_Completa');
+      const iCat     = ci('Moneymap');
+      const iStato   = ci('Stato');
+
+      const txs = [];
+      for(let i = hIdx+1; i < rows.length; i++){
+        const r = rows[i];
+        if(!r || r[iDate]==null) continue;
+        const statoRaw = iStato>=0 && r[iStato] ? String(r[iStato]).toLowerCase() : 'contabilizzato';
+        if(!statoRaw.includes('contabilizzato')) continue;
+
+        // Parse date — SheetJS with cellDates returns ISO string when raw:false
+        let date = '';
+        const dv = r[iDate];
+        if(typeof dv === 'string'){
+          if(/^\d{2}\/\d{2}\/\d{4}$/.test(dv)){
+            const [d,m,y] = dv.split('/');
+            date = `${y}-${m}-${d}`;
+          } else if(/^\d{4}-\d{2}-\d{2}/.test(dv)){
+            date = dv.slice(0,10);
+          } else { date = dv; }
+        } else if(dv instanceof Date){
+          date = dv.toISOString().slice(0,10);
+        } else { continue; }
+
+        const entrata = r[iEntrate] ? parseFloat(String(r[iEntrate]).replace(',','.')) : 0;
+        const uscita  = r[iUscite]  ? parseFloat(String(r[iUscite]).replace(',','.'))  : 0;
+        const amount  = isNaN(entrata)||entrata===0 ? (isNaN(uscita)?0:uscita) : entrata;
+        if(amount===0) continue;
+
+        const desc = iDesc>=0 && r[iDesc] ? String(r[iDesc]).trim() : '';
+        const cat  = iCat>=0  && r[iCat]  ? String(r[iCat]).trim()  : 'Altre spese';
+        const month = date.slice(0,7);
+        const _key  = `${date}|${amount}|${desc.slice(0,60)}`;
+        txs.push({id:uid(), date, desc, amount, cat, month, _key});
+      }
+
+      if(!txs.length){ alert('Nessuna transazione trovata nel file.'); return; }
+
+      if(!state.finance) state.finance = {netWorth:[],seeded:false,transactions:[]};
+      if(!state.finance.transactions) state.finance.transactions = [];
+      const existing = new Set(state.finance.transactions.map(t=>t._key));
+      const newTxs   = txs.filter(t=>!existing.has(t._key));
+      state.finance.transactions = [...state.finance.transactions, ...newTxs];
+      state.finance.transactions.sort((a,b)=>b.date.localeCompare(a.date));
+      save();
+
+      // Switch to the most recent imported month
+      const months = [...new Set(txs.map(t=>t.month))].sort().reverse();
+      if(months.length) _speseActiveMonth = months[0];
+
+      renderSpese();
+
+      const drop = document.getElementById('spese-drop');
+      const msg = newTxs.length === txs.length
+        ? `✓ Importate ${newTxs.length} transazioni`
+        : `✓ ${newTxs.length} nuove · ${txs.length-newTxs.length} duplicate ignorate`;
+      if(drop){
+        const prev = drop.innerHTML;
+        drop.innerHTML = `<div style="color:var(--up);font-size:.84rem;font-weight:600">${msg}</div>`;
+        setTimeout(()=>{ drop.innerHTML = prev; }, 3500);
+      }
+    } catch(err){
+      console.error('importSpese error:', err);
+      alert('Errore durante il parsing: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function _clearSpese(){
+  if(!confirm('Eliminare tutte le transazioni importate?')) return;
+  if(state.finance) state.finance.transactions = [];
+  save(); renderSpese();
+}
+
+function renderSpese(){
+  const txAll = (state.finance && state.finance.transactions) ? state.finance.transactions : [];
+  const kpiEl    = document.getElementById('spese-kpi');
+  const listEl   = document.getElementById('spese-list');
+  const monthsEl = document.getElementById('spese-months');
+
+  if(!txAll.length){
+    if(kpiEl)    kpiEl.innerHTML = '';
+    if(listEl)   listEl.innerHTML = '<div style="color:var(--text-3);font-size:.78rem;padding:10px 0">Nessuna transazione. Carica un Excel Fineco qui sopra.</div>';
+    if(monthsEl) monthsEl.innerHTML = '';
+    if(_speseCatChart){ _speseCatChart.destroy(); _speseCatChart=null; }
+    return;
+  }
+
+  const allMonths = [...new Set(txAll.map(t=>t.month))].sort().reverse();
+  if(!allMonths.includes(_speseActiveMonth)) _speseActiveMonth = allMonths[0];
+
+  if(monthsEl){
+    monthsEl.innerHTML = allMonths.map(m=>
+      `<button class="fin-range-btn${m===_speseActiveMonth?' active':''}" onclick="_speseActiveMonth='${m}';renderSpese()">${m}</button>`
+    ).join('');
+  }
+
+  const txs = txAll.filter(t=>t.month===_speseActiveMonth);
+  const entrate = txs.filter(t=>t.amount>0).reduce((s,t)=>s+t.amount,0);
+  const uscite  = Math.abs(txs.filter(t=>t.amount<0).reduce((s,t)=>s+t.amount,0));
+  const net     = entrate - uscite;
+  const savRate = entrate > 0 ? (net/entrate*100) : null;
+
+  if(kpiEl) kpiEl.innerHTML = `
+    <div class="fin-kpi"><div class="fin-kpi-label">Entrate</div><div class="fin-kpi-val" style="color:var(--up)">${_fmtEur(entrate)}</div><div class="fin-kpi-sub">${txs.filter(t=>t.amount>0).length} movimenti</div></div>
+    <div class="fin-kpi"><div class="fin-kpi-label">Uscite</div><div class="fin-kpi-val" style="color:var(--down)">${_fmtEur(uscite)}</div><div class="fin-kpi-sub">${txs.filter(t=>t.amount<0).length} movimenti</div></div>
+    <div class="fin-kpi"><div class="fin-kpi-label">Netto</div><div class="fin-kpi-val" style="color:${net>=0?'var(--up)':'var(--down)'}">${net>=0?'+':''}${_fmtEur(net)}</div>${savRate!==null?`<div class="fin-kpi-sub ${net>=0?'up':'down'}">Saving rate ${savRate.toFixed(0)}%</div>`:''}</div>
+  `;
+
+  // Category breakdown (uscite only)
+  const catMap = {};
+  txs.filter(t=>t.amount<0).forEach(t=>{ catMap[t.cat] = (catMap[t.cat]||0)+Math.abs(t.amount); });
+  const catEntries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]);
+  _drawSpeseCatChart(catEntries);
+
+  // Transaction list
+  if(listEl){
+    const sorted = [...txs].sort((a,b)=>b.date.localeCompare(a.date));
+    listEl.innerHTML = sorted.map(t=>`
+      <div class="spese-tx">
+        <span class="spese-tx-cat">${t.cat}</span>
+        <span class="spese-tx-desc" title="${t.desc}">${_speseCleanDesc(t.desc)}</span>
+        <span class="spese-tx-amt" style="color:${t.amount>0?'var(--up)':'var(--down)'}">${t.amount>0?'+':''}${_fmtEur(t.amount)}</span>
+        <span class="spese-tx-date">${t.date.slice(5)}</span>
+      </div>`).join('');
+  }
+}
+
+function _speseCleanDesc(desc){
+  return desc
+    .replace(/\s*Carta N\.\s*\*+\s*\d+\s*Data operazione\s*\S+/gi,'')
+    .replace(/\s{2,}/g,' ')
+    .trim();
+}
+
+function _drawSpeseCatChart(catEntries){
+  const canvas = document.getElementById('spese-chart');
+  if(!canvas) return;
+  if(_speseCatChart){ _speseCatChart.destroy(); _speseCatChart=null; }
+  if(!catEntries.length) return;
+  const labels = catEntries.map(([c])=>c);
+  const data   = catEntries.map(([,v])=>Math.round(v*100)/100);
+  const colors = labels.map(l=>_SPESE_CAT_COLORS[l]||'rgba(180,180,180,.45)');
+  _speseCatChart = new Chart(canvas,{
+    type:'bar',
+    data:{labels, datasets:[{data, backgroundColor:colors, borderRadius:5, borderSkipped:false}]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>' '+_fmtEur(c.raw)}}},
+      scales:{
+        x:{grid:{color:'rgba(255,255,255,.04)'}, ticks:{color:'var(--text-3)',font:{size:10},callback:v=>'€'+Math.round(v)}},
+        y:{grid:{display:false}, ticks:{color:'var(--text-2)',font:{size:11}}}
+      }
+    }
+  });
+}
 
 function renderDiario(){
   ensureState();
