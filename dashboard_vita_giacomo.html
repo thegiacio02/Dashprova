@@ -1835,27 +1835,49 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <div id="spese-list" style="margin-top:10px;max-height:380px;overflow-y:auto"></div>
   </div>
 
-  <!-- ── Portfolio eToro ── -->
+  <!-- ── Portfolio eToro (manuale) ── -->
   <div class="card" style="margin-top:16px">
     <h2 style="justify-content:space-between">
       <span style="display:flex;align-items:center;gap:8px"><span class="ico">📊</span> Portfolio eToro</span>
       <span style="display:flex;gap:6px;align-items:center">
-        <button class="btn sm" id="etoro-refresh-btn" onclick="refreshEtoroQuotes()" style="font-size:.7rem">↻ Prezzi live</button>
-        <button class="btn ghost sm" style="font-size:.68rem;color:var(--down)" onclick="_clearEtoro()">Svuota</button>
+        <span id="etoro-cur-toggle" style="display:inline-flex;border:1px solid var(--hair-2);border-radius:5px;overflow:hidden">
+          <button class="etoro-cur-btn active" data-cur="USD" onclick="setEtoroCurrency('USD')" style="background:transparent;border:none;color:var(--text-2);padding:3px 9px;font-size:.68rem;cursor:pointer;font-family:var(--mono);font-weight:600">USD</button>
+          <button class="etoro-cur-btn" data-cur="EUR" onclick="setEtoroCurrency('EUR')" style="background:transparent;border:none;color:var(--text-2);padding:3px 9px;font-size:.68rem;cursor:pointer;font-family:var(--mono);font-weight:600">EUR</button>
+        </span>
+        <button class="btn sm" id="etoro-refresh-btn" onclick="refreshEtoroQuotes()" style="font-size:.7rem">↻ Prezzi</button>
       </span>
     </h2>
-    <!-- Drop zone -->
-    <div id="etoro-drop" class="spese-drop"
-         onclick="document.getElementById('etoro-file').click()"
-         ondragover="event.preventDefault();this.classList.add('over')"
-         ondragleave="this.classList.remove('over')"
-         ondrop="event.preventDefault();this.classList.remove('over');importEtoro(event.dataTransfer.files[0])">
-      <div style="font-size:.82rem;color:var(--text-3)">Trascina il file eToro Account Statement <span style="opacity:.5">(.xlsx)</span></div>
-      <div style="font-size:.68rem;color:var(--text-4);margin-top:4px">eToro → Portfolio → Account Statement → Export</div>
-      <input type="file" id="etoro-file" accept=".xlsx,.xls" style="display:none" onchange="importEtoro(this.files[0]);this.value=''">
+
+    <!-- Add/Edit form -->
+    <div style="background:var(--surface-2);border:1px solid var(--hair);border-radius:8px;padding:12px;margin-bottom:14px">
+      <div style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px;font-family:var(--mono)" id="etoro-form-title">+ Nuova posizione</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;align-items:end">
+        <div class="field" style="margin:0">
+          <label style="font-size:.65rem">Ticker</label>
+          <input type="text" id="et-ticker" placeholder="QQQ" style="text-transform:uppercase;font-family:var(--mono)">
+        </div>
+        <div class="field" style="margin:0">
+          <label style="font-size:.65rem">Unità totali</label>
+          <input type="number" id="et-units" placeholder="20.86" step="0.0001">
+        </div>
+        <div class="field" style="margin:0">
+          <label style="font-size:.65rem">Prezzo medio apertura ($)</label>
+          <input type="number" id="et-avg" placeholder="480.50" step="0.01">
+        </div>
+        <div class="field" style="margin:0">
+          <label style="font-size:.65rem">N° posizioni <span style="color:var(--text-4)">(opz)</span></label>
+          <input type="number" id="et-poscount" placeholder="21" step="1">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;align-items:center">
+        <button class="btn sm" id="et-save-btn" onclick="saveEtoroHolding()">Salva posizione</button>
+        <button class="btn ghost sm" id="et-cancel-btn" onclick="cancelEtoroEdit()" style="display:none;font-size:.7rem">Annulla</button>
+        <span id="et-form-msg" style="font-size:.7rem;color:var(--text-3);margin-left:auto"></span>
+      </div>
     </div>
+
     <!-- KPI strip -->
-    <div class="fin-kpi-grid" id="etoro-kpi" style="margin-top:12px"></div>
+    <div class="fin-kpi-grid" id="etoro-kpi"></div>
     <!-- Holdings table -->
     <div id="etoro-table" style="margin-top:12px"></div>
     <!-- Meta -->
@@ -2399,7 +2421,7 @@ function defaultState(){ return {
     aiChat:{messages:[]},
     dailyMotivation:null,
     frAILesson:null,
-    finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},realizedUsd:0,unrealizedUsd:0,importedAt:null}}
+    finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null}}
   };}
 
 function load(){
@@ -6405,114 +6427,99 @@ function _drawSpeseCatChart(catEntries){
   });
 }
 
-// ============ ETORO PORTFOLIO TRACKER ============
+// ============ ETORO PORTFOLIO TRACKER (manuale) ============
 
-function importEtoro(file){
-  if(!file) return;
-  if(typeof XLSX === 'undefined'){ alert('Libreria XLSX non ancora caricata, riprova.'); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, {type:'array', cellDates:false});
+let _etoroEditId = null;
+let _etoroCurrency = 'USD';
 
-      // --- Account Activity sheet ---
-      const actSheet = wb.Sheets['Account Activity'];
-      if(!actSheet){ alert('Sheet "Account Activity" non trovato. Assicurati di usare l\'Account Statement di eToro.'); return; }
-      const actRows = XLSX.utils.sheet_to_json(actSheet, {header:1, defval:null});
-      // Header is row 0: Date, Type, Details, Amount, Units/Contracts, Realized Equity Change, Realized Equity, Balance, Position ID, Asset type, NWA
-      const hdr = actRows[0] || [];
-      const ci = name => hdr.findIndex(h => h && String(h).includes(name));
-      const iType   = ci('Type');
-      const iDetail = ci('Details');
-      const iAmt    = ci('Amount');
-      const iUnits  = ci('Units');
-      const iPosId  = ci('Position ID');
-      const iAsset  = ci('Asset type');
-
-      // Find closed position IDs
-      const closedIds = new Set();
-      for(let i=1; i<actRows.length; i++){
-        const r = actRows[i];
-        if(!r || r[iType]==null) continue;
-        if(String(r[iType]).toLowerCase().includes('closed')){
-          const pid = r[iPosId] ? String(r[iPosId]).trim() : '';
-          if(pid && pid!=='-') closedIds.add(pid);
-        }
-      }
-
-      // Collect open positions
-      const openRows = [];
-      for(let i=1; i<actRows.length; i++){
-        const r = actRows[i];
-        if(!r || r[iType]==null) continue;
-        if(!String(r[iType]).includes('Open Position')) continue;
-        const pid = r[iPosId] ? String(r[iPosId]).trim() : '';
-        if(!pid || pid==='-' || closedIds.has(pid)) continue;
-        const detail = r[iDetail] ? String(r[iDetail]).trim() : '';
-        const ticker = detail.split('/')[0].replace(/\s+/g,'').trim();
-        const amt    = r[iAmt]   ? parseFloat(r[iAmt])   : 0;
-        const units  = r[iUnits] ? parseFloat(r[iUnits]) : 0;
-        const atype  = r[iAsset] ? String(r[iAsset]).trim() : '';
-        openRows.push({pid, ticker, detail, amt, units, atype});
-      }
-
-      if(!openRows.length){ alert('Nessuna posizione aperta trovata nel file.'); return; }
-
-      // Aggregate by ticker
-      const agg = {};
-      openRows.forEach(p=>{
-        if(!agg[p.ticker]) agg[p.ticker] = {ticker:p.ticker, units:0, investedUsd:0, positions:0, type:p.atype};
-        agg[p.ticker].units       += p.units;
-        agg[p.ticker].investedUsd += p.amt;
-        agg[p.ticker].positions   += 1;
-      });
-      const holdings = Object.values(agg).sort((a,b)=>b.investedUsd-a.investedUsd);
-
-      // --- Account Summary sheet ---
-      let realizedUsd = 0, unrealizedUsd = 0;
-      const sumSheet = wb.Sheets['Account Summary'];
-      if(sumSheet){
-        const sumRows = XLSX.utils.sheet_to_json(sumSheet, {header:1, defval:null});
-        sumRows.forEach(r=>{
-          if(!r || !r[0]) return;
-          const label = String(r[0]);
-          if(label.includes('Ending Realized Equity'))   realizedUsd   = parseFloat(r[1]) || 0;
-          if(label.includes('Ending Unrealized Equity')) unrealizedUsd = parseFloat(r[1]) || 0;
-        });
-      }
-
-      // Save state
-      if(!state.finance) state.finance = {netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},realizedUsd:0,unrealizedUsd:0,importedAt:null}};
-      if(!state.finance.etoro) state.finance.etoro = {holdings:[],quotes:{},realizedUsd:0,unrealizedUsd:0,importedAt:null};
-      state.finance.etoro.holdings     = holdings;
-      state.finance.etoro.realizedUsd  = realizedUsd;
-      state.finance.etoro.unrealizedUsd= unrealizedUsd;
-      state.finance.etoro.importedAt   = new Date().toISOString();
-      state.finance.etoro.quotes       = {}; // clear stale quotes
-      save();
-
-      const drop = document.getElementById('etoro-drop');
-      if(drop){
-        const prev = drop.innerHTML;
-        drop.innerHTML = `<div style="color:var(--up);font-size:.84rem;font-weight:600">✓ ${holdings.length} asset importati · ${openRows.length} posizioni aperte</div>`;
-        setTimeout(()=>{ drop.innerHTML = prev; }, 3000);
-      }
-      renderEtoro();
-      refreshEtoroQuotes();
-    } catch(err){
-      console.error('importEtoro error:', err);
-      alert('Errore parsing: ' + err.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
+function _ensureEtoro(){
+  if(!state.finance) state.finance = {netWorth:[],seeded:false,transactions:[],etoro:null};
+  if(!state.finance.etoro || !Array.isArray(state.finance.etoro.holdings)){
+    state.finance.etoro = {holdings:[], quotes:{}, eurusd:null, quotesAt:null};
+  }
+  return state.finance.etoro;
 }
 
-function _clearEtoro(){
-  if(!confirm('Eliminare i dati eToro importati?')) return;
-  if(state.finance) state.finance.etoro = {holdings:[],quotes:{},realizedUsd:0,unrealizedUsd:0,importedAt:null};
+function setEtoroCurrency(cur){
+  _etoroCurrency = cur;
+  document.querySelectorAll('.etoro-cur-btn').forEach(b=>{
+    const active = b.dataset.cur === cur;
+    b.classList.toggle('active', active);
+    b.style.background = active ? 'var(--acc-bg)' : 'transparent';
+    b.style.color      = active ? 'var(--acc)'    : 'var(--text-2)';
+  });
+  renderEtoro();
+}
+
+function saveEtoroHolding(){
+  const ticker = (document.getElementById('et-ticker').value||'').trim().toUpperCase();
+  const units  = parseFloat(document.getElementById('et-units').value);
+  const avg    = parseFloat(document.getElementById('et-avg').value);
+  const pc     = parseInt(document.getElementById('et-poscount').value, 10);
+  const msg    = document.getElementById('et-form-msg');
+  if(!ticker || !isFinite(units) || units<=0 || !isFinite(avg) || avg<=0){
+    if(msg){ msg.textContent='Compila ticker, unità e prezzo medio.'; msg.style.color='var(--down)'; }
+    return;
+  }
+  const et = _ensureEtoro();
+  if(_etoroEditId){
+    const h = et.holdings.find(x=>x.id===_etoroEditId);
+    if(h){
+      h.ticker = ticker;
+      h.units = units;
+      h.avgPrice = avg;
+      h.positions = isFinite(pc) ? pc : (h.positions||1);
+      h.updatedAt = new Date().toISOString();
+    }
+  } else {
+    et.holdings.push({
+      id: uid(),
+      ticker, units, avgPrice:avg,
+      positions: isFinite(pc) ? pc : 1,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    });
+  }
+  save();
+  cancelEtoroEdit();
+  renderEtoro();
+  refreshEtoroQuotes();
+  if(msg){ msg.textContent = _etoroEditId ? 'Posizione aggiornata' : 'Posizione salvata'; msg.style.color='var(--up)'; setTimeout(()=>{ if(msg) msg.textContent=''; }, 2500); }
+}
+
+function editEtoroHolding(id){
+  const et = _ensureEtoro();
+  const h = et.holdings.find(x=>x.id===id);
+  if(!h) return;
+  _etoroEditId = id;
+  document.getElementById('et-ticker').value   = h.ticker;
+  document.getElementById('et-units').value    = h.units;
+  document.getElementById('et-avg').value      = h.avgPrice;
+  document.getElementById('et-poscount').value = h.positions || '';
+  document.getElementById('etoro-form-title').textContent = '✎ Modifica ' + h.ticker;
+  document.getElementById('et-save-btn').textContent      = 'Aggiorna posizione';
+  document.getElementById('et-cancel-btn').style.display  = 'inline-flex';
+  document.getElementById('et-ticker').scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function cancelEtoroEdit(){
+  _etoroEditId = null;
+  ['et-ticker','et-units','et-avg','et-poscount'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.getElementById('etoro-form-title').textContent = '+ Nuova posizione';
+  document.getElementById('et-save-btn').textContent      = 'Salva posizione';
+  document.getElementById('et-cancel-btn').style.display  = 'none';
+}
+
+function deleteEtoroHolding(id){
+  const et = _ensureEtoro();
+  const h = et.holdings.find(x=>x.id===id);
+  if(!h) return;
+  if(!confirm(`Eliminare la posizione su ${h.ticker}?`)) return;
+  et.holdings = et.holdings.filter(x=>x.id!==id);
+  if(_etoroEditId===id) cancelEtoroEdit();
   save(); renderEtoro();
 }
+
 
 let _etoroRefreshing = false;
 async function refreshEtoroQuotes(){
@@ -6561,60 +6568,69 @@ function renderEtoro(){
 
   if(!et || !et.holdings || !et.holdings.length){
     if(kpiEl)   kpiEl.innerHTML='';
-    if(tableEl) tableEl.innerHTML='<div style="color:var(--text-3);font-size:.78rem;padding:10px 0">Nessun dato. Importa il tuo Account Statement eToro.</div>';
+    if(tableEl) tableEl.innerHTML='<div style="color:var(--text-3);font-size:.78rem;padding:10px 0;text-align:center">Nessuna posizione. Aggiungine una con il form qui sopra ↑</div>';
     if(metaEl)  metaEl.textContent='';
     return;
   }
 
   const eurusd = et.eurusd || 1.0;
   const quotes = et.quotes || {};
+  const cur    = _etoroCurrency;
+  const isEur  = cur === 'EUR';
+  const fx     = isEur ? (1/eurusd) : 1; // USD → display currency
+  const sym    = isEur ? '€' : '$';
+  // fmt with separators based on locale-ish
+  const fmt = (v, dec=0)=> sym + (v||0).toLocaleString('it-IT', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  const fmtSigned = (v, dec=0)=> (v>=0?'+':'') + sym + Math.abs(v).toLocaleString('it-IT', {minimumFractionDigits:dec, maximumFractionDigits:dec});
 
-  let totalInvested=0, totalCurrent=0, hasAllPrices=true;
+  let totalInvestedUsd=0, totalCurrentUsd=0, hasAllPrices=true;
   const rows = et.holdings.map(h=>{
-    totalInvested += h.investedUsd;
+    const investedUsd = h.units * h.avgPrice;
+    totalInvestedUsd += investedUsd;
     const q = quotes[h.ticker];
     let currentUsd = null, pnlUsd = null, pnlPct = null;
     if(q && q.price){
       currentUsd = h.units * q.price;
-      pnlUsd     = currentUsd - h.investedUsd;
-      pnlPct     = (pnlUsd / h.investedUsd) * 100;
-      totalCurrent += currentUsd;
+      pnlUsd     = currentUsd - investedUsd;
+      pnlPct     = (pnlUsd / investedUsd) * 100;
+      totalCurrentUsd += currentUsd;
     } else {
       hasAllPrices = false;
     }
-    return {h, q, currentUsd, pnlUsd, pnlPct};
+    return {h, q, investedUsd, currentUsd, pnlUsd, pnlPct};
   });
 
   // KPI strip
   if(kpiEl){
-    const totalPnl     = hasAllPrices ? totalCurrent - totalInvested : null;
-    const totalPnlPct  = hasAllPrices && totalInvested ? (totalPnl/totalInvested*100) : null;
-    const totalCurEur  = hasAllPrices ? totalCurrent/eurusd : null;
-    const realizedEur  = et.realizedUsd ? (et.realizedUsd/eurusd) : null;
+    const totalPnlUsd    = hasAllPrices ? totalCurrentUsd - totalInvestedUsd : null;
+    const totalPnlPct    = hasAllPrices && totalInvestedUsd ? (totalPnlUsd/totalInvestedUsd*100) : null;
+    const investedDisp   = totalInvestedUsd * fx;
+    const currentDisp    = hasAllPrices ? totalCurrentUsd * fx : null;
+    const pnlDisp        = hasAllPrices ? totalPnlUsd * fx     : null;
+    const totalPositions = et.holdings.reduce((s,h)=>s + (h.positions||0), 0);
 
     kpiEl.innerHTML = `
       <div class="fin-kpi">
         <div class="fin-kpi-label">Investito</div>
-        <div class="fin-kpi-val">$${totalInvested.toFixed(0)}</div>
-        <div class="fin-kpi-sub">${et.holdings.length} asset · ${et.holdings.reduce((s,h)=>s+h.positions,0)} pos.</div>
+        <div class="fin-kpi-val">${fmt(investedDisp)}</div>
+        <div class="fin-kpi-sub">${et.holdings.length} asset${totalPositions?` · ${totalPositions} pos.`:''}</div>
       </div>
       ${hasAllPrices ? `
       <div class="fin-kpi">
         <div class="fin-kpi-label">Valore corrente</div>
-        <div class="fin-kpi-val" style="color:${totalCurrent>=totalInvested?'var(--up)':'var(--down)'}">$${totalCurrent.toFixed(0)}</div>
-        <div class="fin-kpi-sub">≈ €${totalCurEur.toFixed(0)}</div>
+        <div class="fin-kpi-val" style="color:${currentDisp>=investedDisp?'var(--up)':'var(--down)'}">${fmt(currentDisp)}</div>
+        <div class="fin-kpi-sub">${isEur?`$${totalCurrentUsd.toFixed(0)}`:`€${(totalCurrentUsd/eurusd).toFixed(0)}`}</div>
       </div>
       <div class="fin-kpi">
         <div class="fin-kpi-label">P&L aperto</div>
-        <div class="fin-kpi-val" style="color:${totalPnl>=0?'var(--up)':'var(--down)'}">${totalPnl>=0?'+':''}$${totalPnl.toFixed(0)}</div>
-        <div class="fin-kpi-sub ${totalPnl>=0?'up':'down'}">${totalPnlPct>=0?'+':''}${totalPnlPct.toFixed(1)}%</div>
-      </div>` : ''}
-      ${realizedEur ? `
-      <div class="fin-kpi">
-        <div class="fin-kpi-label">Cash realizz.</div>
-        <div class="fin-kpi-val" style="font-size:1.1rem">$${et.realizedUsd.toFixed(0)}</div>
-        <div class="fin-kpi-sub">≈ €${realizedEur.toFixed(0)}</div>
-      </div>` : ''}
+        <div class="fin-kpi-val" style="color:${pnlDisp>=0?'var(--up)':'var(--down)'}">${fmtSigned(pnlDisp)}</div>
+        <div class="fin-kpi-sub ${pnlDisp>=0?'up':'down'}">${totalPnlPct>=0?'+':''}${totalPnlPct.toFixed(2)}%</div>
+      </div>` : `
+      <div class="fin-kpi" style="opacity:.6">
+        <div class="fin-kpi-label">Valore corrente</div>
+        <div class="fin-kpi-val" style="font-size:1rem;color:var(--text-4)">— prezzi non caricati —</div>
+        <div class="fin-kpi-sub">Clicca ↻ Prezzi</div>
+      </div>`}
     `;
   }
 
@@ -6624,35 +6640,45 @@ function renderEtoro(){
       <div style="overflow-x:auto">
       <table style="width:100%;border-collapse:collapse;font-size:.78rem">
         <thead>
-          <tr style="color:var(--text-4);font-size:.65rem;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--hair)">
+          <tr style="color:var(--text-4);font-size:.62rem;text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--hair)">
             <th style="text-align:left;padding:6px 0;font-weight:600">Asset</th>
             <th style="text-align:right;padding:6px 4px;font-weight:600">Unità</th>
+            <th style="text-align:right;padding:6px 4px;font-weight:600">P. medio</th>
             <th style="text-align:right;padding:6px 4px;font-weight:600">Invest.</th>
-            <th style="text-align:right;padding:6px 4px;font-weight:600">Prezzo</th>
+            <th style="text-align:right;padding:6px 4px;font-weight:600">Prezzo live</th>
             <th style="text-align:right;padding:6px 4px;font-weight:600">Valore</th>
-            <th style="text-align:right;padding:6px 0;font-weight:600">P&L</th>
+            <th style="text-align:right;padding:6px 4px;font-weight:600">P&L</th>
+            <th style="text-align:right;padding:6px 0;font-weight:600"></th>
           </tr>
         </thead>
         <tbody>
-          ${rows.map(({h,q,currentUsd,pnlUsd,pnlPct})=>{
-            const priceTxt  = q?.price  ? `$${q.price.toFixed(2)}`    : '<span style="color:var(--text-4)">—</span>';
-            const valTxt    = currentUsd!==null ? `$${currentUsd.toFixed(0)}` : '<span style="color:var(--text-4)">—</span>';
-            const pnlColor  = pnlUsd===null ? '' : pnlUsd>=0 ? 'color:var(--up)' : 'color:var(--down)';
-            const pnlSign   = pnlUsd===null ? '' : pnlUsd>=0 ? '+' : '';
-            const pnlTxt    = pnlUsd!==null
-              ? `<span style="${pnlColor}">${pnlSign}$${pnlUsd.toFixed(0)}</span><br><span style="font-size:.65rem;${pnlColor}">${pnlSign}${pnlPct.toFixed(1)}%</span>`
+          ${rows.map(({h,q,investedUsd,currentUsd,pnlUsd,pnlPct})=>{
+            const avgDisp     = h.avgPrice * fx;
+            const investDisp  = investedUsd * fx;
+            const priceDisp   = q?.price!==undefined ? q.price * fx : null;
+            const valDisp     = currentUsd!==null ? currentUsd * fx : null;
+            const pnlDisp     = pnlUsd!==null ? pnlUsd * fx : null;
+            const priceTxt    = priceDisp!==null ? sym+priceDisp.toFixed(2)    : '<span style="color:var(--text-4)">—</span>';
+            const valTxt      = valDisp!==null ? fmt(valDisp) : '<span style="color:var(--text-4)">—</span>';
+            const pnlColor    = pnlDisp===null ? '' : pnlDisp>=0 ? 'color:var(--up)' : 'color:var(--down)';
+            const pnlTxt      = pnlDisp!==null
+              ? `<span style="${pnlColor}">${fmtSigned(pnlDisp)}</span><br><span style="font-size:.65rem;${pnlColor}">${pnlPct>=0?'+':''}${pnlPct.toFixed(2)}%</span>`
               : '<span style="color:var(--text-4)">—</span>';
             return `<tr style="border-bottom:1px solid var(--hair)">
               <td style="padding:8px 0">
-                <strong style="font-family:var(--mono)">${h.ticker}</strong>
-                <span style="font-size:.62rem;color:var(--text-4);margin-left:4px">${h.type}</span><br>
-                <span style="font-size:.63rem;color:var(--text-4)">${h.positions} pos.</span>
+                <strong style="font-family:var(--mono)">${escapeHtml(h.ticker)}</strong>
+                ${h.positions?`<br><span style="font-size:.63rem;color:var(--text-4)">${h.positions} pos.</span>`:''}
               </td>
-              <td style="text-align:right;padding:8px 4px;font-family:var(--mono)">${h.units.toFixed(4)}</td>
-              <td style="text-align:right;padding:8px 4px;font-family:var(--mono);color:var(--text-3)">$${h.investedUsd.toFixed(0)}</td>
+              <td style="text-align:right;padding:8px 4px;font-family:var(--mono)">${h.units.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:4})}</td>
+              <td style="text-align:right;padding:8px 4px;font-family:var(--mono);color:var(--text-3)">${sym}${avgDisp.toFixed(2)}</td>
+              <td style="text-align:right;padding:8px 4px;font-family:var(--mono);color:var(--text-3)">${fmt(investDisp)}</td>
               <td style="text-align:right;padding:8px 4px;font-family:var(--mono)">${priceTxt}</td>
               <td style="text-align:right;padding:8px 4px;font-family:var(--mono)">${valTxt}</td>
-              <td style="text-align:right;padding:8px 0;font-family:var(--mono)">${pnlTxt}</td>
+              <td style="text-align:right;padding:8px 4px;font-family:var(--mono)">${pnlTxt}</td>
+              <td style="text-align:right;padding:8px 0;white-space:nowrap">
+                <button class="btn ghost sm" style="padding:3px 6px;font-size:.65rem" onclick="editEtoroHolding('${h.id}')" title="Modifica">✎</button>
+                <button class="btn ghost sm" style="padding:3px 6px;font-size:.65rem;color:var(--down)" onclick="deleteEtoroHolding('${h.id}')" title="Elimina">✕</button>
+              </td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -6662,11 +6688,9 @@ function renderEtoro(){
 
   if(metaEl){
     const ts = et.quotesAt ? new Date(et.quotesAt).toLocaleString('it-IT') : null;
-    const imp = et.importedAt ? new Date(et.importedAt).toLocaleDateString('it-IT') : null;
     metaEl.textContent = [
-      imp ? `Importato: ${imp}` : '',
-      ts  ? `Prezzi aggiornati: ${ts}` : 'Prezzi non ancora caricati — clicca ↻',
-      eurusd!==1 ? `EUR/USD: ${eurusd.toFixed(4)}` : ''
+      ts ? `Prezzi aggiornati: ${ts}` : 'Prezzi non ancora caricati — clicca ↻ Prezzi',
+      eurusd && eurusd!==1 ? `EUR/USD: ${eurusd.toFixed(4)}` : ''
     ].filter(Boolean).join(' · ');
   }
 }
