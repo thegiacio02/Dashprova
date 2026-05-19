@@ -102,4 +102,5 @@ La prima volta che accedi, se il documento Firestore non esiste, la dashboard cr
 - Il vecchio endpoint Realtime Database hardcoded non è più usato.
 - I dati personali non devono essere aggiunti come file `.json` pubblici nel repo.
 - Le regole incluse bloccano ogni documento fuori da `users/{uid}/...` e limitano accesso al solo UID configurato.
-- Le funzioni AI che richiedono API key client-side sono disattivate finché non esiste un backend sicuro.
+- La API key Gemini non è hardcoded e non viene salvata nel repo. Se la configuri dalla dashboard, viene salvata in Firestore nel documento `users/{uid}/private/settings`, leggibile solo dal tuo UID tramite le regole Firestore.
+- Per ridurre il rischio di abuso, limita la API key Gemini in Google Cloud al dominio `thegiacio02.github.io` e, se usi la preview locale, anche a `localhost`.

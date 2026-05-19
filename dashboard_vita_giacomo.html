@@ -2232,6 +2232,7 @@ const FIREBASE_CONFIG = {
 };
 const FIREBASE_ALLOWED_UID = 'HJGU7orI1tZVVKTs1Xq7v6e7EQ32';
 const FIRESTORE_STATE_DOC = 'dashboard/state';
+const FIRESTORE_PRIVATE_SETTINGS_DOC = 'private/settings';
 
 let firebaseAuth = null;
 let firebaseDb = null;
@@ -2241,6 +2242,7 @@ let saveTimer = null;
 let lastSavedHash = null;
 let isApplyingRemoteState = false;
 let dashStarted = false;
+let geminiApiKey = '';
 
 function setSyncStatus(s, msg){
   const el = document.getElementById('sync-status');
@@ -2278,6 +2280,11 @@ function userStateDoc(){
   return firebaseDb.doc(`users/${currentUser.uid}/${FIRESTORE_STATE_DOC}`);
 }
 
+function privateSettingsDoc(){
+  if(!currentUser) throw new Error('Utente non autenticato');
+  return firebaseDb.doc(`users/${currentUser.uid}/${FIRESTORE_PRIVATE_SETTINGS_DOC}`);
+}
+
 async function authCheck() {
   const overlay = document.getElementById('auth-overlay');
   if(!initFirebase()){
@@ -2300,6 +2307,7 @@ async function authCheck() {
     }
     currentUser = user;
     overlay.style.display = 'none';
+    await loadPrivateSettings();
     await loadStateFromFirestore();
     if(!dashStarted){
       dashStarted = true;
@@ -2380,6 +2388,33 @@ async function loadStateFromFirestore(){
   }catch(e){
     setSyncStatus('error');
     console.warn('Firestore load failed:', e.message);
+    return false;
+  }
+}
+
+async function loadPrivateSettings(){
+  if(!currentUser || !firebaseDb) return false;
+  try{
+    const snap = await privateSettingsDoc().get();
+    geminiApiKey = snap.exists ? (snap.data()?.geminiApiKey || '') : '';
+    return true;
+  }catch(e){
+    console.warn('Private settings load failed:', e.message);
+    geminiApiKey = '';
+    return false;
+  }
+}
+
+async function savePrivateSettings(){
+  if(!currentUser || !firebaseDb) return false;
+  try{
+    await privateSettingsDoc().set({
+      geminiApiKey,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+    return true;
+  }catch(e){
+    alert('Non riesco a salvare la API key in Firestore: ' + e.message);
     return false;
   }
 }
@@ -6992,8 +7027,11 @@ function renderDiario(){
 const BRIEFING_REFRESH_MS = 60*60*1000; // 1h — bilancia freschezza e quota free tier (250 req/giorno)
 let _briefingTimer = null;
 
-function getGeminiKey(){ return ''; }
-function setGeminiKey(){ /* API keys are not stored in the frontend. */ }
+function getGeminiKey(){ return geminiApiKey || ''; }
+function setGeminiKey(k){
+  geminiApiKey = (k || '').trim();
+  savePrivateSettings();
+}
 
 function formatTimeAgo(date){
   const diffMin = Math.floor((Date.now() - date.getTime())/60000);
@@ -7005,7 +7043,21 @@ function formatTimeAgo(date){
 }
 
 function openGeminiSetup(){
-  alert('Le funzioni AI che richiedono una API key sono disattivate finché non c’è un backend sicuro. La dashboard non salva segreti nel frontend.');
+  const current = getGeminiKey();
+  const msg = `Inserisci la tua API key Google Gemini.
+
+Verrà salvata in Firestore sotto il tuo utente Firebase, non nel repo GitHub e non nel file HTML.
+Consiglio: in Google Cloud limita la key al dominio thegiacio02.github.io.
+
+Lascia vuoto e conferma per rimuoverla.`;
+  const k = prompt(msg, current);
+  if(k === null) return;
+  setGeminiKey(k);
+  if(k.trim()){
+    fetchAIBriefing(true);
+  } else {
+    renderAIBriefing();
+  }
 }
 
 function gatherNewsHeadlines(){

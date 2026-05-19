@@ -3,3 +3,4 @@ package-lock.json
 package.json
 .DS_Store
 *.log
+legacy_dashboard_data.json
