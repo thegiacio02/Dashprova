@@ -2203,6 +2203,8 @@ function toggleTheme(){
 (function(){ applyTheme(localStorage.getItem('dash_theme')||'dark'); })();
 
 // ============ AUTH ============
+// Master password hash (SHA-256 of "4Lc302!!"). La stessa password vale su qualsiasi dispositivo.
+const MASTER_PWD_HASH  = '9fe43e719b5e1bf9a605fa1cbe72929a8bbbab5a0ab4218f724f076836fde634';
 const AUTH_HASH_KEY    = 'dash_pass_hash';
 const AUTH_SESSION_KEY = 'dash_auth_session';
 
@@ -2212,51 +2214,38 @@ async function _sha256(str) {
 }
 
 async function authCheck() {
-  const hash = localStorage.getItem(AUTH_HASH_KEY);
   const overlay = document.getElementById('auth-overlay');
-  if(!hash) {
-    // First run — show setup
-    document.getElementById('auth-setup').style.display = 'flex';
-    document.getElementById('auth-login').style.display  = 'none';
-    return;
-  }
+  // Sessione valida = sessione marchiata con l'hash master corrente
   const session = localStorage.getItem(AUTH_SESSION_KEY);
-  if(session === hash) {
-    // Valid session — hide overlay and boot dashboard
+  if(session === MASTER_PWD_HASH) {
     overlay.style.display = 'none';
     dashInit();
     return;
   }
-  // Need to log in
-  document.getElementById('auth-login').style.display  = 'flex';
-  document.getElementById('auth-setup').style.display  = 'none';
+  // Sempre form login (mai setup): la password è già impostata centralmente
+  document.getElementById('auth-login').style.display = 'flex';
+  document.getElementById('auth-setup').style.display = 'none';
   setTimeout(()=>document.getElementById('auth-pwd').focus(), 100);
 }
 
 async function authSetup() {
-  const p1 = document.getElementById('auth-p1').value;
-  const p2 = document.getElementById('auth-p2').value;
-  const err = document.getElementById('auth-setup-err');
-  if(p1.length < 4)  { err.textContent = 'La password deve avere almeno 4 caratteri.'; return; }
-  if(p1 !== p2)      { err.textContent = 'Le password non coincidono.'; return; }
-  const hash = await _sha256(p1);
-  localStorage.setItem(AUTH_HASH_KEY, hash);
-  localStorage.setItem(AUTH_SESSION_KEY, hash);
-  document.getElementById('auth-overlay').style.display = 'none';
-  dashInit();
+  // disattivata: la password è gestita centralmente, non si può cambiare dal client
+  document.getElementById('auth-login').style.display = 'flex';
+  document.getElementById('auth-setup').style.display = 'none';
 }
 
 async function authLogin() {
   const pwd = document.getElementById('auth-pwd').value;
   const err = document.getElementById('auth-login-err');
   const hash = await _sha256(pwd);
-  if(hash !== localStorage.getItem(AUTH_HASH_KEY)) {
+  if(hash !== MASTER_PWD_HASH) {
     err.textContent = 'Password errata.';
     document.getElementById('auth-pwd').value = '';
     document.getElementById('auth-pwd').focus();
     return;
   }
-  localStorage.setItem(AUTH_SESSION_KEY, hash);
+  localStorage.setItem(AUTH_SESSION_KEY, MASTER_PWD_HASH);
+  localStorage.setItem(AUTH_HASH_KEY, MASTER_PWD_HASH); // compat
   document.getElementById('auth-overlay').style.display = 'none';
   dashInit();
 }
