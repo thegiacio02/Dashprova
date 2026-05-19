@@ -16,6 +16,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -309,23 +312,6 @@ input,select,textarea{max-width:100%}
 .news-skeleton.short{width:45%}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .news-error{font-size:.78rem;color:var(--muted2);padding:12px 0;text-align:center}
-.gmail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
-.gmail-title{margin:0;display:flex;align-items:center;gap:8px}
-.gmail-meta{font-size:.72rem;color:var(--muted2);text-align:right;line-height:1.35}
-.gmail-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-.gmail-kpi{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px}
-.gmail-kpi .lbl{font-size:.62rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
-.gmail-kpi .val{font-family:var(--mono);font-size:1.05rem;color:var(--text);font-weight:800;margin-top:2px}
-.gmail-list{display:flex;flex-direction:column;gap:8px}
-.gmail-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:8px;padding:9px 10px}
-.gmail-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 4px rgba(255,255,255,.03)}
-.gmail-item.unread .gmail-dot{background:var(--accent);box-shadow:0 0 0 4px rgba(110,240,255,.08)}
-.gmail-main{min-width:0}
-.gmail-subject{font-size:.82rem;color:var(--text);font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gmail-from{font-size:.69rem;color:var(--muted2);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
-.gmail-time{font-size:.68rem;color:var(--muted);font-family:var(--mono);white-space:nowrap}
-.gmail-empty{font-size:.8rem;color:var(--muted2);padding:12px 0}
-@media(max-width:700px){.gmail-head{align-items:stretch;flex-direction:column}.gmail-meta{text-align:left}.gmail-kpis{grid-template-columns:1fr}.gmail-item{grid-template-columns:auto 1fr}.gmail-time{grid-column:2;color:var(--muted2)}}
 .weather-main{display:flex;align-items:center;gap:18px}
 .weather-icon{font-size:3rem;line-height:1;filter:drop-shadow(0 0 12px rgba(0,229,255,.3))}
 .weather-temp{font-size:2.4rem;font-weight:800;color:#fff;line-height:1;font-family:var(--mono);letter-spacing:-2px;background:linear-gradient(180deg,#fff,#a8c5e3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -956,16 +942,16 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 #auth-box{background:#0c1322;border:1px solid #1f2d4d;border-radius:12px;padding:48px 40px;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:24px}
 #auth-box h2{margin:0;font-size:1.3rem;color:#e8eef9;font-weight:700;letter-spacing:.04em;text-align:center}
 #auth-box .auth-sub{font-size:.8rem;color:#5a6a87;text-align:center;margin-top:-12px}
-#auth-box input[type=password]{width:100%;background:#05080f;border:1px solid #1f2d4d;color:#e8eef9;padding:12px 14px;border-radius:8px;font-size:1rem;font-family:inherit;box-sizing:border-box;outline:none;transition:border-color .15s}
-#auth-box input[type=password]:focus{border-color:#00e5ff}
+#auth-box input{width:100%;background:#05080f;border:1px solid #1f2d4d;color:#e8eef9;padding:12px 14px;border-radius:8px;font-size:1rem;font-family:inherit;box-sizing:border-box;outline:none;transition:border-color .15s}
+#auth-box input:focus{border-color:#00e5ff}
 #auth-box .auth-btn{width:100%;padding:12px;background:#00e5ff;color:#000;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
 #auth-box .auth-btn:hover{opacity:.85}
 #auth-box .auth-err{color:#ff4d6d;font-size:.8rem;text-align:center;min-height:1.2em}
 [data-theme="light"] #auth-overlay{background:var(--bg)}
 [data-theme="light"] #auth-box{background:var(--surface);border-color:var(--hair)}
 [data-theme="light"] #auth-box h2{color:var(--text)}
-[data-theme="light"] #auth-box input[type=password]{background:#fff;border-color:var(--hair-2);color:var(--text)}
-[data-theme="light"] #auth-box input[type=password]:focus{border-color:var(--acc)}
+[data-theme="light"] #auth-box input{background:#fff;border-color:var(--hair-2);color:var(--text)}
+[data-theme="light"] #auth-box input:focus{border-color:var(--acc)}
 [data-theme="light"] #auth-box .auth-btn{background:var(--acc);color:#fff}
 </style>
 </head>
@@ -974,20 +960,12 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 <!-- AUTH OVERLAY -->
 <div id="auth-overlay">
   <div id="auth-box">
-    <!-- Setup (first run) -->
-    <div id="auth-setup" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
-      <h2>🔒 Crea la tua password</h2>
-      <p class="auth-sub">Prima configurazione — scegli una password per proteggere il dashboard.</p>
-      <input type="password" id="auth-p1" placeholder="Password" onkeydown="if(event.key==='Enter')document.getElementById('auth-p2').focus()"/>
-      <input type="password" id="auth-p2" placeholder="Conferma password" onkeydown="if(event.key==='Enter')authSetup()"/>
-      <button class="auth-btn" onclick="authSetup()">Imposta password</button>
-      <div class="auth-err" id="auth-setup-err"></div>
-    </div>
     <!-- Login -->
-    <div id="auth-login" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
+    <div id="auth-login" style="display:flex;flex-direction:column;align-items:center;gap:16px;width:100%">
       <h2>📊 Dashboard Giacomo</h2>
-      <p class="auth-sub">Inserisci la password per accedere.</p>
-      <input type="password" id="auth-pwd" placeholder="Password" onkeydown="if(event.key==='Enter')authLogin()"/>
+      <p class="auth-sub">Accedi con il tuo account Firebase.</p>
+      <input type="email" id="auth-email" placeholder="Email" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('auth-pwd').focus()"/>
+      <input type="password" id="auth-pwd" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authLogin()"/>
       <button class="auth-btn" onclick="authLogin()">Accedi</button>
       <div class="auth-err" id="auth-login-err"></div>
     </div>
@@ -1196,24 +1174,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- GMAIL SUMMARY -->
-  <div class="card" id="gmail-card" style="margin-top:16px">
-    <div class="gmail-head">
-      <h2 class="gmail-title"><span class="ico">✉️</span> Ultime Gmail</h2>
-      <div class="gmail-meta">
-        <div id="gmail-updated">Aggiornamento ogni ora</div>
-        <button class="btn ghost sm" onclick="loadGmailSummary(true)" id="gmail-refresh-btn" style="font-size:.75rem;padding:4px 10px;margin-top:6px">↻ Ricarica</button>
-      </div>
-    </div>
-    <div class="gmail-kpis">
-      <div class="gmail-kpi"><div class="lbl">Inbox</div><div class="val" id="gmail-inbox-count">—</div></div>
-      <div class="gmail-kpi"><div class="lbl">Non lette</div><div class="val" id="gmail-unread-count">—</div></div>
-      <div class="gmail-kpi"><div class="lbl">Importanti</div><div class="val" id="gmail-important-count">—</div></div>
-    </div>
-    <div class="gmail-list" id="gmail-list">
-      <div class="gmail-empty">Caricamento riepilogo Gmail…</div>
-    </div>
-  </div>
 </section>
 
 <!-- ============ COSE DA FARE ============ -->
@@ -2022,7 +1982,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 <section class="tab" id="tab-dati">
   <div class="card">
     <h2><span class="ico">💾</span> Backup & ripristino</h2>
-    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:12px">I dati sono salvati nel browser (localStorage). Esporta regolarmente per non perderli.</p>
+    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:12px">I dati sono salvati in Firestore sul tuo account Firebase. Esporta un backup quando vuoi una copia offline.</p>
     <div class="row">
       <button class="btn" onclick="exportData()">⬇ Esporta JSON</button>
       <button class="btn ghost" onclick="document.getElementById('imp').click()">⬆ Importa JSON</button>
@@ -2260,111 +2220,189 @@ function toggleTheme(){
 }
 (function(){ applyTheme(localStorage.getItem('dash_theme')||'dark'); })();
 
-// ============ AUTH ============
-// Master password hash (SHA-256 of "4Lc302!!"). La stessa password vale su qualsiasi dispositivo.
-const MASTER_PWD_HASH  = '9fe43e719b5e1bf9a605fa1cbe72929a8bbbab5a0ab4218f724f076836fde634';
-const AUTH_HASH_KEY    = 'dash_pass_hash';
-const AUTH_SESSION_KEY = 'dash_auth_session';
+// ============ FIREBASE AUTH + FIRESTORE ============
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyCDMj_-IYdprwo6yNGtj3vYRiTqN0HDIEQ',
+  authDomain: 'dashboardvitaprotetta.firebaseapp.com',
+  projectId: 'dashboardvitaprotetta',
+  storageBucket: 'dashboardvitaprotetta.firebasestorage.app',
+  messagingSenderId: '316286448438',
+  appId: '1:316286448438:web:906c49746052d57844f997',
+  measurementId: 'G-LLWQVQNSL7'
+};
+const FIREBASE_ALLOWED_UID = 'HJGU7orI1tZVVKTs1Xq7v6e7EQ32';
+const FIRESTORE_STATE_DOC = 'dashboard/state';
 
-async function _sha256(str) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-async function authCheck() {
-  const overlay = document.getElementById('auth-overlay');
-  // Sessione valida = sessione marchiata con l'hash master corrente
-  const session = localStorage.getItem(AUTH_SESSION_KEY);
-  if(session === MASTER_PWD_HASH) {
-    overlay.style.display = 'none';
-    dashInit();
-    return;
-  }
-  // Sempre form login (mai setup): la password è già impostata centralmente
-  document.getElementById('auth-login').style.display = 'flex';
-  document.getElementById('auth-setup').style.display = 'none';
-  setTimeout(()=>document.getElementById('auth-pwd').focus(), 100);
-}
-
-async function authSetup() {
-  // disattivata: la password è gestita centralmente, non si può cambiare dal client
-  document.getElementById('auth-login').style.display = 'flex';
-  document.getElementById('auth-setup').style.display = 'none';
-}
-
-async function authLogin() {
-  const pwd = document.getElementById('auth-pwd').value;
-  const err = document.getElementById('auth-login-err');
-  const hash = await _sha256(pwd);
-  if(hash !== MASTER_PWD_HASH) {
-    err.textContent = 'Password errata.';
-    document.getElementById('auth-pwd').value = '';
-    document.getElementById('auth-pwd').focus();
-    return;
-  }
-  localStorage.setItem(AUTH_SESSION_KEY, MASTER_PWD_HASH);
-  localStorage.setItem(AUTH_HASH_KEY, MASTER_PWD_HASH); // compat
-  document.getElementById('auth-overlay').style.display = 'none';
-  dashInit();
-}
-
-function authLogout() {
-  localStorage.removeItem(AUTH_SESSION_KEY);
-  location.reload();
-}
-
-// ============ DATA MODEL ============
-const STORAGE_KEY = 'giacomo_life_dashboard_v1';
-const FB_URL = 'https://dashboard-vita-c9599-default-rtdb.europe-west1.firebasedatabase.app/data.json';
+let firebaseAuth = null;
+let firebaseDb = null;
+let currentUser = null;
+let unsubscribeDashboard = null;
 let saveTimer = null;
 let lastSavedHash = null;
+let isApplyingRemoteState = false;
+let dashStarted = false;
 
 function setSyncStatus(s, msg){
   const el = document.getElementById('sync-status');
   if(!el) return;
   el.className = 'sync-badge sync-'+s;
-  el.textContent = {saving:'⬤ Salvataggio…', ok:'⬤ Sincronizzato', error:'⬤ Offline', idle:'⬤ —'}[s]||msg;
+  el.textContent = msg || {saving:'⬤ Salvataggio…', ok:'⬤ Sincronizzato', error:'⬤ Offline', idle:'⬤ —'}[s] || '⬤ —';
   if(s==='ok') setTimeout(()=>setSyncStatus('idle'), 3000);
 }
 
-async function pushToFirebase(){
+function firebaseConfigReady(){
+  return FIREBASE_CONFIG.apiKey && !FIREBASE_CONFIG.apiKey.startsWith('PASTE_') &&
+    FIREBASE_CONFIG.projectId && !FIREBASE_CONFIG.projectId.startsWith('PASTE_') &&
+    FIREBASE_CONFIG.appId && !FIREBASE_CONFIG.appId.startsWith('PASTE_');
+}
+
+function initFirebase(){
+  if(firebaseAuth && firebaseDb) return true;
+  const err = document.getElementById('auth-login-err');
+  if(!window.firebase){
+    if(err) err.textContent = 'Firebase SDK non caricato. Controlla la connessione.';
+    return false;
+  }
+  if(!firebaseConfigReady()){
+    if(err) err.textContent = 'Configura FIREBASE_CONFIG nel file HTML prima di usare la dashboard.';
+    return false;
+  }
+  firebase.initializeApp(FIREBASE_CONFIG);
+  firebaseAuth = firebase.auth();
+  firebaseDb = firebase.firestore();
+  return true;
+}
+
+function userStateDoc(){
+  if(!currentUser) throw new Error('Utente non autenticato');
+  return firebaseDb.doc(`users/${currentUser.uid}/${FIRESTORE_STATE_DOC}`);
+}
+
+async function authCheck() {
+  const overlay = document.getElementById('auth-overlay');
+  if(!initFirebase()){
+    overlay.style.display = 'flex';
+    setTimeout(()=>document.getElementById('auth-email')?.focus(), 100);
+    return;
+  }
+
+  firebaseAuth.onAuthStateChanged(async user => {
+    if(!user){
+      currentUser = null;
+      overlay.style.display = 'flex';
+      setTimeout(()=>document.getElementById('auth-email')?.focus(), 100);
+      return;
+    }
+    if(FIREBASE_ALLOWED_UID && !FIREBASE_ALLOWED_UID.startsWith('PASTE_') && user.uid !== FIREBASE_ALLOWED_UID){
+      await firebaseAuth.signOut();
+      document.getElementById('auth-login-err').textContent = 'Account non autorizzato per questa dashboard.';
+      return;
+    }
+    currentUser = user;
+    overlay.style.display = 'none';
+    await loadStateFromFirestore();
+    if(!dashStarted){
+      dashStarted = true;
+      dashInit();
+    }else{
+      renderAll();
+    }
+    subscribeToFirestoreState();
+  });
+}
+
+async function authLogin() {
+  const email = document.getElementById('auth-email').value.trim();
+  const pwd = document.getElementById('auth-pwd').value;
+  const err = document.getElementById('auth-login-err');
+  err.textContent = '';
+  if(!email || !pwd){
+    err.textContent = 'Inserisci email e password.';
+    return;
+  }
+  if(!initFirebase()) return;
   try {
-    setSyncStatus('saving');
-    const res = await fetch(FB_URL, {
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(state)
-    });
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    lastSavedHash = JSON.stringify(state);
-    setSyncStatus('ok');
+    await firebaseAuth.signInWithEmailAndPassword(email, pwd);
+    document.getElementById('auth-pwd').value = '';
   } catch(e){
-    setSyncStatus('error');
-    console.warn('Firebase save failed, data safe in localStorage:', e.message);
+    err.textContent = e?.message || 'Login non riuscito.';
   }
 }
 
-async function pullFromFirebase(){
+async function authLogout() {
+  if(unsubscribeDashboard){ unsubscribeDashboard(); unsubscribeDashboard = null; }
+  if(firebaseAuth) await firebaseAuth.signOut();
+  location.reload();
+}
+
+async function pushToFirestore(){
+  if(!currentUser || !firebaseDb || isApplyingRemoteState) return;
   try {
     setSyncStatus('saving');
-    const res = await fetch(FB_URL);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const remote = await res.json();
-    if(remote && typeof remote === 'object'){
+    const hash = JSON.stringify(state);
+    if(hash === lastSavedHash){ setSyncStatus('idle'); return; }
+    await userStateDoc().set({
+      data: state,
+      schemaVersion: 1,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+    lastSavedHash = hash;
+    setSyncStatus('ok');
+  } catch(e){
+    setSyncStatus('error');
+    console.warn('Firestore save failed:', e.message);
+  }
+}
+
+async function loadStateFromFirestore(){
+  if(!currentUser || !firebaseDb) return false;
+  try{
+    setSyncStatus('saving', '⬤ Caricamento…');
+    const snap = await userStateDoc().get();
+    if(snap.exists && snap.data()?.data){
+      const remote = snap.data().data;
       const def = defaultState();
       Object.keys(def).forEach(k=>{ if(remote[k]===undefined) remote[k]=def[k]; });
       state = remote;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      setSyncStatus('ok');
-      return true;
+      lastSavedHash = JSON.stringify(state);
+    }else{
+      ensureState();
+      await userStateDoc().set({
+        data: state,
+        schemaVersion: 1,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, {merge:true});
+      lastSavedHash = JSON.stringify(state);
     }
-    setSyncStatus('idle');
-    return false;
-  } catch(e){
+    setSyncStatus('ok');
+    return true;
+  }catch(e){
     setSyncStatus('error');
-    console.warn('Firebase load failed, using localStorage:', e.message);
+    console.warn('Firestore load failed:', e.message);
     return false;
   }
+}
+
+function subscribeToFirestoreState(){
+  if(!currentUser || !firebaseDb || unsubscribeDashboard) return;
+  unsubscribeDashboard = userStateDoc().onSnapshot(snap => {
+    if(!snap.exists || !snap.data()?.data) return;
+    const next = snap.data().data;
+    const nextHash = JSON.stringify(next);
+    if(nextHash === lastSavedHash) return;
+    isApplyingRemoteState = true;
+    const def = defaultState();
+    Object.keys(def).forEach(k=>{ if(next[k]===undefined) next[k]=def[k]; });
+    state = next;
+    lastSavedHash = nextHash;
+    renderAll();
+    isApplyingRemoteState = false;
+    setSyncStatus('ok', '⬤ Aggiornato');
+  }, e => {
+    setSyncStatus('error');
+    console.warn('Firestore realtime failed:', e.message);
+  });
 }
 
 const CORNICI = {
@@ -2461,31 +2499,13 @@ function defaultState(){ return {
   };}
 
 function load(){
-  const def = defaultState();
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      // Migration: fill missing fields with defaults so old states stay compatible
-      Object.keys(def).forEach(k=>{ if(parsed[k]===undefined) parsed[k]=def[k]; });
-      return parsed;
-    }
-  }catch(e){}
-  return def;
+  return defaultState();
 }
 function save(){
   const def = defaultState();
   Object.keys(def).forEach(k=>{ if(state[k]===undefined) state[k]=def[k]; });
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch(e) {
-    if(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED') {
-      setSyncStatus('error');
-      console.warn('localStorage quota esaurita – salvataggio solo su Firebase');
-    }
-  }
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(()=>{ pushToFirebase(); }, 1500);
+  saveTimer = setTimeout(()=>{ pushToFirestore(); }, 900);
 }
 function ensureState(){
   const def = defaultState();
@@ -3557,8 +3577,8 @@ function importData(e){
 }
 function resetAll(){
   if(!confirm('Cancellare TUTTI i dati? Operazione irreversibile.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  state = load(); renderAll();
+  state = defaultState();
+  save(); renderAll();
 }
 
 // ============ PRODUTTIVITÀ ============
@@ -4876,77 +4896,6 @@ function renderInsights(){
     </div>`).join('');
 }
 
-// ============ GMAIL SUMMARY ============
-let gmailSummaryCache = null;
-
-function maskGmailSender(sender){
-  if(!sender) return 'mittente nascosto';
-  return sender;
-}
-
-function formatGmailTime(ts){
-  if(!ts) return '';
-  try{
-    const d = new Date(ts);
-    return d.toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
-  }catch(e){ return ''; }
-}
-
-function renderGmailSummary(){
-  const data = gmailSummaryCache;
-  const list = document.getElementById('gmail-list');
-  if(!list) return;
-
-  const inbox = document.getElementById('gmail-inbox-count');
-  const unread = document.getElementById('gmail-unread-count');
-  const important = document.getElementById('gmail-important-count');
-  const updated = document.getElementById('gmail-updated');
-
-  if(!data){
-    list.innerHTML = '<div class="gmail-empty">Riepilogo Gmail non ancora disponibile.</div>';
-    return;
-  }
-
-  inbox.textContent = data.counts?.inbox ?? '—';
-  unread.textContent = data.counts?.unread ?? '—';
-  important.textContent = data.counts?.importantUnread ?? data.counts?.important ?? '—';
-  updated.textContent = data.updatedAt ? `Aggiornato ${formatGmailTime(data.updatedAt)}` : 'Aggiornamento ogni ora';
-
-  const items = Array.isArray(data.latest) ? data.latest.slice(0,5) : [];
-  if(!items.length){
-    list.innerHTML = '<div class="gmail-empty">Nessuna email recente da mostrare.</div>';
-    return;
-  }
-
-  list.innerHTML = items.map(m=>`
-    <div class="gmail-item ${m.unread?'unread':''}">
-      <span class="gmail-dot"></span>
-      <div class="gmail-main">
-        <div class="gmail-subject">${escapeHtml(m.label || 'Email recente')}</div>
-        <div class="gmail-from">${escapeHtml(maskGmailSender(m.from || ''))}${m.category?` · ${escapeHtml(m.category)}`:''}</div>
-      </div>
-      <div class="gmail-time">${escapeHtml(formatGmailTime(m.ts))}</div>
-    </div>
-  `).join('');
-}
-
-async function loadGmailSummary(force=false){
-  const btn = document.getElementById('gmail-refresh-btn');
-  try{
-    if(btn) btn.textContent = '…';
-    const cacheBust = force ? `?t=${Date.now()}` : '';
-    const res = await fetch(`gmail_summary.json${cacheBust}`, {cache: force ? 'reload' : 'no-store'});
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    gmailSummaryCache = await res.json();
-    renderGmailSummary();
-  }catch(e){
-    const list = document.getElementById('gmail-list');
-    if(list) list.innerHTML = '<div class="gmail-empty">Riepilogo Gmail non disponibile. Verrà aggiornato dall’automazione oraria.</div>';
-  }finally{
-    if(btn) btn.textContent = '↻ Ricarica';
-  }
-}
-
 // ============ INIT ============
 function initDateFields(){
   document.getElementById('log-date').value = todayISO();
@@ -4962,8 +4911,6 @@ function dashInit() {
   renderAll();
   // Ripristina il timer Pomodoro se era in corso prima del reload
   try{ _restorePomo(); }catch(e){ console.error('restorePomo:', e); }
-  pullFromFirebase().then(loaded => { if(loaded) renderAll(); });
-  setInterval(async ()=>{ const loaded = await pullFromFirebase(); if(loaded) renderAll(); }, 60000);
   // AI briefing
   setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
   scheduleAIBriefing();
@@ -4971,8 +4918,6 @@ function dashInit() {
   try{ renderDailyMotivation(); }catch(e){ console.error('Daily Boost render:', e); }
   setTimeout(()=>refreshDailyMotivation(false), 1500);
   setInterval(()=>refreshDailyMotivation(false), 60*60*1000);
-  loadGmailSummary(false);
-  setInterval(()=>loadGmailSummary(true), 60*60*1000);
 }
 
 // Start auth check — dashboard boots only after successful login
@@ -7044,12 +6989,11 @@ function renderDiario(){
 }
 
 // ============ OGGI · TODAY VIEW ============
-const GEMINI_KEY_STORAGE = 'dash_gemini_key';
 const BRIEFING_REFRESH_MS = 60*60*1000; // 1h — bilancia freschezza e quota free tier (250 req/giorno)
 let _briefingTimer = null;
 
-function getGeminiKey(){ return localStorage.getItem(GEMINI_KEY_STORAGE) || ''; }
-function setGeminiKey(k){ localStorage.setItem(GEMINI_KEY_STORAGE, k); }
+function getGeminiKey(){ return ''; }
+function setGeminiKey(){ /* API keys are not stored in the frontend. */ }
 
 function formatTimeAgo(date){
   const diffMin = Math.floor((Date.now() - date.getTime())/60000);
@@ -7061,24 +7005,7 @@ function formatTimeAgo(date){
 }
 
 function openGeminiSetup(){
-  const current = getGeminiKey();
-  const msg = `Inserisci la tua API key Google Gemini.
-
-Per ottenerla (gratis):
-1) Vai su https://aistudio.google.com/apikey
-2) Accedi con il tuo account Google
-3) Clicca "Create API key"
-4) Copia la key e incollala qui sotto
-
-(Limite gratuito: 1500 richieste/giorno — il briefing usa solo ~12/giorno)`;
-  const k = prompt(msg, current);
-  if(k === null) return;
-  setGeminiKey(k.trim());
-  if(k.trim()){
-    fetchAIBriefing(true);
-  } else {
-    renderAIBriefing();
-  }
+  alert('Le funzioni AI che richiedono una API key sono disattivate finché non c’è un backend sicuro. La dashboard non salva segreti nel frontend.');
 }
 
 function gatherNewsHeadlines(){
