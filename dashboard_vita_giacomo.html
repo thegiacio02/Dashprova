@@ -722,6 +722,25 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fl-img-drop{border:2px dashed var(--border2);border-radius:8px;padding:18px 14px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:rgba(12,19,34,.4);min-height:100px;display:flex;align-items:center;justify-content:center}
 .fl-img-drop:hover,.fl-img-drop.drag-over{border-color:var(--accent);background:rgba(0,229,255,.04)}
 
+/* ===== FINANZE ===== */
+.fin-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.fin-kpi{background:var(--surface-2);border:1px solid var(--hair);border-radius:8px;padding:14px}
+.fin-kpi-label{font-size:.62rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:6px;font-family:var(--mono)}
+.fin-kpi-val{font-size:1.4rem;font-weight:500;color:var(--text);font-family:var(--mono);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.fin-kpi-sub{font-size:.7rem;color:var(--text-3);margin-top:4px;font-family:var(--mono)}
+.fin-kpi-sub.up{color:var(--up)}
+.fin-kpi-sub.down{color:var(--down)}
+.fin-range-btn{background:transparent;border:1px solid var(--hair-2);color:var(--text-3);padding:4px 10px;border-radius:5px;font-size:.7rem;cursor:pointer;font-family:var(--mono);font-weight:600;transition:all .12s}
+.fin-range-btn:hover{color:var(--text);border-color:var(--hair-3)}
+.fin-range-btn.active{background:var(--acc-bg);color:var(--acc);border-color:rgba(110,240,255,.25)}
+.fin-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--hair);font-size:.8rem}
+.fin-row:last-child{border-bottom:none}
+.fin-row .fin-date{color:var(--text-2);font-family:var(--mono);font-size:.74rem;width:88px}
+.fin-row .fin-bd{font-size:.7rem;color:var(--text-3);font-family:var(--mono)}
+.fin-row .fin-tot{font-weight:600;color:var(--text);font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.fin-row .fin-del{background:transparent;border:none;color:var(--text-4);cursor:pointer;font-size:.85rem;padding:2px 6px;border-radius:4px}
+.fin-row .fin-del:hover{color:var(--down);background:var(--surface-3)}
+
 /* ── LIGHT THEME (BLOOMBERG-STYLE) ── */
 [data-theme="light"] html{background:var(--bg)}
 [data-theme="light"] body{background:var(--bg)}
@@ -971,6 +990,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <button data-tab="produttivita" class="side-item">Produttività</button>
     <button data-tab="francese" class="side-item">🇫🇷 Francese</button>
     <button data-tab="libri" class="side-item">Libri</button>
+    <button data-tab="finanze" class="side-item">Finanze</button>
     <button data-tab="benessere" class="side-item">Benessere</button>
     <span class="side-group-title">Mente</span>
     <button data-tab="financelab" class="side-item">Finance Lab</button>
@@ -1713,6 +1733,63 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 </section>
 
+<!-- ============ FINANZE ============ -->
+<section class="tab" id="tab-finanze">
+  <!-- KPI strip -->
+  <div class="card">
+    <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">💰</span> Net Worth</span><span class="card-badge" id="fin-points-count">0 snapshot</span></h2>
+    <div class="fin-kpi-grid" id="fin-kpi-grid"></div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card" style="margin-top:16px">
+    <h2 style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="ico">📈</span> Andamento</span>
+      <span style="display:flex;gap:4px">
+        <button class="fin-range-btn" data-r="1y">1A</button>
+        <button class="fin-range-btn" data-r="3y">3A</button>
+        <button class="fin-range-btn active" data-r="all">Tutto</button>
+      </span>
+    </h2>
+    <div style="position:relative;height:280px"><canvas id="fin-chart"></canvas></div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.72rem;color:var(--text-3)">
+      <span><span style="display:inline-block;width:10px;height:2px;background:var(--acc);vertical-align:middle;margin-right:6px"></span>Net Worth</span>
+      <span><span style="display:inline-block;width:10px;height:2px;background:var(--up);vertical-align:middle;margin-right:6px"></span>Azioni</span>
+      <span><span style="display:inline-block;width:10px;height:2px;background:var(--warn);vertical-align:middle;margin-right:6px"></span>Liquidità</span>
+    </div>
+  </div>
+
+  <!-- Add snapshot + List -->
+  <div class="grid grid-2" style="margin-top:16px">
+    <div class="card">
+      <h2><span class="ico">+</span> Nuovo snapshot mensile</h2>
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="fin-date">
+      </div>
+      <div class="row" style="display:flex;gap:10px">
+        <div class="field" style="flex:1">
+          <label>Liquidità (€)</label>
+          <input type="number" id="fin-liquid" placeholder="0" step="0.01">
+        </div>
+        <div class="field" style="flex:1">
+          <label>Azioni (€)</label>
+          <input type="number" id="fin-stocks" placeholder="0" step="0.01">
+        </div>
+      </div>
+      <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px">
+        Totale: <strong id="fin-preview-total" style="color:var(--text);font-family:var(--mono)">€ 0</strong>
+      </div>
+      <button class="btn" onclick="addNetWorthSnapshot()">Salva snapshot</button>
+    </div>
+
+    <div class="card">
+      <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📋</span> Storico</span><span style="font-size:.7rem;color:var(--text-3)">recenti in cima</span></h2>
+      <div id="fin-list" style="max-height:320px;overflow-y:auto"></div>
+    </div>
+  </div>
+</section>
+
 <!-- ============ BENESSERE ============ -->
 <section class="tab" id="tab-benessere">
   <div class="grid grid-2">
@@ -2259,7 +2336,8 @@ function defaultState(){ return {
     flTagFilter:'all',
     aiChat:{messages:[]},
     dailyMotivation:null,
-    frAILesson:null
+    frAILesson:null,
+    finance:{netWorth:[],seeded:false}
   };}
 
 function load(){
@@ -4566,6 +4644,7 @@ function renderAll(){
   try { renderTodayTodos();  } catch(e){ console.error('renderTodayTodos error:', e); }
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
   try { renderDailyMotivation(); } catch(e){ console.error('renderDailyMotivation error:', e); }
+  try { renderFinance();         } catch(e){ console.error('renderFinance error:', e); }
 }
 
 // ============ PROMEMORIA + INSIGHTS AI ============
@@ -5820,6 +5899,244 @@ function setDiarioTagFilter(tag){
   state.diarioTagFilter = (state.diarioTagFilter === tag) ? '' : tag;
   renderDiario();
 }
+
+// ============ FINANZE — Net Worth ============
+const NET_WORTH_SEED = [
+  {date:'2020-10-09',liquid:480.66,stocks:1094.62},
+  {date:'2020-11-01',liquid:1186.78,stocks:699},
+  {date:'2020-12-01',liquid:1252.76,stocks:1154.69},
+  {date:'2021-01-01',liquid:1196,stocks:1186},
+  {date:'2021-02-01',liquid:952,stocks:1445},
+  {date:'2021-03-01',liquid:1071.91,stocks:1991.10},
+  {date:'2021-04-01',liquid:701.74,stocks:2595.50},
+  {date:'2021-05-08',liquid:100,stocks:2695},
+  {date:'2021-06-01',liquid:580,stocks:2487},
+  {date:'2021-07-01',liquid:649,stocks:3184},
+  {date:'2021-08-01',liquid:463,stocks:3261},
+  {date:'2021-09-01',liquid:609,stocks:3614},
+  {date:'2021-10-05',liquid:430,stocks:3739},
+  {date:'2021-11-05',liquid:106,stocks:4601},
+  {date:'2021-12-02',liquid:528,stocks:4761},
+  {date:'2021-12-27',liquid:469,stocks:5427},
+  {date:'2022-02-01',liquid:300,stocks:5867},
+  {date:'2022-03-01',liquid:957,stocks:5485},
+  {date:'2022-04-01',liquid:300,stocks:7020},
+  {date:'2022-05-01',liquid:520,stocks:6155},
+  {date:'2022-06-01',liquid:1619,stocks:6168},
+  {date:'2022-07-01',liquid:1645,stocks:5770},
+  {date:'2022-08-01',liquid:730,stocks:6776},
+  {date:'2022-09-01',liquid:1000,stocks:6700},
+  {date:'2022-10-01',liquid:720,stocks:6050},
+  {date:'2022-11-01',liquid:1176,stocks:6084},
+  {date:'2022-12-01',liquid:1523,stocks:5907},
+  {date:'2023-01-01',liquid:792,stocks:5708},
+  {date:'2023-02-01',liquid:1046,stocks:6600},
+  {date:'2023-03-01',liquid:500,stocks:6745},
+  {date:'2023-04-01',liquid:1083,stocks:8703},
+  {date:'2023-05-01',liquid:750,stocks:8900},
+  {date:'2023-06-01',liquid:1206,stocks:9258},
+  {date:'2023-07-01',liquid:1161,stocks:9671},
+  {date:'2023-11-01',liquid:1050,stocks:8700},
+  {date:'2024-09-01',liquid:2581,stocks:8943},
+  {date:'2024-12-01',liquid:920,stocks:11369},
+  {date:'2025-02-01',liquid:1070,stocks:10900},
+  {date:'2025-11-01',liquid:2500,stocks:11480},
+  {date:'2025-12-01',liquid:2300,stocks:11762},
+  {date:'2026-01-01',liquid:1300,stocks:12119},
+  {date:'2026-05-01',liquid:1639,stocks:11605}
+];
+
+function _ensureFinanceState(){
+  if(!state.finance) state.finance = {netWorth:[],seeded:false};
+  if(!state.finance.seeded && (!state.finance.netWorth || !state.finance.netWorth.length)){
+    state.finance.netWorth = NET_WORTH_SEED.map(s=>({...s,id:uid(),total:Math.round((s.liquid+s.stocks)*100)/100}));
+    state.finance.seeded = true;
+    save();
+  }
+}
+
+function _fmtEur(v){
+  if(v==null||isNaN(v)) return '—';
+  return '€ ' + Math.round(v).toLocaleString('it-IT');
+}
+function _fmtEurFull(v){
+  return '€ ' + (Math.round(v*100)/100).toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:0});
+}
+
+function addNetWorthSnapshot(){
+  _ensureFinanceState();
+  const date = document.getElementById('fin-date').value || todayISO();
+  const liquid = parseFloat(document.getElementById('fin-liquid').value)||0;
+  const stocks = parseFloat(document.getElementById('fin-stocks').value)||0;
+  if(liquid===0 && stocks===0){ alert('Inserisci almeno un valore'); return; }
+  const total = Math.round((liquid+stocks)*100)/100;
+  // Sostituisce se stessa data già esiste
+  state.finance.netWorth = state.finance.netWorth.filter(s=>s.date!==date);
+  state.finance.netWorth.push({id:uid(),date,liquid,stocks,total});
+  state.finance.netWorth.sort((a,b)=>a.date.localeCompare(b.date));
+  save();
+  document.getElementById('fin-liquid').value='';
+  document.getElementById('fin-stocks').value='';
+  document.getElementById('fin-preview-total').textContent='€ 0';
+  renderFinance();
+}
+
+function delNetWorthSnapshot(id){
+  if(!confirm('Eliminare questo snapshot?')) return;
+  state.finance.netWorth = state.finance.netWorth.filter(s=>s.id!==id);
+  save(); renderFinance();
+}
+
+let _finRange = 'all';
+let _finChart = null;
+
+function renderFinance(){
+  _ensureFinanceState();
+  const list = (state.finance.netWorth||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  const cnt = document.getElementById('fin-points-count');
+  if(cnt) cnt.textContent = list.length + ' snapshot';
+
+  // KPI
+  const kpiC = document.getElementById('fin-kpi-grid');
+  if(kpiC){
+    if(!list.length){
+      kpiC.innerHTML = '<div style="color:var(--text-3);font-size:.85rem;padding:10px">Nessun dato ancora. Aggiungi il primo snapshot qui sotto.</div>';
+    } else {
+      const last = list[list.length-1];
+      const prev = list.length>1 ? list[list.length-2] : null;
+      const first = list[0];
+      const ath = list.reduce((m,s)=>s.total>m.total?s:m, list[0]);
+      const deltaMoM = prev ? last.total - prev.total : 0;
+      const deltaMoMPct = prev ? (deltaMoM/prev.total*100) : 0;
+      const deltaTot = last.total - first.total;
+      const deltaTotPct = first.total ? (deltaTot/first.total*100) : 0;
+      // CAGR
+      const years = (new Date(last.date) - new Date(first.date)) / (365.25*24*3600*1000);
+      const cagr = years>0.1 && first.total>0 ? (Math.pow(last.total/first.total, 1/years)-1)*100 : null;
+      kpiC.innerHTML = `
+        <div class="fin-kpi">
+          <div class="fin-kpi-label">Net Worth</div>
+          <div class="fin-kpi-val">${_fmtEur(last.total)}</div>
+          <div class="fin-kpi-sub">${last.date}</div>
+        </div>
+        <div class="fin-kpi">
+          <div class="fin-kpi-label">Δ mese scorso</div>
+          <div class="fin-kpi-val ${deltaMoM>=0?'':''}" style="color:${deltaMoM>=0?'var(--up)':'var(--down)'}">${deltaMoM>=0?'+':''}${_fmtEur(deltaMoM)}</div>
+          <div class="fin-kpi-sub ${deltaMoM>=0?'up':'down'}">${deltaMoM>=0?'+':''}${deltaMoMPct.toFixed(1)}%</div>
+        </div>
+        <div class="fin-kpi">
+          <div class="fin-kpi-label">Crescita totale</div>
+          <div class="fin-kpi-val" style="color:${deltaTot>=0?'var(--up)':'var(--down)'}">${deltaTot>=0?'+':''}${_fmtEur(deltaTot)}</div>
+          <div class="fin-kpi-sub ${deltaTot>=0?'up':'down'}">${deltaTotPct>=0?'+':''}${deltaTotPct.toFixed(0)}% dal ${first.date.slice(0,7)}</div>
+        </div>
+        <div class="fin-kpi">
+          <div class="fin-kpi-label">All-time high</div>
+          <div class="fin-kpi-val">${_fmtEur(ath.total)}</div>
+          <div class="fin-kpi-sub">${ath.date}</div>
+        </div>
+        ${cagr!=null?`<div class="fin-kpi">
+          <div class="fin-kpi-label">CAGR</div>
+          <div class="fin-kpi-val" style="color:${cagr>=0?'var(--up)':'var(--down)'}">${cagr>=0?'+':''}${cagr.toFixed(1)}%</div>
+          <div class="fin-kpi-sub">annualizzato · ${years.toFixed(1)}a</div>
+        </div>`:''}
+        <div class="fin-kpi">
+          <div class="fin-kpi-label">Liquidità · Azioni</div>
+          <div class="fin-kpi-val" style="font-size:1rem">${_fmtEur(last.liquid)} · ${_fmtEur(last.stocks)}</div>
+          <div class="fin-kpi-sub">${last.total?Math.round(last.stocks/last.total*100):0}% in azioni</div>
+        </div>
+      `;
+    }
+  }
+
+  // Chart
+  _drawFinanceChart(list);
+
+  // List
+  const lc = document.getElementById('fin-list');
+  if(lc){
+    if(!list.length){
+      lc.innerHTML = '<div style="color:var(--text-3);font-size:.85rem;padding:10px">Nessuno snapshot.</div>';
+    } else {
+      const reverse = list.slice().reverse();
+      lc.innerHTML = reverse.map(s=>`
+        <div class="fin-row">
+          <div class="fin-date">${s.date}</div>
+          <div class="fin-bd">L: ${_fmtEur(s.liquid)} · A: ${_fmtEur(s.stocks)}</div>
+          <div class="fin-tot">${_fmtEur(s.total)}</div>
+          <button class="fin-del" onclick="delNetWorthSnapshot('${s.id}')" title="Elimina">✕</button>
+        </div>
+      `).join('');
+    }
+  }
+}
+
+function _drawFinanceChart(list){
+  const canvas = document.getElementById('fin-chart');
+  if(!canvas || !window.Chart) return;
+  // Filtra per range
+  let filtered = list;
+  if(_finRange!=='all' && list.length){
+    const last = new Date(list[list.length-1].date);
+    const cutoff = new Date(last);
+    if(_finRange==='1y') cutoff.setFullYear(cutoff.getFullYear()-1);
+    if(_finRange==='3y') cutoff.setFullYear(cutoff.getFullYear()-3);
+    filtered = list.filter(s=>new Date(s.date)>=cutoff);
+  }
+  const labels = filtered.map(s=>s.date);
+  const totals = filtered.map(s=>s.total);
+  const liquids = filtered.map(s=>s.liquid);
+  const stocks = filtered.map(s=>s.stocks);
+  const isLight = document.documentElement.dataset.theme==='light';
+  const gridColor = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
+  const textColor = isLight ? '#5a6070' : '#a4abb8';
+  if(_finChart) _finChart.destroy();
+  const ctx = canvas.getContext('2d');
+  _finChart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        {label:'Net Worth',data:totals,borderColor:'#6ef0ff',backgroundColor:'rgba(110,240,255,.08)',borderWidth:2,tension:.3,fill:true,pointRadius:2,pointHoverRadius:5},
+        {label:'Azioni',data:stocks,borderColor:'#4ade80',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]},
+        {label:'Liquidità',data:liquids,borderColor:'#f0b86e',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{
+        backgroundColor: isLight?'#fff':'#0f1218',
+        borderColor: gridColor, borderWidth:1, titleColor:textColor, bodyColor:isLight?'#15161a':'#e6e8ee',
+        callbacks:{label:(c)=>c.dataset.label+': '+_fmtEurFull(c.parsed.y)}
+      }},
+      scales:{
+        x:{grid:{color:gridColor,drawBorder:false},ticks:{color:textColor,font:{size:10,family:'JetBrains Mono'},maxRotation:0,autoSkip:true,maxTicksLimit:8}},
+        y:{grid:{color:gridColor,drawBorder:false},ticks:{color:textColor,font:{size:10,family:'JetBrains Mono'},callback:(v)=>'€'+(v/1000).toFixed(1)+'k'}}
+      }
+    }
+  });
+}
+
+// Bind UI (called once at script load — DOM è già parsed perché siamo a fine body)
+(function bindFinanceUI(){
+  const dateInp = document.getElementById('fin-date');
+  if(dateInp) dateInp.value = todayISO();
+  ['fin-liquid','fin-stocks'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input',()=>{
+      const l = parseFloat(document.getElementById('fin-liquid').value)||0;
+      const s = parseFloat(document.getElementById('fin-stocks').value)||0;
+      const p = document.getElementById('fin-preview-total');
+      if(p) p.textContent = _fmtEurFull(l+s);
+    });
+  });
+  document.querySelectorAll('.fin-range-btn').forEach(b=>{
+    b.onclick = ()=>{
+      _finRange = b.dataset.r;
+      document.querySelectorAll('.fin-range-btn').forEach(x=>x.classList.toggle('active', x===b));
+      renderFinance();
+    };
+  });
+})();
 
 function renderDiario(){
   ensureState();
