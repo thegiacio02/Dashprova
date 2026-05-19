@@ -97,22 +97,35 @@ button.side-item.active .side-badge{background:var(--acc-bg);color:var(--acc)}
 .sync-saving{color:var(--warn);animation:pulse 1s infinite}
 .sync-ok{color:var(--up)}
 .sync-error{color:var(--down)}
-/* Mobile sidebar */
+/* Hamburger button — only visible on mobile */
+.hamburger{display:none;background:transparent;border:none;color:var(--text);padding:8px 10px;cursor:pointer;font-size:1.1rem;line-height:1;border-radius:7px;margin-right:4px;transition:background .12s}
+.hamburger:hover{background:var(--surface-2)}
+.hamburger svg{display:block;width:22px;height:22px}
+/* Backdrop for mobile drawer */
+.sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;backdrop-filter:blur(2px);opacity:0;transition:opacity .25s ease}
+body.sidebar-open .sidebar-backdrop{display:block;opacity:1}
+/* Mobile drawer */
 @media(max-width:720px){
-  body.app-shell{flex-direction:column}
-  .sidebar{width:100%;height:auto;position:relative;flex-direction:row;overflow-x:auto;align-items:center}
-  .brand{border-bottom:none;border-right:1px solid var(--hair);padding:10px 14px;flex-shrink:0}
-  .brand-sub,.side-group-title,.side-foot-label{display:none}
-  .brand-name{font-size:.75rem}
-  #tabs{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:6px 8px;gap:2px;flex:1}
-  #tabs::-webkit-scrollbar{height:3px}
-  button.side-item{white-space:nowrap;padding:6px 10px;font-size:.72rem;flex-shrink:0}
-  button.side-item::before,button.side-item.active::before{display:none}
-  button.side-item.active{background:var(--acc-bg);color:var(--acc)}
-  .side-foot{display:none}
-  .topbar{height:44px;padding:0 14px}
-  .app-main > main{padding:12px 14px;padding-bottom:calc(30px + env(safe-area-inset-bottom))}
+  .hamburger{display:inline-flex;align-items:center;justify-content:center}
+  body.app-shell{display:block}
+  .sidebar{position:fixed;top:0;left:0;width:84%;max-width:320px;height:100vh;z-index:200;transform:translateX(-100%);transition:transform .28s cubic-bezier(.32,.72,0,1);box-shadow:8px 0 28px rgba(0,0,0,.4);padding-top:env(safe-area-inset-top)}
+  body.sidebar-open .sidebar{transform:translateX(0)}
+  .app-main{min-height:100vh}
+  .topbar{height:52px;padding:0 8px 0 4px;padding-top:env(safe-area-inset-top);height:calc(52px + env(safe-area-inset-top))}
+  .app-main > main{padding:14px;padding-bottom:calc(30px + env(safe-area-inset-bottom))}
+  .topbar-title{font-size:.88rem;font-weight:600}
+  /* Tighter sidebar internals on mobile */
+  .brand{padding:16px 18px}
+  button.side-item{padding:11px 14px 11px 22px;font-size:.92rem}
+  button.side-item.active::before{left:8px;height:22px}
+  .side-group-title{padding:14px 16px 6px;font-size:.62rem}
+  #tabs{padding:10px 10px 20px}
+  .side-foot{padding:16px 16px calc(20px + env(safe-area-inset-bottom))}
+  /* Logout button stays in topbar */
+  .logout-btn{padding:6px 12px;font-size:.78rem}
 }
+/* Touch device tap highlight removal */
+button.side-item,.hamburger,#theme-toggle,.cornice-switch button{-webkit-tap-highlight-color:transparent}
 
 /* Ticker tape */
 .ticker-tape{position:relative;overflow:hidden;background:var(--bg-2);border:1px solid var(--hair);border-radius:8px;padding:9px 0;margin-bottom:16px}
@@ -979,9 +992,16 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 </aside>
 
+<div class="sidebar-backdrop" onclick="document.body.classList.remove('sidebar-open')"></div>
+
 <div class="app-main">
 <header class="topbar">
-  <div class="topbar-title">Il mio sistema</div>
+  <div style="display:flex;align-items:center;min-width:0;flex:1">
+    <button class="hamburger" onclick="document.body.classList.toggle('sidebar-open')" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+    </button>
+    <div class="topbar-title">Il mio sistema</div>
+  </div>
   <div class="topbar-actions">
     <div id="sync-status" class="sync-badge sync-idle" title="Stato sincronizzazione Firebase">⬤ —</div>
     <button onclick="authLogout()" class="logout-btn" title="Esci">Esci</button>
@@ -2305,6 +2325,14 @@ function switchTab(name, btn){
 }
 document.querySelectorAll('#tabs > button[data-tab], .dropdown-menu button[data-tab]').forEach(b=>{
   b.onclick = (e)=>{ e.stopPropagation(); switchTab(b.dataset.tab, b); };
+});
+// Mobile: chiudi il drawer al tap su un tab
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  if(e.target.closest('button[data-tab]')) document.body.classList.remove('sidebar-open');
+});
+// ESC chiude il drawer
+document.addEventListener('keydown', (e)=>{
+  if(e.key==='Escape') document.body.classList.remove('sidebar-open');
 });
 // Dropdown toggle (position:fixed menu, computed from toggle rect)
 const dd = document.getElementById('more-dropdown');
