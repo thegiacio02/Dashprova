@@ -309,6 +309,23 @@ input,select,textarea{max-width:100%}
 .news-skeleton.short{width:45%}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
 .news-error{font-size:.78rem;color:var(--muted2);padding:12px 0;text-align:center}
+.gmail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.gmail-title{margin:0;display:flex;align-items:center;gap:8px}
+.gmail-meta{font-size:.72rem;color:var(--muted2);text-align:right;line-height:1.35}
+.gmail-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.gmail-kpi{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px}
+.gmail-kpi .lbl{font-size:.62rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.gmail-kpi .val{font-family:var(--mono);font-size:1.05rem;color:var(--text);font-weight:800;margin-top:2px}
+.gmail-list{display:flex;flex-direction:column;gap:8px}
+.gmail-item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:8px;padding:9px 10px}
+.gmail-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);box-shadow:0 0 0 4px rgba(255,255,255,.03)}
+.gmail-item.unread .gmail-dot{background:var(--accent);box-shadow:0 0 0 4px rgba(110,240,255,.08)}
+.gmail-main{min-width:0}
+.gmail-subject{font-size:.82rem;color:var(--text);font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gmail-from{font-size:.69rem;color:var(--muted2);font-family:var(--mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.gmail-time{font-size:.68rem;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+.gmail-empty{font-size:.8rem;color:var(--muted2);padding:12px 0}
+@media(max-width:700px){.gmail-head{align-items:stretch;flex-direction:column}.gmail-meta{text-align:left}.gmail-kpis{grid-template-columns:1fr}.gmail-item{grid-template-columns:auto 1fr}.gmail-time{grid-column:2;color:var(--muted2)}}
 .weather-main{display:flex;align-items:center;gap:18px}
 .weather-icon{font-size:3rem;line-height:1;filter:drop-shadow(0 0 12px rgba(0,229,255,.3))}
 .weather-temp{font-size:2.4rem;font-weight:800;color:#fff;line-height:1;font-family:var(--mono);letter-spacing:-2px;background:linear-gradient(180deg,#fff,#a8c5e3);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
@@ -1176,6 +1193,25 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
       <div id="weather-forecast" class="weather-forecast"></div>
       <div id="weather-detail" class="weather-detail"></div>
+    </div>
+  </div>
+
+  <!-- GMAIL SUMMARY -->
+  <div class="card" id="gmail-card" style="margin-top:16px">
+    <div class="gmail-head">
+      <h2 class="gmail-title"><span class="ico">✉️</span> Ultime Gmail</h2>
+      <div class="gmail-meta">
+        <div id="gmail-updated">Aggiornamento ogni ora</div>
+        <button class="btn ghost sm" onclick="loadGmailSummary(true)" id="gmail-refresh-btn" style="font-size:.75rem;padding:4px 10px;margin-top:6px">↻ Ricarica</button>
+      </div>
+    </div>
+    <div class="gmail-kpis">
+      <div class="gmail-kpi"><div class="lbl">Inbox</div><div class="val" id="gmail-inbox-count">—</div></div>
+      <div class="gmail-kpi"><div class="lbl">Non lette</div><div class="val" id="gmail-unread-count">—</div></div>
+      <div class="gmail-kpi"><div class="lbl">Importanti</div><div class="val" id="gmail-important-count">—</div></div>
+    </div>
+    <div class="gmail-list" id="gmail-list">
+      <div class="gmail-empty">Caricamento riepilogo Gmail…</div>
     </div>
   </div>
 </section>
@@ -4840,6 +4876,77 @@ function renderInsights(){
     </div>`).join('');
 }
 
+// ============ GMAIL SUMMARY ============
+let gmailSummaryCache = null;
+
+function maskGmailSender(sender){
+  if(!sender) return 'mittente nascosto';
+  return sender;
+}
+
+function formatGmailTime(ts){
+  if(!ts) return '';
+  try{
+    const d = new Date(ts);
+    return d.toLocaleString('it-IT', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+  }catch(e){ return ''; }
+}
+
+function renderGmailSummary(){
+  const data = gmailSummaryCache;
+  const list = document.getElementById('gmail-list');
+  if(!list) return;
+
+  const inbox = document.getElementById('gmail-inbox-count');
+  const unread = document.getElementById('gmail-unread-count');
+  const important = document.getElementById('gmail-important-count');
+  const updated = document.getElementById('gmail-updated');
+
+  if(!data){
+    list.innerHTML = '<div class="gmail-empty">Riepilogo Gmail non ancora disponibile.</div>';
+    return;
+  }
+
+  inbox.textContent = data.counts?.inbox ?? '—';
+  unread.textContent = data.counts?.unread ?? '—';
+  important.textContent = data.counts?.importantUnread ?? data.counts?.important ?? '—';
+  updated.textContent = data.updatedAt ? `Aggiornato ${formatGmailTime(data.updatedAt)}` : 'Aggiornamento ogni ora';
+
+  const items = Array.isArray(data.latest) ? data.latest.slice(0,5) : [];
+  if(!items.length){
+    list.innerHTML = '<div class="gmail-empty">Nessuna email recente da mostrare.</div>';
+    return;
+  }
+
+  list.innerHTML = items.map(m=>`
+    <div class="gmail-item ${m.unread?'unread':''}">
+      <span class="gmail-dot"></span>
+      <div class="gmail-main">
+        <div class="gmail-subject">${escapeHtml(m.label || 'Email recente')}</div>
+        <div class="gmail-from">${escapeHtml(maskGmailSender(m.from || ''))}${m.category?` · ${escapeHtml(m.category)}`:''}</div>
+      </div>
+      <div class="gmail-time">${escapeHtml(formatGmailTime(m.ts))}</div>
+    </div>
+  `).join('');
+}
+
+async function loadGmailSummary(force=false){
+  const btn = document.getElementById('gmail-refresh-btn');
+  try{
+    if(btn) btn.textContent = '…';
+    const cacheBust = force ? `?t=${Date.now()}` : '';
+    const res = await fetch(`gmail_summary.json${cacheBust}`, {cache: force ? 'reload' : 'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    gmailSummaryCache = await res.json();
+    renderGmailSummary();
+  }catch(e){
+    const list = document.getElementById('gmail-list');
+    if(list) list.innerHTML = '<div class="gmail-empty">Riepilogo Gmail non disponibile. Verrà aggiornato dall’automazione oraria.</div>';
+  }finally{
+    if(btn) btn.textContent = '↻ Ricarica';
+  }
+}
+
 // ============ INIT ============
 function initDateFields(){
   document.getElementById('log-date').value = todayISO();
@@ -4864,6 +4971,8 @@ function dashInit() {
   try{ renderDailyMotivation(); }catch(e){ console.error('Daily Boost render:', e); }
   setTimeout(()=>refreshDailyMotivation(false), 1500);
   setInterval(()=>refreshDailyMotivation(false), 60*60*1000);
+  loadGmailSummary(false);
+  setInterval(()=>loadGmailSummary(true), 60*60*1000);
 }
 
 // Start auth check — dashboard boots only after successful login
