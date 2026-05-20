@@ -104,3 +104,12 @@ La prima volta che accedi, se il documento Firestore non esiste, la dashboard cr
 - Le regole incluse bloccano ogni documento fuori da `users/{uid}/...` e limitano accesso al solo UID configurato.
 - La API key Gemini non è hardcoded e non viene salvata nel repo. Se la configuri dalla dashboard, viene salvata in Firestore nel documento `users/{uid}/private/settings`, leggibile solo dal tuo UID tramite le regole Firestore.
 - Per ridurre il rischio di abuso, limita la API key Gemini in Google Cloud al dominio `thegiacio02.github.io` e, se usi la preview locale, anche a `localhost`.
+
+## Automazioni locali/connector
+
+Alcuni box della dashboard vengono aggiornati da automazioni Codex che leggono connector privati e salvano solo un riepilogo in Firestore:
+
+- Gmail/Outlook: `scripts/push_email_briefings.mjs`
+- Google Calendar: `scripts/push_calendar_events.mjs`
+
+Gli input temporanei `.email_briefings_input.json` e `.calendar_events_input.json` sono ignorati da Git. Le credenziali Firebase usate dagli script restano in `.env.local`, anch'esso ignorato.

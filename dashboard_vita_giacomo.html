@@ -924,31 +924,49 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .tab.active.today-command-layout{display:grid}
 #tab-oggi.today-command-layout > *{grid-column:1/-1;margin-top:0!important}
 #personal-briefing-card{order:1;grid-column:1/-1}
-#today-action-card{order:2;grid-column:1/8;border-left:3px solid var(--green);box-shadow:0 10px 28px rgba(0,0,0,.08)}
-#daily-boost-card{order:2;grid-column:8/-1}
-#today-mail-grid{order:3;grid-column:1/-1}
-#ai-briefing-card{order:4;grid-column:1/7}
-#news-card{order:4;grid-column:7/-1}
-#ticker-tape{order:5;grid-column:1/-1}
-#quotes-card{order:6;grid-column:1/7}
-#weather-card{order:6;grid-column:7/-1}
-#today-stats-card{order:7;grid-column:1/-1}
-#today-log-grid{order:8;grid-column:1/-1}
+#calendar-today-card{order:2;grid-column:1/-1;border-left:3px solid #4285f4}
+#today-action-card{order:3;grid-column:1/8;border-left:3px solid var(--green);box-shadow:0 10px 28px rgba(0,0,0,.08)}
+#daily-boost-card{order:3;grid-column:8/-1}
+#today-mail-grid{order:4;grid-column:1/-1}
+#ai-briefing-card{order:5;grid-column:1/7}
+#news-card{order:5;grid-column:7/-1}
+#ticker-tape{order:6;grid-column:1/-1}
+#quotes-card{order:7;grid-column:1/7}
+#weather-card{order:7;grid-column:7/-1}
+#today-stats-card{order:8;grid-column:1/-1}
+#today-log-grid{order:9;grid-column:1/-1}
 .today-primary-card h2{font-size:1.05rem}
 .today-primary-card input{font-size:.92rem}
 .today-muted-context{opacity:.92}
+.calendar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.calendar-title{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--text)}
+.calendar-logo{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;font-family:var(--mono);font-weight:900;font-size:.78rem}
+.calendar-meta{font-size:.7rem;color:var(--muted2);font-family:var(--mono)}
+.calendar-list{display:flex;flex-direction:column;gap:8px}
+.calendar-event{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;padding:9px 10px;border:1px solid var(--border);border-left:3px solid #4285f4;border-radius:8px;background:rgba(255,255,255,.025);text-decoration:none;color:inherit}
+.calendar-event.now{border-left-color:var(--green);background:rgba(34,197,94,.06)}
+.calendar-event.next{border-left-color:var(--accent);background:rgba(0,229,255,.045)}
+.calendar-time{font-size:.72rem;color:var(--muted2);font-family:var(--mono);line-height:1.35}
+.calendar-event.now .calendar-time{color:var(--green);font-weight:800}
+.calendar-main{min-width:0}
+.calendar-name{font-size:.88rem;color:var(--text);font-weight:750;line-height:1.35;overflow-wrap:anywhere}
+.calendar-extra{font-size:.72rem;color:var(--muted2);margin-top:2px;line-height:1.35}
+.calendar-empty{font-size:.82rem;color:var(--muted2);text-align:center;padding:10px 0}
+@media(max-width:640px){.calendar-event{grid-template-columns:1fr}.calendar-time{font-size:.7rem}}
 @media(max-width:1050px){
   #tab-oggi.today-command-layout{grid-template-columns:1fr}
   #tab-oggi.today-command-layout > *{grid-column:1/-1!important}
-  #daily-boost-card{order:3}
-  #today-mail-grid{order:4}
-  #ai-briefing-card{order:5}
-  #news-card{order:6}
-  #ticker-tape{order:7}
-  #quotes-card{order:8}
-  #weather-card{order:9}
-  #today-stats-card{order:10}
-  #today-log-grid{order:11}
+  #calendar-today-card{order:2}
+  #today-action-card{order:3}
+  #daily-boost-card{order:4}
+  #today-mail-grid{order:5}
+  #ai-briefing-card{order:6}
+  #news-card{order:7}
+  #ticker-tape{order:8}
+  #quotes-card{order:9}
+  #weather-card{order:10}
+  #today-stats-card{order:11}
+  #today-log-grid{order:12}
 }
 [data-theme="light"] .rtb-select{background:#fff;border-color:#ccc;color:#333}
 [data-theme="light"] #rich-content{color:#0a1426;caret-color:#cc0033}
@@ -1177,6 +1195,17 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <button class="btn ghost sm" onclick="event.stopPropagation();openGeminiSetup()" title="Impostazioni AI" style="font-size:.75rem;padding:4px 10px">⚙️</button>
       </div>
       <div id="briefing-content"></div>
+    </div>
+  </div>
+
+  <!-- GOOGLE CALENDAR -->
+  <div class="card" id="calendar-today-card">
+    <div class="calendar-head">
+      <div class="calendar-title"><span class="calendar-logo" aria-hidden="true">G</span> Calendario oggi</div>
+      <div class="calendar-meta" id="google-calendar-meta">In attesa</div>
+    </div>
+    <div class="calendar-list" id="google-calendar-events">
+      <div class="calendar-empty">Nessun evento Google Calendar ancora sincronizzato.</div>
     </div>
   </div>
 
@@ -2730,6 +2759,7 @@ function defaultState(){ return {
     goalPlanner:{lastPlan:null},
     frAILesson:null,
     emailBriefings:{gmail:{updatedAt:null,items:[]},outlook:{updatedAt:null,items:[]}},
+    calendarBriefing:{updatedAt:null,events:[]},
     finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null}}
   };}
 
@@ -5293,6 +5323,58 @@ function renderMailBriefing(kind, data){
   }).join('');
 }
 
+// ============ GOOGLE CALENDAR ============
+function calendarDateLabel(iso, allDay=false){
+  if(!iso) return '';
+  try{
+    const d = new Date(iso);
+    if(isNaN(d)) return '';
+    if(allDay) return 'Tutto il giorno';
+    return d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
+  }catch(e){ return ''; }
+}
+
+function renderGoogleCalendar(){
+  ensureState();
+  const wrap = document.getElementById('google-calendar-events');
+  const meta = document.getElementById('google-calendar-meta');
+  if(!wrap) return;
+  const data = state.calendarBriefing || {};
+  const events = Array.isArray(data.events) ? data.events.slice() : [];
+  if(meta){
+    const updated = data.updatedAt ? mailTimeLabel(data.updatedAt) : '';
+    meta.textContent = updated ? `Agg. ${updated}` : 'In attesa';
+  }
+  if(!events.length){
+    wrap.innerHTML = '<div class="calendar-empty">Nessun evento Google Calendar nei prossimi giorni.</div>';
+    return;
+  }
+
+  const now = Date.now();
+  const today = todayISO();
+  const tomorrow = addDaysISO(today, 1);
+  const sorted = events.sort((a,b)=>String(a.start||'').localeCompare(String(b.start||''))).slice(0,8);
+  wrap.innerHTML = sorted.map((e,i)=>{
+    const start = e.start ? new Date(e.start) : null;
+    const end = e.end ? new Date(e.end) : null;
+    const day = start && !isNaN(start) ? start.toISOString().slice(0,10) : '';
+    const dayLabel = day === today ? 'Oggi' : day === tomorrow ? 'Domani' : (start ? start.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}) : '');
+    const time = e.allDay ? 'Tutto il giorno' : `${calendarDateLabel(e.start)}${e.end ? ' - '+calendarDateLabel(e.end) : ''}`;
+    const isNow = start && end && start.getTime() <= now && end.getTime() > now;
+    const cls = isNow ? 'now' : (i===0 ? 'next' : '');
+    const tag = e.url ? 'a' : 'div';
+    const href = e.url ? `href="${escapeHtml(e.url)}" target="_blank" rel="noopener"` : '';
+    return `<${tag} class="calendar-event ${cls}" ${href}>
+      <div class="calendar-time">${escapeHtml(dayLabel)}<br>${escapeHtml(time)}</div>
+      <div class="calendar-main">
+        <div class="calendar-name">${escapeHtml(e.title || 'Senza titolo')}</div>
+        ${e.location?`<div class="calendar-extra">📍 ${escapeHtml(e.location)}</div>`:''}
+        ${e.calendar?`<div class="calendar-extra">${escapeHtml(e.calendar)}</div>`:''}
+      </div>
+    </${tag}>`;
+  }).join('');
+}
+
 // ============ BRIEFING PERSONALE MATTINA/SERA ============
 const PERSONAL_BRIEFING_MODES = {
   morning:{label:'Mattina', icon:'AM'},
@@ -5338,6 +5420,13 @@ function buildPersonalBriefingContext(mode){
     gmail:(state.emailBriefings?.gmail?.items || []).slice(0,5).map(m=>({from:m.from||'',subject:m.subject||'',reason:m.reason||'',unread:!!m.unread})),
     outlook:(state.emailBriefings?.outlook?.items || []).slice(0,5).map(m=>({from:m.from||'',subject:m.subject||'',reason:m.reason||'',unread:!!m.unread}))
   };
+  const calendar = (state.calendarBriefing?.events || []).slice(0,8).map(e=>({
+    title:e.title||'',
+    start:e.start||'',
+    end:e.end||'',
+    allDay:!!e.allDay,
+    location:e.location||''
+  }));
   const goals = (state.goals||[]).slice(0,10).map(g=>{
     let pace = null;
     try{ pace = _goalPace(g); }catch(e){}
@@ -5354,6 +5443,7 @@ function buildPersonalBriefingContext(mode){
     mit,
     energy,
     time_blocks:blocks,
+    calendar_events:calendar,
     email_priority:mail,
     goals,
     inbox:(state.inbox||[]).filter(i=>!i.done).slice(-10).map(i=>i.text||''),
@@ -5514,6 +5604,7 @@ function renderAll(){
   try { renderTodayTodos();  } catch(e){ console.error('renderTodayTodos error:', e); }
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
   try { renderPersonalBriefings(); } catch(e){ console.error('renderPersonalBriefings error:', e); }
+  try { renderGoogleCalendar(); } catch(e){ console.error('renderGoogleCalendar error:', e); }
   try { renderMailBriefings(); } catch(e){ console.error('renderMailBriefings error:', e); }
   try { renderDailyMotivation(); } catch(e){ console.error('renderDailyMotivation error:', e); }
   try { renderFinance();         } catch(e){ console.error('renderFinance error:', e); }
