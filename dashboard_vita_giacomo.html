@@ -256,6 +256,25 @@ nav.tabs{display:none}
 .goal-add-form{background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:14px;border:1px solid var(--accent);display:none}
 .goal-add-form.open{display:block}
 .goal-prio-icon{font-size:.85rem;opacity:.9}
+.goal-planner{background:linear-gradient(135deg,rgba(20,184,166,.08),rgba(139,92,246,.07));border:1px solid var(--border);border-left:3px solid var(--teal);border-radius:10px;padding:14px;margin:14px 0}
+.goal-planner-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.goal-planner-title{font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.goal-planner-sub{font-size:.74rem;color:var(--muted2);margin-top:3px;line-height:1.45}
+.goal-planner-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+@media(max-width:900px){.goal-planner-grid{grid-template-columns:1fr 1fr}.goal-planner-grid .wide{grid-column:1/-1}}
+.goal-plan-preview{margin-top:12px;border-top:1px dashed var(--border);padding-top:12px}
+.goal-plan-summary{font-size:.84rem;line-height:1.55;color:var(--text);margin-bottom:10px}
+.goal-plan-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media(max-width:900px){.goal-plan-cols{grid-template-columns:1fr}}
+.goal-plan-box{background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:8px;padding:10px;min-width:0}
+.goal-plan-box h4{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted2);margin:0 0 7px;font-weight:800}
+.goal-plan-box ul{margin:0;padding-left:18px;font-size:.79rem;line-height:1.55;color:var(--text)}
+.goal-plan-box li{margin:4px 0}
+.goal-plan-meta{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.goal-plan-meta .tag{font-size:.68rem}
+.goal-plan-empty{font-size:.8rem;color:var(--muted2);line-height:1.55}
+.goal-plan-error{font-size:.8rem;color:var(--red);line-height:1.5}
+.goal-plan-loading{font-size:.8rem;color:var(--muted);padding:8px 0}
 
 /* === NETWORK === */
 .contact-card{background:var(--surface2);padding:12px;border-radius:8px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
@@ -1552,6 +1571,43 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <!-- Stats overview -->
     <div class="goals-overview" id="goals-overview" style="margin-top:14px"></div>
 
+    <!-- AI goal planner -->
+    <div class="goal-planner">
+      <div class="goal-planner-head">
+        <div>
+          <div class="goal-planner-title"><span class="ico">🧭</span> Pianificatore AI</div>
+          <div class="goal-planner-sub">Scrivi un obiettivo: lo trasformo in milestone, piano settimanale e task datate applicabili alla dashboard.</div>
+        </div>
+        <button class="btn ghost sm" onclick="clearGoalPlan()" style="font-size:.72rem;padding:4px 10px">Svuota</button>
+      </div>
+      <div class="goal-planner-grid">
+        <input class="wide" type="text" id="plan-goal-title" placeholder="Obiettivo (es. preparare esame X entro 20 giorni)"/>
+        <input type="date" id="plan-goal-deadline"/>
+        <select id="plan-goal-area">
+          <option value="">Area</option>
+          <option value="double">💼 Double</option>
+          <option value="como">⛵ Como</option>
+          <option value="francese">🇫🇷 Francese</option>
+          <option value="lettura">📚 Lettura</option>
+          <option value="sport">🏋️ Sport</option>
+          <option value="social">🤝 Social</option>
+          <option value="personale">👤 Personale</option>
+        </select>
+        <select id="plan-goal-intensity">
+          <option value="normal">Ritmo normale</option>
+          <option value="light">Leggero</option>
+          <option value="intense">Intenso</option>
+        </select>
+      </div>
+      <textarea id="plan-goal-notes" rows="2" placeholder="Vincoli o contesto opzionale: giorni disponibili, materiale, difficoltà, cosa evitare…"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+        <button class="btn sm" id="goal-plan-generate-btn" onclick="generateGoalPlan()">✨ Genera piano</button>
+        <button class="btn ghost sm" onclick="applyGoalPlan()" id="goal-plan-apply-btn" disabled>✓ Applica a obiettivi + task</button>
+        <span id="goal-plan-status" style="font-size:.76rem;color:var(--muted2)"></span>
+      </div>
+      <div id="goal-plan-preview" class="goal-plan-preview"></div>
+    </div>
+
     <!-- Add goal form -->
     <div class="goal-add-form" id="goal-add-form">
       <div style="font-size:.8rem;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">Nuovo obiettivo</div>
@@ -2641,6 +2697,7 @@ function defaultState(){ return {
     aiChat:{messages:[]},
     dailyMotivation:null,
     personalBriefings:{morning:null,evening:null},
+    goalPlanner:{lastPlan:null},
     frAILesson:null,
     emailBriefings:{gmail:{updatedAt:null,items:[]},outlook:{updatedAt:null,items:[]}},
     finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null}}
@@ -4265,6 +4322,12 @@ function setTodoDueQuick(id, when){
   save(); renderTodos();
 }
 
+function addDaysISO(base, days){
+  const d = new Date((base || todayISO()) + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0,10);
+}
+
 // ============ ABITUDINI ============
 function addHabit(){
   ensureState();
@@ -4438,6 +4501,238 @@ function loadDefaultGoals(){
   save(); renderGoals();
 }
 
+// AI goal planner
+function _cleanPlanJson(raw){
+  return (raw||'').replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/```\s*$/,'').trim();
+}
+
+function _normalizePlan(plan){
+  const today = todayISO();
+  const title = (plan.title || plan.goal || '').toString().trim();
+  const deadline = /^\d{4}-\d{2}-\d{2}$/.test(plan.deadline||'') ? plan.deadline : (document.getElementById('plan-goal-deadline')?.value || addDaysISO(today, 30));
+  const area = TODO_AREAS[plan.area] ? plan.area : (document.getElementById('plan-goal-area')?.value || 'personale');
+  const milestones = Array.isArray(plan.milestones) ? plan.milestones.slice(0,12).map(m=>({
+    title:(m.title || m.text || '').toString().trim(),
+    due:/^\d{4}-\d{2}-\d{2}$/.test(m.due||'') ? m.due : null
+  })).filter(m=>m.title) : [];
+  const weekly = Array.isArray(plan.weeklyPlan) ? plan.weeklyPlan.slice(0,10).map(w=>({
+    label:(w.label || w.week || '').toString().trim(),
+    focus:(w.focus || '').toString().trim(),
+    deliverable:(w.deliverable || '').toString().trim()
+  })).filter(w=>w.label || w.focus || w.deliverable) : [];
+  const tasks = Array.isArray(plan.tasks) ? plan.tasks.slice(0,24).map((t,i)=>({
+    text:(t.text || t.title || '').toString().trim(),
+    due:/^\d{4}-\d{2}-\d{2}$/.test(t.due||'') ? t.due : addDaysISO(today, Math.min(i, 14)),
+    prio:['high','med','low'].includes(t.prio) ? t.prio : (i<3?'high':'med'),
+    area:TODO_AREAS[t.area] ? t.area : area
+  })).filter(t=>t.text) : [];
+  return {
+    id:uid(),
+    title:title || document.getElementById('plan-goal-title')?.value.trim() || 'Nuovo piano',
+    summary:(plan.summary || '').toString().trim(),
+    target:{
+      value:parseFloat(plan.target?.value) || Math.max(1, milestones.length || tasks.length || 1),
+      unit:(plan.target?.unit || 'step').toString().trim()
+    },
+    deadline,
+    area,
+    priority:['high','medium','low'].includes(plan.priority) ? plan.priority : 'medium',
+    milestones,
+    weeklyPlan:weekly,
+    tasks,
+    created:new Date().toISOString()
+  };
+}
+
+function renderGoalPlanner(){
+  const wrap = document.getElementById('goal-plan-preview');
+  const status = document.getElementById('goal-plan-status');
+  const applyBtn = document.getElementById('goal-plan-apply-btn');
+  if(!wrap) return;
+  ensureState();
+  state.goalPlanner = state.goalPlanner || {lastPlan:null};
+  const plan = state.goalPlanner.lastPlan;
+  if(applyBtn) applyBtn.disabled = !plan;
+  if(!plan){
+    wrap.innerHTML = '<div class="goal-plan-empty">Genera un piano e lo vedrai qui prima di applicarlo. Nessuna task viene creata finché non premi <strong>Applica</strong>.</div>';
+    if(status) status.textContent = '';
+    return;
+  }
+  const area = TODO_AREAS[plan.area] || TODO_AREAS.personale;
+  const ms = plan.milestones || [];
+  const weekly = plan.weeklyPlan || [];
+  const tasks = plan.tasks || [];
+  wrap.innerHTML = `
+    <div class="goal-plan-summary"><strong>${escapeHtml(plan.title)}</strong>${plan.summary?` · ${escapeHtml(plan.summary)}`:''}</div>
+    <div class="goal-plan-meta">
+      <span class="tag ${area.color}">${area.icon} ${area.name}</span>
+      <span class="tag teal">📅 ${escapeHtml(plan.deadline||'senza deadline')}</span>
+      <span class="tag blue">🎯 ${escapeHtml(String(plan.target?.value||1))} ${escapeHtml(plan.target?.unit||'step')}</span>
+      <span class="tag yellow">📋 ${ms.length} milestone</span>
+      <span class="tag red">✅ ${tasks.length} task</span>
+    </div>
+    <div class="goal-plan-cols">
+      <div class="goal-plan-box">
+        <h4>Milestone</h4>
+        ${ms.length?`<ul>${ms.map(m=>`<li>${escapeHtml(m.title)}${m.due?` <span style="color:var(--muted2)">(${escapeHtml(m.due)})</span>`:''}</li>`).join('')}</ul>`:'<div class="goal-plan-empty">Nessuna milestone.</div>'}
+      </div>
+      <div class="goal-plan-box">
+        <h4>Settimane</h4>
+        ${weekly.length?`<ul>${weekly.map(w=>`<li><strong>${escapeHtml(w.label||'Settimana')}</strong>: ${escapeHtml(w.focus || w.deliverable || '')}</li>`).join('')}</ul>`:'<div class="goal-plan-empty">Nessun piano settimanale.</div>'}
+      </div>
+      <div class="goal-plan-box">
+        <h4>Task iniziali</h4>
+        ${tasks.length?`<ul>${tasks.slice(0,10).map(t=>`<li>${escapeHtml(t.text)} <span style="color:var(--muted2)">(${escapeHtml(t.due)})</span></li>`).join('')}</ul>`:'<div class="goal-plan-empty">Nessuna task.</div>'}
+      </div>
+    </div>`;
+  if(status) status.textContent = plan.created ? `piano generato ${formatTimeAgo(new Date(plan.created))}` : '';
+}
+
+async function generateGoalPlan(){
+  const title = document.getElementById('plan-goal-title')?.value.trim();
+  const deadline = document.getElementById('plan-goal-deadline')?.value || addDaysISO(todayISO(), 30);
+  const area = document.getElementById('plan-goal-area')?.value || 'personale';
+  const intensity = document.getElementById('plan-goal-intensity')?.value || 'normal';
+  const notes = document.getElementById('plan-goal-notes')?.value.trim() || '';
+  const status = document.getElementById('goal-plan-status');
+  const btn = document.getElementById('goal-plan-generate-btn');
+  const wrap = document.getElementById('goal-plan-preview');
+  if(!title){ alert('Scrivi prima un obiettivo da pianificare.'); return; }
+  const key = getGeminiKey();
+  if(!key){ openGeminiSetup(); return; }
+  ensureState();
+  if(status) status.textContent = 'generazione in corso...';
+  if(wrap) wrap.innerHTML = '<div class="goal-plan-loading">Sto spezzando l’obiettivo in milestone e task...</div>';
+  if(btn) btn.disabled = true;
+
+  const ctx = {
+    today:todayISO(),
+    existing_goals:(state.goals||[]).slice(0,12).map(g=>({title:g.title,deadline:g.deadline||'',area:g.area||'',progress:g.current,target:g.target,unit:g.unit||''})),
+    active_todos:(state.todos||[]).filter(t=>!t.done).slice(0,16).map(t=>({text:t.text,due:t.due||'',prio:t.prio||'med',area:t.area||''})),
+    energy_today:state.energy?.[todayISO()] || {},
+    time_blocks_today:state.timeBlocks?.[todayISO()] || []
+  };
+  const prompt = `Sei un planner operativo personale per Giacomo.
+Trasforma l'obiettivo in un piano concreto applicabile alla dashboard.
+
+INPUT:
+- obiettivo: ${title}
+- deadline: ${deadline}
+- area preferita: ${area}
+- intensità: ${intensity}
+- vincoli/contesto: ${notes || 'nessuno'}
+
+CONTESTO DASHBOARD:
+${JSON.stringify(ctx, null, 0)}
+
+Output JSON puro, niente markdown:
+{
+  "title":"titolo breve",
+  "summary":"1 frase: strategia del piano",
+  "area":"double|como|francese|lettura|sport|social|personale",
+  "priority":"high|medium|low",
+  "deadline":"YYYY-MM-DD",
+  "target":{"value": numero, "unit":"step|capitoli|sessioni|%|altro"},
+  "milestones":[{"title":"...", "due":"YYYY-MM-DD"}],
+  "weeklyPlan":[{"label":"Settimana 1", "focus":"...", "deliverable":"..."}],
+  "tasks":[{"text":"azione concreta", "due":"YYYY-MM-DD", "prio":"high|med|low", "area":"double|como|francese|lettura|sport|social|personale"}]
+}
+
+Regole:
+- massimo 6 milestone, massimo 6 settimane, massimo 12 task.
+- Le task devono essere azioni fisiche o mentali completabili, non slogan.
+- Distribuisci le date tra oggi e la deadline.
+- Se la deadline è vicina, riduci ambizione e scegli solo essenziale.
+- Non duplicare task già presenti nel contesto se sono identiche.
+- Il piano deve essere realistico per una persona con altre attività aperte.`;
+
+  try{
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{temperature:.45,maxOutputTokens:2200,thinkingConfig:{thinkingBudget:0},responseMimeType:'application/json'}
+      })
+    });
+    if(!resp.ok){ const t=await resp.text(); throw new Error('HTTP '+resp.status+' — '+t.slice(0,200)); }
+    const data = await resp.json();
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if(!raw) throw new Error('Risposta vuota dal modello.');
+    const parsed = JSON.parse(_cleanPlanJson(raw));
+    state.goalPlanner = state.goalPlanner || {};
+    state.goalPlanner.lastPlan = _normalizePlan(parsed);
+    save();
+    renderGoalPlanner();
+  }catch(e){
+    if(wrap) wrap.innerHTML = `<div class="goal-plan-error">Errore piano: ${escapeHtml(e.message)}</div>`;
+    if(status) status.textContent = 'errore';
+  }finally{
+    if(btn) btn.disabled = false;
+  }
+}
+
+function applyGoalPlan(){
+  ensureState();
+  const plan = state.goalPlanner?.lastPlan;
+  if(!plan){ alert('Genera prima un piano.'); return; }
+  const ok = confirm(`Applicare il piano "${plan.title}"?\n\nCreo 1 obiettivo, ${plan.milestones?.length||0} milestone e ${plan.tasks?.length||0} task.`);
+  if(!ok) return;
+  const goalId = uid();
+  const goal = {
+    id:goalId,
+    title:plan.title,
+    desc:plan.summary || 'Piano generato dal Pianificatore AI',
+    target:parseFloat(plan.target?.value) || Math.max(1, (plan.milestones||[]).length || 1),
+    current:0,
+    unit:plan.target?.unit || 'step',
+    deadline:plan.deadline || null,
+    area:plan.area || null,
+    priority:plan.priority || 'medium',
+    milestones:(plan.milestones||[]).map(m=>({id:uid(), text:m.due ? `${m.title} (${m.due})` : m.title, done:false})),
+    log:[{id:uid(), date:todayISO(), delta:0, value:0, note:'Piano generato e applicato dal Pianificatore AI'}],
+    created:todayISO(),
+    sourcePlanId:plan.id
+  };
+  state.goals.push(goal);
+  const existing = new Set((state.todos||[]).filter(t=>!t.done).map(t=>(t.text||'').trim().toLowerCase()));
+  let added = 0;
+  (plan.tasks||[]).forEach(t=>{
+    const key = (t.text||'').trim().toLowerCase();
+    if(!key || existing.has(key)) return;
+    state.todos.push({
+      id:uid(),
+      text:t.text,
+      done:false,
+      area:t.area || plan.area || null,
+      prio:t.prio || 'med',
+      due:t.due || null,
+      created:new Date().toISOString(),
+      sourceGoalId:goalId,
+      sourcePlanId:plan.id
+    });
+    existing.add(key);
+    added++;
+  });
+  state.goalPlanner.lastPlan = null;
+  save();
+  renderGoals();
+  renderTodos();
+  alert(`Piano applicato: obiettivo creato e ${added} task aggiunte.`);
+}
+
+function clearGoalPlan(){
+  ensureState();
+  state.goalPlanner = state.goalPlanner || {};
+  state.goalPlanner.lastPlan = null;
+  ['plan-goal-title','plan-goal-notes'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const d = document.getElementById('plan-goal-deadline'); if(d) d.value = '';
+  const a = document.getElementById('plan-goal-area'); if(a) a.value = '';
+  const i = document.getElementById('plan-goal-intensity'); if(i) i.value = 'normal';
+  save();
+  renderGoalPlanner();
+}
+
 function updateGoalProgress(id, delta){
   const g = state.goals.find(x=>x.id===id); if(!g) return;
   _goalEnsureShape(g);
@@ -4588,6 +4883,7 @@ function _goalSortFn(a,b){
 
 function renderGoals(){
   ensureState();
+  renderGoalPlanner();
   state.goals.forEach(_goalEnsureShape);
   _renderGoalsOverview();
   const c = document.getElementById('goals-list');
@@ -5310,6 +5606,8 @@ function initDateFields(){
   document.getElementById('ck-month').value = todayISO().slice(0,7);
   document.getElementById('todo-due').value = todayISO();
   document.getElementById('goal-deadline').value = '2026-11-30';
+  const planDeadline = document.getElementById('plan-goal-deadline');
+  if(planDeadline) planDeadline.value = addDaysISO(todayISO(), 30);
 }
 
 function dashInit() {
