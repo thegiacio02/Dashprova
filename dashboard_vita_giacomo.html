@@ -1219,7 +1219,10 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <div class="card" id="calendar-today-card">
     <div class="calendar-head">
       <div class="calendar-title"><span class="calendar-logo" aria-hidden="true">G</span> Calendario oggi</div>
-      <div class="calendar-meta" id="google-calendar-meta">In attesa</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+        <div class="calendar-meta" id="google-calendar-meta">In attesa</div>
+        <button class="btn ghost sm" onclick="refreshGoogleCalendarBox()" id="google-calendar-refresh-btn" style="font-size:.72rem;padding:4px 10px">↻ Aggiorna</button>
+      </div>
     </div>
     <div class="calendar-list" id="google-calendar-events">
       <div class="calendar-empty">Nessun evento Google Calendar ancora sincronizzato.</div>
@@ -5440,6 +5443,23 @@ function renderGoogleCalendar(){
       <div class="calendar-week-body"><div class="calendar-time-labels">${timeLabels}</div>${columns}</div>
     </div>
   </div>`;
+}
+
+async function refreshGoogleCalendarBox(){
+  const btn = document.getElementById('google-calendar-refresh-btn');
+  const meta = document.getElementById('google-calendar-meta');
+  const oldText = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '↻ Aggiorno…'; }
+  if(meta) meta.textContent = 'Rileggo Firestore…';
+  try{
+    await loadStateFromFirestore();
+    renderGoogleCalendar();
+  }catch(e){
+    if(meta) meta.textContent = 'Errore refresh';
+    console.warn('Calendar refresh failed:', e.message);
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = oldText || '↻ Aggiorna'; }
+  }
 }
 
 // ============ BRIEFING PERSONALE MATTINA/SERA ============
