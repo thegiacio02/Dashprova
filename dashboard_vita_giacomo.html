@@ -5809,12 +5809,16 @@ function todoBriefingList(){
 
 function buildPersonalBriefingContext(mode){
   ensureState();
-  const today = todayISO();
+  const localDateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const todayDate = new Date();
+  todayDate.setHours(0,0,0,0);
+  const tomorrowDate = new Date(todayDate);
+  tomorrowDate.setDate(todayDate.getDate()+1);
+  const today = localDateKey(todayDate);
+  const tomorrow = localDateKey(tomorrowDate);
   const y = new Date(); y.setDate(y.getDate()-1);
-  const yesterday = y.toISOString().slice(0,10);
-  const tm = new Date(); tm.setDate(tm.getDate()+1);
-  const tomorrow = tm.toISOString().slice(0,10);
-  const tomorrowWeekday = tm.toLocaleDateString('it-IT',{timeZone:'Europe/Paris',weekday:'long',day:'2-digit',month:'long'});
+  const yesterday = localDateKey(y);
+  const tomorrowWeekday = tomorrowDate.toLocaleDateString('it-IT',{timeZone:'Europe/Paris',weekday:'long',day:'2-digit',month:'long'});
   const mit = (state.mit?.[today] || []).map(m=>typeof m==='object'?m:{text:m||'',done:false}).filter(m=>m.text);
   const energy = state.energy?.[today] || {};
   const blocks = (state.timeBlocks?.[today] || []).map(b=>({start:b.start,end:b.end,what:b.what}));
@@ -5841,16 +5845,29 @@ function buildPersonalBriefingContext(mode){
       return localDate === dateStr;
     } catch { return false; }
   };
-  const targetDate = mode === 'evening' ? tomorrow : today;
   const allCalEvents = (state.calendarBriefing?.events || []);
-  const calendar = allCalEvents.filter(e => _isOnDate(e.start, targetDate) || (e.allDay && (e.start||'').slice(0,10) === targetDate)).slice(0,15).map(e=>({
+  const mapCalendarEvent = e => ({
     title:e.title||'',
+    date:e.start ? (e.allDay ? String(e.start).slice(0,10) : new Date(e.start).toLocaleDateString('it-CA',{timeZone:'Europe/Paris'})) : '',
     start:_fmtLocal(e.start),
     end:_fmtLocal(e.end),
+    raw_start:e.start||'',
+    raw_end:e.end||'',
     allDay:!!e.allDay,
+    time:e.allDay ? 'Tutto il giorno' : `${calendarDateLabel(e.start)}${e.end ? ' - '+calendarDateLabel(e.end) : ''}`,
     location:e.location||'',
     description:(e.description||'').slice(0,160)
-  }));
+  });
+  const calendarToday = allCalEvents
+    .filter(e => _isOnDate(e.start, today) || (e.allDay && String(e.start||'').slice(0,10) === today))
+    .slice(0,15)
+    .map(mapCalendarEvent);
+  const calendarTomorrow = allCalEvents
+    .filter(e => _isOnDate(e.start, tomorrow) || (e.allDay && String(e.start||'').slice(0,10) === tomorrow))
+    .slice(0,15)
+    .map(mapCalendarEvent);
+  const targetDate = mode === 'evening' ? tomorrow : today;
+  const calendar = mode === 'evening' ? calendarTomorrow : calendarToday;
   const goals = (state.goals||[]).slice(0,6).map(g=>{
     let pace = null;
     try{ pace = _goalPace(g); }catch(e){}
@@ -5868,7 +5885,12 @@ function buildPersonalBriefingContext(mode){
     todos:todoBriefingList(),
     mit,
     energy,
+    time_blocks:blocks,
+    calendar_updated_at:state.calendarBriefing?.updatedAt || '',
     calendar_events:calendar,
+    calendar_today:calendarToday,
+    calendar_tomorrow:calendarTomorrow,
+    calendar_next_events:allCalEvents.slice(0,20).map(mapCalendarEvent),
     email_priority:mail,
     goals,
     inbox:(state.inbox||[]).filter(i=>!i.done).slice(-8).map(i=>i.text||''),
@@ -5881,6 +5903,7 @@ function _buildMorningPrompt(ctx){
   return `Sei l'assistente personale di Giacomo. Preparagli il briefing della giornata: diretto, breve, operativo.
 
 Usa SOLO i dati JSON sotto. Non inventare nulla. Gli orari sono già in fuso orario locale (Europe/Paris).
+Per l'agenda usa DATI.calendar_today. Se DATI.calendar_today contiene eventi, non scrivere che il calendario è vuoto.
 Scrivi in italiano. Niente emoji nel testo.
 
 Formato OBBLIGATORIO:
@@ -5908,6 +5931,7 @@ function _buildEveningPrompt(ctx){
 Analizza il calendario di domani e i task pendenti. Dagli consigli operativi e una strategia per gestire la giornata al meglio.
 
 Usa SOLO i dati JSON sotto. Non inventare nulla. Gli orari sono in fuso orario locale (Europe/Paris).
+Per l'agenda di domani usa DATI.calendar_tomorrow prima di ogni altra cosa. Se DATI.calendar_tomorrow contiene eventi, non scrivere mai che domani è senza impegni in calendario.
 Scrivi in italiano. Niente emoji nel testo. Tono diretto, sintetico, da coach pragmatico.
 
 Formato OBBLIGATORIO:
