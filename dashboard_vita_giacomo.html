@@ -372,6 +372,11 @@ input,select,textarea{max-width:100%}
 .wf-temps .wf-min{color:var(--muted2);font-weight:500}
 .weather-detail{margin-top:8px}
 @media(max-width:700px){.weather-forecast{grid-template-columns:repeat(7,1fr);gap:3px}.wf-name{font-size:.55rem}.wf-temps{font-size:.62rem}.wf-icon{font-size:1rem}}
+.weather-mini{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:999px;font-size:.82rem;cursor:pointer;transition:border-color .15s,transform .15s;margin-top:16px}
+.weather-mini:hover{border-color:var(--accent);transform:translateY(-1px)}
+.weather-mini-icon{font-size:1.1rem;line-height:1}
+.weather-mini-temp{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.weather-mini-summary{color:var(--muted);font-size:.74rem}
 
 .quote-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;transition:background .15s}
 .quote-row:last-child{border-bottom:none}
@@ -1040,6 +1045,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .pb-title{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--text);font-size:.9rem}
 .pb-icon{width:24px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;font-weight:900;flex:0 0 auto}
 .pb-icon.morning{background:linear-gradient(135deg,#f59e0b,#06b6d4)}
+.pb-icon.evening{background:linear-gradient(135deg,#7c3aed,#1e3a8a)}
 .pb-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .pb-meta{font-size:.68rem;color:var(--muted2);font-family:var(--mono);text-align:right;line-height:1.35}
 .pb-content{font-size:.85rem;line-height:1.65;color:var(--text);min-height:74px;word-break:break-word}
@@ -1050,27 +1056,27 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .pb-loading{color:var(--muted);font-size:.82rem;padding:8px 0}
 .pb-error{color:var(--red);font-size:.82rem;line-height:1.5;padding:8px 0}
 /* === POMODORO 50/10 === */
-#pomo-widget{position:fixed;right:18px;bottom:18px;z-index:99998;display:flex;flex-direction:column;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.14),0 1px 3px rgba(0,0,0,.08);font-size:.78rem;user-select:none;min-width:220px;max-width:260px}
-#pomo-widget.collapsed{min-width:0;max-width:none;padding:6px;border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;flex-direction:row}
-#pomo-widget.collapsed > :not(.pomo-toggle){display:none}
-#pomo-widget .pomo-bar{display:flex;align-items:center;gap:6px}
-#pomo-widget .pomo-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .25s}
-#pomo-widget.work .pomo-dot{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.18)}
-#pomo-widget.break .pomo-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18)}
-#pomo-widget.paused .pomo-dot{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.18)}
-#pomo-widget .pomo-time{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);min-width:46px;text-align:center;font-size:.9rem}
-#pomo-widget .pomo-phase{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-right:2px}
-#pomo-widget .pomo-spacer{flex:1}
-#pomo-widget button{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:3px 6px;border-radius:6px;font-size:.9rem;line-height:1;transition:background .15s,color .15s}
-#pomo-widget button:hover{background:var(--bg);color:var(--text)}
-#pomo-widget .pomo-toggle{font-size:.75rem;padding:3px 5px}
-#pomo-widget .pomo-row2{display:flex;gap:4px;align-items:center}
-#pomo-widget .pomo-row2 input,#pomo-widget .pomo-row2 select{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:.72rem;font-family:inherit;min-width:0}
-#pomo-widget .pomo-row2 input{flex:1}
-#pomo-widget .pomo-row2 select{flex-shrink:0;max-width:72px}
-#pomo-widget .pomo-row2 input:focus,#pomo-widget .pomo-row2 select:focus{outline:0;border-color:var(--accent)}
-#pomo-widget .pomo-logged{font-size:.66rem;color:var(--muted);text-align:right;padding:0 2px}
-@media(max-width:768px){#pomo-widget{display:none !important}}
+#pomo-fab{position:fixed;right:18px;bottom:18px;z-index:99998;display:flex;flex-direction:column;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px 10px;box-shadow:0 6px 18px rgba(0,0,0,.14),0 1px 3px rgba(0,0,0,.08);font-size:.78rem;user-select:none;min-width:220px;max-width:260px}
+#pomo-fab.collapsed{min-width:0;max-width:none;padding:6px;border-radius:50%;width:36px;height:36px;align-items:center;justify-content:center;cursor:pointer;flex-direction:row}
+#pomo-fab.collapsed > :not(.pomo-toggle){display:none}
+#pomo-fab .pomo-bar{display:flex;align-items:center;gap:6px}
+#pomo-fab .pomo-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .25s}
+#pomo-fab.work .pomo-dot{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.18)}
+#pomo-fab.break .pomo-dot{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.18)}
+#pomo-fab.paused .pomo-dot{background:#f59e0b;box-shadow:0 0 0 3px rgba(245,158,11,.18)}
+#pomo-fab .pomo-time{font-variant-numeric:tabular-nums;font-weight:700;color:var(--text);min-width:46px;text-align:center;font-size:.9rem}
+#pomo-fab .pomo-phase{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-right:2px}
+#pomo-fab .pomo-spacer{flex:1}
+#pomo-fab button{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:3px 6px;border-radius:6px;font-size:.9rem;line-height:1;transition:background .15s,color .15s}
+#pomo-fab button:hover{background:var(--bg);color:var(--text)}
+#pomo-fab .pomo-toggle{font-size:.75rem;padding:3px 5px}
+#pomo-fab .pomo-row2{display:flex;gap:4px;align-items:center}
+#pomo-fab .pomo-row2 input,#pomo-fab .pomo-row2 select{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:.72rem;font-family:inherit;min-width:0}
+#pomo-fab .pomo-row2 input{flex:1}
+#pomo-fab .pomo-row2 select{flex-shrink:0;max-width:72px}
+#pomo-fab .pomo-row2 input:focus,#pomo-fab .pomo-row2 select:focus{outline:0;border-color:var(--accent)}
+#pomo-fab .pomo-logged{font-size:.66rem;color:var(--muted);text-align:right;padding:0 2px}
+@media(max-width:768px){#pomo-fab{display:none !important}}
 #auth-overlay{position:fixed;inset:0;z-index:9999999;display:flex;align-items:center;justify-content:center;background:#05080f}
 #auth-box{background:#0c1322;border:1px solid #1f2d4d;border-radius:12px;padding:48px 40px;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:24px}
 #auth-box h2{margin:0;font-size:1.3rem;color:#e8eef9;font-weight:700;letter-spacing:.04em;text-align:center}
@@ -1119,6 +1125,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <nav id="tabs">
     <span class="side-group-title">Quotidiano</span>
     <button data-tab="oggi" class="side-item active">Oggi</button>
+    <button data-tab="notizie" class="side-item">📰 Notizie</button>
     <button data-tab="chiusure" class="side-item">⛵ Chiusure <span id="chiusure-badge" class="side-badge">0</span></button>
     <button data-tab="todo" class="side-item">Cose da fare <span id="todo-badge" class="side-badge">0</span></button>
     <button data-tab="settimana" class="side-item">Settimana</button>
@@ -1170,41 +1177,23 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 <!-- ============ OGGI ============ -->
 <section class="tab active today-command-layout" id="tab-oggi">
 
-  <!-- TICKER TAPE -->
-  <div class="ticker-tape" id="ticker-tape" title="Mercati in tempo reale · passa col mouse per fermare">
-    <div class="ticker-track" id="ticker-track"><span class="ticker-item"><span class="ticker-sym">···</span><span class="ticker-price">caricamento mercati</span></span></div>
-  </div>
-
   <!-- BRIEFING PERSONALE MATTINA/SERA -->
-  <div class="card collapsible personal-briefing-card" id="personal-briefing-card" data-card-id="personal-briefing" style="margin-top:16px">
+  <div class="card collapsible personal-briefing-card" id="personal-briefing-card" data-card-id="personal-briefing">
     <h2 onclick="toggleCard(this)" style="justify-content:space-between">
-      <span style="display:flex;align-items:center;gap:8px"><span class="ico">🧭</span> Briefing personale <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· piano della giornata</span></span>
+      <span style="display:flex;align-items:center;gap:8px"><span class="ico">🧭</span> <span id="personal-briefing-title">Briefing personale</span> <span id="personal-briefing-subtitle" style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· piano della giornata</span></span>
       <span class="chevron">▾</span>
     </h2>
     <div class="card-body">
       <div class="pb-panel">
         <div class="pb-panel-head">
-          <div class="pb-title"><span class="pb-icon morning">AM</span> Briefing del giorno</div>
+          <div class="pb-title"><span class="pb-icon" id="personal-briefing-icon">AM</span> <span id="personal-briefing-label">Briefing del giorno</span></div>
           <div class="pb-actions">
-            <span class="pb-meta" id="morning-briefing-meta"></span>
-            <button class="btn ghost sm" id="morning-briefing-btn" onclick="event.stopPropagation();refreshPersonalBriefing('morning', true)" style="font-size:.72rem;padding:4px 10px">↻ Genera</button>
+            <span class="pb-meta" id="personal-briefing-meta"></span>
+            <button class="btn ghost sm" id="personal-briefing-btn" onclick="event.stopPropagation();refreshPersonalBriefing(currentPersonalBriefingMode(), true)" style="font-size:.72rem;padding:4px 10px">↻ Genera</button>
           </div>
         </div>
-        <div class="pb-content" id="morning-briefing-content"></div>
+        <div class="pb-content" id="personal-briefing-content"></div>
       </div>
-    </div>
-  </div>
-
-  <!-- AI BRIEFING (collassabile, default aperto) -->
-  <div class="card collapsible" id="ai-briefing-card" data-card-id="briefing" style="border-left:3px solid var(--accent)">
-    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🤖</span> Briefing AI <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· situazione mondiale</span></span><span class="chevron">▾</span></h2>
-    <div class="card-body">
-      <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-        <span id="briefing-meta" style="font-size:.72rem;color:var(--muted);margin-right:auto"></span>
-        <button class="btn ghost sm" onclick="event.stopPropagation();refreshAIBriefing()" id="briefing-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
-        <button class="btn ghost sm" onclick="event.stopPropagation();openGeminiSetup()" title="Impostazioni AI" style="font-size:.75rem;padding:4px 10px">⚙️</button>
-      </div>
-      <div id="briefing-content"></div>
     </div>
   </div>
 
@@ -1250,30 +1239,11 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- NEWS LIVE -->
-  <div class="card" id="news-card" style="margin-top:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <h2 style="margin:0"><span class="ico">📰</span> Rassegna stampa</h2>
-      <button class="btn ghost sm" onclick="loadNews(true)" id="news-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
-    </div>
-    <div class="news-grid" id="news-grid">
-      <div id="news-bloomberg"></div>
-      <div id="news-reuters"></div>
-      <div id="news-sole24"></div>
-    </div>
-  </div>
-
-  <!-- STATS STRIP (collassabile) -->
-  <div class="card collapsible collapsed today-muted-context" id="today-stats-card" data-card-id="stats" style="margin-top:16px">
-    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📊</span> Statistiche rapide</span><span class="chevron">▾</span></h2>
-    <div class="card-body">
-      <div class="stats-strip" id="stats-strip">
-        <div class="stat-item"><span class="stat-label">SETTIMANA</span><span class="stat-value" id="kpi-week">-</span><span class="stat-sub" id="kpi-week-date">—</span></div>
-        <div class="stat-item"><span class="stat-label">SESSIONI 7GG</span><span class="stat-value" id="kpi-sessions">0</span><span class="stat-sub">log attività</span></div>
-        <div class="stat-item"><span class="stat-label">SONNO 7GG</span><span class="stat-value"><span id="kpi-sleep">—</span><span class="stat-unit">h</span></span><span class="stat-sub" id="kpi-sleep-status">—</span></div>
-        <div class="stat-item"><span class="stat-label">CORNICE</span><span class="stat-value"><span id="kpi-cornice">B</span></span><span class="stat-sub"><span id="kpi-cornice-name">Media</span> · <span id="kpi-cornice-desc">Apr / Ott</span></span></div>
-      </div>
-    </div>
+  <!-- METEO mini widget -->
+  <div class="weather-mini" id="weather-mini" onclick="switchTab('notizie')" title="Apri sezione Notizie per il dettaglio">
+    <span class="weather-mini-icon" id="weather-mini-icon">🌤️</span>
+    <span class="weather-mini-temp" id="weather-mini-temp">—°</span>
+    <span class="weather-mini-summary" id="weather-mini-summary">Meteo Milano</span>
   </div>
 
   <!-- LOG RAPIDO + LOG SONNO (collassabili) -->
@@ -1322,28 +1292,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- MERCATI dettaglio (collassabile) -->
-  <div class="card collapsible collapsed today-muted-context" id="quotes-card" data-card-id="mercati" style="margin-top:16px">
-    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📈</span> Mercati · dettaglio</span><span class="chevron">▾</span></h2>
-    <div class="card-body">
-      <div id="quotes-content">
-        <div class="quote-row" data-sym="QQQ"><span class="quote-label">QQQ <span class="quote-sub">Nasdaq 100 ETF</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
-        <div class="quote-row" data-sym="FTSEMIB.MI"><span class="quote-label">FTSE MIB <span class="quote-sub">Milano</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
-        <div class="quote-row" data-sym="EURUSD=X"><span class="quote-label">EUR/USD <span class="quote-sub">Forex</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- METEO (in fondo, collassabile) -->
-  <div class="card collapsible collapsed today-muted-context" id="weather-card" data-card-id="meteo" style="margin-top:16px">
-    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🌤️</span> Meteo Milano</span><span class="chevron">▾</span></h2>
-    <div class="card-body">
-      <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
-      <div id="weather-forecast" class="weather-forecast"></div>
-      <div id="weather-detail" class="weather-detail"></div>
-    </div>
-  </div>
-
   <!-- MAIL PRIORITARIE -->
   <div class="mail-grid" id="today-mail-grid">
     <div class="card mail-card" id="gmail-priority-card">
@@ -1375,6 +1323,60 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         </div>
       </div>
     </div>
+  </div>
+
+</section>
+
+<!-- ============ NOTIZIE & MERCATI ============ -->
+<section class="tab" id="tab-notizie">
+
+  <!-- TICKER TAPE -->
+  <div class="ticker-tape" id="ticker-tape" title="Mercati in tempo reale · passa col mouse per fermare">
+    <div class="ticker-track" id="ticker-track"><span class="ticker-item"><span class="ticker-sym">···</span><span class="ticker-price">caricamento mercati</span></span></div>
+  </div>
+
+  <!-- AI BRIEFING situazione mondiale -->
+  <div class="card collapsible" id="ai-briefing-card" data-card-id="briefing" style="border-left:3px solid var(--accent);margin-top:16px">
+    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🤖</span> Briefing AI <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· situazione mondiale</span></span><span class="chevron">▾</span></h2>
+    <div class="card-body">
+      <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+        <span id="briefing-meta" style="font-size:.72rem;color:var(--muted);margin-right:auto"></span>
+        <button class="btn ghost sm" onclick="event.stopPropagation();refreshAIBriefing()" id="briefing-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
+        <button class="btn ghost sm" onclick="event.stopPropagation();openGeminiSetup()" title="Impostazioni AI" style="font-size:.75rem;padding:4px 10px">⚙️</button>
+      </div>
+      <div id="briefing-content"></div>
+    </div>
+  </div>
+
+  <!-- RASSEGNA STAMPA -->
+  <div class="card" id="news-card" style="margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h2 style="margin:0"><span class="ico">📰</span> Rassegna stampa</h2>
+      <button class="btn ghost sm" onclick="loadNews(true)" id="news-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
+    </div>
+    <div class="news-grid" id="news-grid">
+      <div id="news-bloomberg"></div>
+      <div id="news-reuters"></div>
+      <div id="news-sole24"></div>
+    </div>
+  </div>
+
+  <!-- MERCATI dettaglio -->
+  <div class="card" id="quotes-card" data-card-id="mercati" style="margin-top:16px">
+    <h2><span class="ico">📈</span> Mercati · dettaglio</h2>
+    <div id="quotes-content">
+      <div class="quote-row" data-sym="QQQ"><span class="quote-label">QQQ <span class="quote-sub">Nasdaq 100 ETF</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+      <div class="quote-row" data-sym="FTSEMIB.MI"><span class="quote-label">FTSE MIB <span class="quote-sub">Milano</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+      <div class="quote-row" data-sym="EURUSD=X"><span class="quote-label">EUR/USD <span class="quote-sub">Forex</span></span><span class="quote-price-wrap"><span class="quote-price">—</span><span class="quote-change">—</span></span></div>
+    </div>
+  </div>
+
+  <!-- METEO dettaglio -->
+  <div class="card" id="weather-card" data-card-id="meteo" style="margin-top:16px">
+    <h2><span class="ico">🌤️</span> Meteo Milano</h2>
+    <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
+    <div id="weather-forecast" class="weather-forecast"></div>
+    <div id="weather-detail" class="weather-detail"></div>
   </div>
 
 </section>
@@ -2797,7 +2799,7 @@ function defaultState(){ return {
     focus:{},
     flTagFilter:'all',
     dailyMotivation:null,
-    personalBriefings:{morning:null},
+    personalBriefings:{morning:null, evening:null},
     goalPlanner:{lastPlan:null},
     frAILesson:null,
     emailBriefings:{gmail:{updatedAt:null,items:[]},outlook:{updatedAt:null,items:[]}},
@@ -3477,22 +3479,7 @@ function saveSignals(){
 
 // ============ RENDER ============
 function renderTopKpis(){
-  const c = CORNICI[state.cornice];
-  document.getElementById('kpi-cornice').textContent = state.cornice;
-  document.getElementById('kpi-cornice-name').textContent = c.name;
-  document.getElementById('kpi-cornice-desc').textContent = c.desc;
-  document.getElementById('kpi-week').textContent = weekNum(new Date());
-  const ws = weekStart(new Date());
-  document.getElementById('kpi-week-date').textContent = `dal ${ws.toLocaleDateString('it-IT')}`;
-  document.getElementById('kpi-sessions').textContent = sessionsInWeek().length;
-
-  const last7 = state.sleep.slice(-7);
-  if(last7.length){
-    const avg = last7.reduce((a,b)=>a+b.h,0)/last7.length;
-    document.getElementById('kpi-sleep').textContent = avg.toFixed(1);
-    const st = avg>=7 ? 'OK ✓' : avg>=6 ? 'sotto target' : 'critico';
-    document.getElementById('kpi-sleep-status').textContent = st;
-  }
+  // Statistiche rapide rimosse dalla dashboard, no-op (rimangono i grafici nella tab Settimana).
 }
 
 function renderRecent(){
@@ -3507,6 +3494,14 @@ function renderRecent(){
 }
 
 function escapeHtml(s){ return (s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function formatAIChatText(t){
+  return escapeHtml(t)
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`([^`]+)`/g,'<code style="background:var(--card);padding:1px 5px;border-radius:3px;font-size:.85em">$1</code>')
+    .replace(/\n/g,'<br>');
+}
 
 let chartWeek, chartTrend, chartSleep;
 
@@ -5780,11 +5775,16 @@ async function refreshChiusure(){
 
 // ============ BRIEFING PERSONALE DEL GIORNO ============
 const PERSONAL_BRIEFING_MODES = {
-  morning:{label:'Briefing del giorno', icon:'AM'}
+  morning:{label:'Briefing del giorno', icon:'AM', title:'Briefing personale', subtitle:'piano della giornata'},
+  evening:{label:'Briefing della sera', icon:'PM', title:'Briefing della sera', subtitle:'prepara il domani'}
 };
-let _personalBriefingInFlight = {morning:false};
+const EVENING_BRIEFING_START_HOUR = 19;
+let _personalBriefingInFlight = {morning:false, evening:false};
 
-function currentPersonalBriefingMode(){ return 'morning'; }
+function currentPersonalBriefingMode(){
+  const h = new Date().getHours();
+  return h >= EVENING_BRIEFING_START_HOUR ? 'evening' : 'morning';
+}
 
 function todoBriefingList(){
   const today = todayISO();
@@ -5812,6 +5812,9 @@ function buildPersonalBriefingContext(mode){
   const today = todayISO();
   const y = new Date(); y.setDate(y.getDate()-1);
   const yesterday = y.toISOString().slice(0,10);
+  const tm = new Date(); tm.setDate(tm.getDate()+1);
+  const tomorrow = tm.toISOString().slice(0,10);
+  const tomorrowWeekday = tm.toLocaleDateString('it-IT',{timeZone:'Europe/Paris',weekday:'long',day:'2-digit',month:'long'});
   const mit = (state.mit?.[today] || []).map(m=>typeof m==='object'?m:{text:m||'',done:false}).filter(m=>m.text);
   const energy = state.energy?.[today] || {};
   const blocks = (state.timeBlocks?.[today] || []).map(b=>({start:b.start,end:b.end,what:b.what}));
@@ -5828,7 +5831,19 @@ function buildPersonalBriefingContext(mode){
       return d.toLocaleString('it-IT',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',weekday:'short',day:'2-digit',month:'2-digit'});
     }catch(e){ return iso; }
   };
-  const calendar = (state.calendarBriefing?.events || []).slice(0,12).map(e=>({
+  // Filtra eventi in base al mode (oggi vs domani)
+  const _isOnDate = (iso, dateStr) => {
+    if(!iso) return false;
+    try {
+      const d = new Date(iso);
+      if(isNaN(d)) return false;
+      const localDate = d.toLocaleDateString('it-CA',{timeZone:'Europe/Paris'}); // YYYY-MM-DD
+      return localDate === dateStr;
+    } catch { return false; }
+  };
+  const targetDate = mode === 'evening' ? tomorrow : today;
+  const allCalEvents = (state.calendarBriefing?.events || []);
+  const calendar = allCalEvents.filter(e => _isOnDate(e.start, targetDate) || (e.allDay && (e.start||'').slice(0,10) === targetDate)).slice(0,15).map(e=>({
     title:e.title||'',
     start:_fmtLocal(e.start),
     end:_fmtLocal(e.end),
@@ -5844,7 +5859,11 @@ function buildPersonalBriefingContext(mode){
   const pomToday = (state.pomodoros||[]).filter(p=>p.date===today).length;
   const shutdownYesterday = (state.shutdowns||[]).find(s=>s.date===yesterday);
   return {
+    mode,
     today,
+    tomorrow,
+    tomorrow_weekday: tomorrowWeekday,
+    target_date: targetDate,
     time:new Date().toLocaleTimeString('it-IT',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}),
     todos:todoBriefingList(),
     mit,
@@ -5858,65 +5877,8 @@ function buildPersonalBriefingContext(mode){
   };
 }
 
-function renderPersonalBriefings(){
-  ensureState();
-  state.personalBriefings = state.personalBriefings || {morning:null};
-  renderPersonalBriefing('morning');
-}
-
-function renderPersonalBriefing(mode){
-  const content = document.getElementById(`${mode}-briefing-content`);
-  const meta = document.getElementById(`${mode}-briefing-meta`);
-  if(!content) return;
-  const b = state.personalBriefings?.[mode];
-  if(!getGeminiKey()){
-    content.innerHTML = `<div class="pb-empty">Configura Gemini per generare il briefing ${PERSONAL_BRIEFING_MODES[mode].label.toLowerCase()} dai tuoi dati.</div>`;
-    if(meta) meta.textContent = '';
-    return;
-  }
-  if(!b || !b.text){
-    content.innerHTML = `<div class="pb-empty">Nessun briefing ${PERSONAL_BRIEFING_MODES[mode].label.toLowerCase()} ancora generato.</div>`;
-    if(meta) meta.textContent = '';
-    return;
-  }
-  content.innerHTML = formatAIChatText(b.text);
-  if(meta){
-    const sameDay = b.date === todayISO();
-    const ago = b.timestamp ? formatTimeAgo(new Date(b.timestamp)) : '';
-    meta.textContent = sameDay ? `oggi · ${ago}` : (b.date || '');
-  }
-}
-
-async function refreshPersonalBriefing(mode, force=false){
-  mode = 'morning'; // briefing unico del giorno
-  if(!PERSONAL_BRIEFING_MODES[mode]) return;
-  ensureState();
-  state.personalBriefings = state.personalBriefings || {morning:null};
-  const key = getGeminiKey();
-  if(!key){ openGeminiSetup(); return; }
-  const existing = state.personalBriefings[mode];
-  if(!force && existing?.date === todayISO() && existing?.text){
-    renderPersonalBriefing(mode);
-    return;
-  }
-  if(_personalBriefingInFlight[mode]) return;
-  _personalBriefingInFlight[mode] = true;
-
-  const content = document.getElementById(`${mode}-briefing-content`);
-  const btn = document.getElementById(`${mode}-briefing-btn`);
-  if(content) content.innerHTML = `<div class="pb-loading">Sto preparando il briefing della giornata...</div>`;
-  if(btn) btn.disabled = true;
-
-  // Pre-carica news + calendario se non ancora in cache
-  if(!Object.keys(window._newsCache||{}).length){
-    try{ await loadNews(true); }catch(e){}
-  }
-  if(typeof refreshGoogleCalendarBox === 'function' && !state.calendarBriefing?.events?.length){
-    try{ await refreshGoogleCalendarBox(true); }catch(e){}
-  }
-
-  const ctx = buildPersonalBriefingContext(mode);
-  const prompt = `Sei l'assistente personale di Giacomo. Preparagli il briefing della giornata: diretto, breve, operativo.
+function _buildMorningPrompt(ctx){
+  return `Sei l'assistente personale di Giacomo. Preparagli il briefing della giornata: diretto, breve, operativo.
 
 Usa SOLO i dati JSON sotto. Non inventare nulla. Gli orari sono già in fuso orario locale (Europe/Paris).
 Scrivi in italiano. Niente emoji nel testo.
@@ -5939,6 +5901,115 @@ Formato OBBLIGATORIO:
 
 DATI:
 ${JSON.stringify(ctx, null, 0)}`;
+}
+
+function _buildEveningPrompt(ctx){
+  return `Sei l'assistente personale di Giacomo. È sera: preparalo per DOMANI (${ctx.tomorrow_weekday}).
+Analizza il calendario di domani e i task pendenti. Dagli consigli operativi e una strategia per gestire la giornata al meglio.
+
+Usa SOLO i dati JSON sotto. Non inventare nulla. Gli orari sono in fuso orario locale (Europe/Paris).
+Scrivi in italiano. Niente emoji nel testo. Tono diretto, sintetico, da coach pragmatico.
+
+Formato OBBLIGATORIO:
+
+**Sguardo su domani**
+1-2 frasi: cosa caratterizza la giornata di domani (carico, eventi chiave, tipo di giornata).
+
+**Agenda di domani**
+- Elenca gli eventi del calendario di DOMANI con orario: \`hh:mm – titolo · luogo\`
+- Per gli all-day: "Evento giornaliero: titolo".
+- Se vuoto: "Nessun impegno in calendario."
+
+**Strategia per gestirla**
+- 3-4 consigli operativi concreti basati sugli orari/eventi/task: come strutturare la giornata, dove inserire i task importanti, eventuali rischi (gap stretti, sovrapposizioni, energia bassa post-evento, ecc.).
+
+**Da preparare stasera**
+- Max 3 cose da fare/preparare ORA per arrivare pronto a domani (mail da inviare, cose da portare, briefing da leggere, riposo).
+
+**Priorità per domani**
+- I 2-3 task più importanti tra i todo aperti (specie con due ≤ domani). Verbo imperativo.
+
+DATI:
+${JSON.stringify(ctx, null, 0)}`;
+}
+
+function _applyPersonalBriefingChrome(mode){
+  const cfg = PERSONAL_BRIEFING_MODES[mode] || PERSONAL_BRIEFING_MODES.morning;
+  const titleEl = document.getElementById('personal-briefing-title');
+  const subEl = document.getElementById('personal-briefing-subtitle');
+  const iconEl = document.getElementById('personal-briefing-icon');
+  const labelEl = document.getElementById('personal-briefing-label');
+  if(titleEl) titleEl.textContent = cfg.title;
+  if(subEl) subEl.textContent = '· ' + cfg.subtitle;
+  if(iconEl){
+    iconEl.textContent = cfg.icon;
+    iconEl.className = 'pb-icon ' + mode;
+  }
+  if(labelEl) labelEl.textContent = cfg.label;
+}
+
+function renderPersonalBriefings(){
+  ensureState();
+  state.personalBriefings = state.personalBriefings || {morning:null, evening:null};
+  if(!('evening' in state.personalBriefings)) state.personalBriefings.evening = null;
+  const mode = currentPersonalBriefingMode();
+  _applyPersonalBriefingChrome(mode);
+  renderPersonalBriefing(mode);
+}
+
+function renderPersonalBriefing(mode){
+  const content = document.getElementById('personal-briefing-content');
+  const meta = document.getElementById('personal-briefing-meta');
+  if(!content) return;
+  const b = state.personalBriefings?.[mode];
+  const label = (PERSONAL_BRIEFING_MODES[mode]?.label || '').toLowerCase();
+  if(!getGeminiKey()){
+    content.innerHTML = `<div class="pb-empty">Configura Gemini per generare il ${label} dai tuoi dati.</div>`;
+    if(meta) meta.textContent = '';
+    return;
+  }
+  if(!b || !b.text){
+    content.innerHTML = `<div class="pb-empty">Nessun ${label} ancora generato.</div>`;
+    if(meta) meta.textContent = '';
+    return;
+  }
+  content.innerHTML = formatAIChatText(b.text);
+  if(meta){
+    const sameDay = b.date === todayISO();
+    const ago = b.timestamp ? formatTimeAgo(new Date(b.timestamp)) : '';
+    meta.textContent = sameDay ? `oggi · ${ago}` : (b.date || '');
+  }
+}
+
+async function refreshPersonalBriefing(mode, force=false){
+  if(!mode) mode = currentPersonalBriefingMode();
+  if(!PERSONAL_BRIEFING_MODES[mode]) return;
+  ensureState();
+  state.personalBriefings = state.personalBriefings || {morning:null, evening:null};
+  if(!('evening' in state.personalBriefings)) state.personalBriefings.evening = null;
+  _applyPersonalBriefingChrome(mode);
+  const key = getGeminiKey();
+  if(!key){ openGeminiSetup(); return; }
+  const existing = state.personalBriefings[mode];
+  if(!force && existing?.date === todayISO() && existing?.text){
+    renderPersonalBriefing(mode);
+    return;
+  }
+  if(_personalBriefingInFlight[mode]) return;
+  _personalBriefingInFlight[mode] = true;
+
+  const content = document.getElementById('personal-briefing-content');
+  const btn = document.getElementById('personal-briefing-btn');
+  if(content) content.innerHTML = `<div class="pb-loading">${mode==='evening' ? 'Sto preparando il piano per domani...' : 'Sto preparando il briefing della giornata...'}</div>`;
+  if(btn) btn.disabled = true;
+
+  // Pre-carica calendario se non ancora in cache
+  if(typeof refreshGoogleCalendarBox === 'function' && !state.calendarBriefing?.events?.length){
+    try{ await refreshGoogleCalendarBox(true); }catch(e){}
+  }
+
+  const ctx = buildPersonalBriefingContext(mode);
+  const prompt = mode === 'evening' ? _buildEveningPrompt(ctx) : _buildMorningPrompt(ctx);
 
   try{
     const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`, {
@@ -5978,8 +6049,9 @@ ${JSON.stringify(ctx, null, 0)}`;
 
 function autoRefreshPersonalBriefing(){
   if(!getGeminiKey()) return;
-  const b = state.personalBriefings?.morning;
-  if(!b || b.date !== todayISO()) refreshPersonalBriefing('morning', false);
+  const mode = currentPersonalBriefingMode();
+  const b = state.personalBriefings?.[mode];
+  if(!b || b.date !== todayISO()) refreshPersonalBriefing(mode, false);
 }
 
 // ============ MASTER RENDER ============
@@ -6296,11 +6368,28 @@ async function loadWeather(){
     el.innerHTML = '<div class="news-error">Meteo non disponibile</div>';
   }
 }
+function renderWeatherMini(){
+  if(!weatherData) return;
+  const d = weatherData;
+  const t = Math.round(d.current.temperature_2m);
+  const [icon,cond] = WCODES[d.current.weather_code] || ['🌤️','—'];
+  const tmax = Math.round(d.daily.temperature_2m_max[0]);
+  const tmin = Math.round(d.daily.temperature_2m_min[0]);
+  const ic = document.getElementById('weather-mini-icon');
+  const tp = document.getElementById('weather-mini-temp');
+  const sm = document.getElementById('weather-mini-summary');
+  if(ic) ic.textContent = icon;
+  if(tp) tp.textContent = t + '°';
+  if(sm) sm.textContent = `${cond} · ${tmin}° / ${tmax}°`;
+}
+
 function renderWeather(dayIdx){
   const d = weatherData;
   const el = document.getElementById('weather-content');
   const fc = document.getElementById('weather-forecast');
   const det = document.getElementById('weather-detail');
+  renderWeatherMini();
+  if(!el || !fc || !det) return;
   const dayNames = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
 
   if(dayIdx===0){
@@ -10100,146 +10189,135 @@ async function loadFrNews(){
 </div>
 
 <!-- === POMODORO 50/10 === -->
-<div id="pomo-widget" title="Pomodoro 50/10"></div>
+<div id="pomo-fab" title="Pomodoro 50/10"></div>
 
 <script>
-// ============ POMODORO 50/10 ============
-// Lightweight markdown formatter (used by personal briefing).
-function formatAIChatText(t){
-  return escapeHtml(t)
-    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g,'<em>$1</em>')
-    .replace(/`([^`]+)`/g,'<code style="background:var(--card);padding:1px 5px;border-radius:3px;font-size:.85em">$1</code>')
-    .replace(/\n/g,'<br>');
-}
+// ============ POMODORO FAB 50/10 ============
+const POMO_FAB_WORK_MIN = 50;
+const POMO_FAB_BREAK_MIN = 10;
+const POMO_FAB_LS_KEY = 'dash_pomo_fab_v1';
 
-const POMO_WORK_MIN = 50;
-const POMO_BREAK_MIN = 10;
-const POMO_LS_KEY = 'dash_pomo_state_v2';
-
-const POMO_AREAS = [
+const POMO_FAB_AREAS = [
   ['double','💼 Double'],['como','⛵ Como'],['francese','🇫🇷 Francese'],
   ['lettura','📚 Lettura'],['sport','🏋️ Sport'],['social','🤝 Social'],
   ['personale','🧠 Personale'],['famiglia','👨‍👩‍👦 Famiglia'],['viaggio','✈️ Viaggio'],
   ['hobby','🎨 Hobby'],['salute','🩺 Salute'],['finanze','💰 Finanze'],['vuoto','🌿 Vuoto']
 ];
 
-let _pomoTimer = null;
-let _pomoLastLogAt = 0;
+let _pomoFabTimer = null;
+let _pomoFabLastLogAt = 0;
 
-function _pomoLoad(){
+function _pomoFabLoad(){
   try {
-    const raw = localStorage.getItem(POMO_LS_KEY);
+    const raw = localStorage.getItem(POMO_FAB_LS_KEY);
     if(!raw) return null;
     const s = JSON.parse(raw);
     if(!s || typeof s !== 'object') return null;
     return s;
   } catch { return null; }
 }
-function _pomoSave(s){
-  try { localStorage.setItem(POMO_LS_KEY, JSON.stringify(s)); } catch {}
+function _pomoFabSave(s){
+  try { localStorage.setItem(POMO_FAB_LS_KEY, JSON.stringify(s)); } catch {}
 }
-function _pomoDefault(){
+function _pomoFabDefault(){
   return {
-    phase:'work', running:false, remainingMs: POMO_WORK_MIN*60*1000, endAt:0,
+    phase:'work', running:false, remainingMs: POMO_FAB_WORK_MIN*60*1000, endAt:0,
     collapsed:false, activity:'', area:'double', lastLog:null
   };
 }
-function _pomoGet(){
-  const s = _pomoLoad() || {};
-  return Object.assign(_pomoDefault(), s);
+function _pomoFabGet(){
+  const s = _pomoFabLoad() || {};
+  return Object.assign(_pomoFabDefault(), s);
 }
 
-function _pomoFmt(ms){
+function _pomoFabFmt(ms){
   const total = Math.max(0, Math.round(ms/1000));
   const m = Math.floor(total/60), r = total%60;
   return String(m).padStart(2,'0')+':'+String(r).padStart(2,'0');
 }
 
-function _pomoCurrentRemaining(s){
+function _pomoFabCurrentRemaining(s){
   if(s.running) return Math.max(0, (s.endAt||0) - Date.now());
   return Math.max(0, s.remainingMs||0);
 }
 
-function _pomoBuildMarkup(s){
+function _pomoFabBuildMarkup(s){
   if(s.collapsed){
-    return `<button class="pomo-toggle" onclick="pomoCollapse()" title="Mostra pomodoro">🍅</button>`;
+    return `<button class="pomo-toggle" onclick="pomoFabCollapse()" title="Mostra pomodoro">🍅</button>`;
   }
-  const remaining = _pomoCurrentRemaining(s);
+  const remaining = _pomoFabCurrentRemaining(s);
   const phaseLabel = s.phase==='work' ? 'Focus' : 'Pausa';
   const playIcon = s.running ? '⏸' : '▶';
-  const opts = POMO_AREAS.map(([v,l])=>`<option value="${v}"${v===s.area?' selected':''}>${l}</option>`).join('');
+  const opts = POMO_FAB_AREAS.map(([v,l])=>`<option value="${v}"${v===s.area?' selected':''}>${l}</option>`).join('');
   const logged = s.lastLog ? `Loggato: ${escapeHtml(s.lastLog.area)} · ${s.lastLog.min}m` : '';
   return `
     <div class="pomo-bar">
       <span class="pomo-dot"></span>
       <span class="pomo-phase">${phaseLabel}</span>
-      <span class="pomo-time" id="pomo-time">${_pomoFmt(remaining)}</span>
+      <span class="pomo-time" id="pomo-fab-time">${_pomoFabFmt(remaining)}</span>
       <span class="pomo-spacer"></span>
-      <button onclick="pomoToggle()" title="Start / Pausa">${playIcon}</button>
-      <button onclick="pomoReset()" title="Reset">↺</button>
-      <button onclick="pomoSkip()" title="Salta fase">⏭</button>
-      <button class="pomo-toggle" onclick="pomoCollapse()" title="Nascondi">–</button>
+      <button onclick="pomoFabToggle()" title="Start / Pausa">${playIcon}</button>
+      <button onclick="pomoFabReset()" title="Reset">↺</button>
+      <button onclick="pomoFabSkip()" title="Salta fase">⏭</button>
+      <button class="pomo-toggle" onclick="pomoFabCollapse()" title="Nascondi">–</button>
     </div>
     <div class="pomo-row2">
-      <input id="pomo-activity" type="text" placeholder="Cosa stai facendo?" value="${escapeHtml(s.activity||'')}" oninput="pomoSetActivity(this.value)" maxlength="120">
-      <select id="pomo-area" onchange="pomoSetArea(this.value)" title="Area">${opts}</select>
+      <input id="pomo-fab-activity" type="text" placeholder="Cosa stai facendo?" value="${escapeHtml(s.activity||'')}" oninput="pomoFabSetActivity(this.value)" maxlength="120">
+      <select id="pomo-fab-area" onchange="pomoFabSetArea(this.value)" title="Area">${opts}</select>
     </div>
     ${logged ? `<div class="pomo-logged">${logged}</div>` : ''}`;
 }
 
-function renderPomo(){
-  const widget = document.getElementById('pomo-widget');
+function renderPomoFab(){
+  const widget = document.getElementById('pomo-fab');
   if(!widget) return;
-  const s = _pomoGet();
+  const s = _pomoFabGet();
   widget.classList.remove('work','break','paused','idle','collapsed');
   if(s.collapsed){
     widget.classList.add('collapsed');
   } else {
     if(s.running) widget.classList.add(s.phase);
-    else if((s.remainingMs||0) < (s.phase==='work'?POMO_WORK_MIN:POMO_BREAK_MIN)*60*1000 && (s.remainingMs||0) > 0) widget.classList.add('paused');
+    else if((s.remainingMs||0) < (s.phase==='work'?POMO_FAB_WORK_MIN:POMO_FAB_BREAK_MIN)*60*1000 && (s.remainingMs||0) > 0) widget.classList.add('paused');
     else widget.classList.add('idle');
   }
-  widget.innerHTML = _pomoBuildMarkup(s);
+  widget.innerHTML = _pomoFabBuildMarkup(s);
 }
 
-function _pomoTick(){
-  const s = _pomoGet();
+function _pomoFabTick(){
+  const s = _pomoFabGet();
   if(!s.running) return;
-  const remaining = _pomoCurrentRemaining(s);
+  const remaining = _pomoFabCurrentRemaining(s);
   if(remaining <= 0){
-    _pomoPhaseEnd(s);
+    _pomoFabPhaseEnd(s);
     return;
   }
-  const timeEl = document.getElementById('pomo-time');
-  if(timeEl) timeEl.textContent = _pomoFmt(remaining);
+  const timeEl = document.getElementById('pomo-fab-time');
+  if(timeEl) timeEl.textContent = _pomoFabFmt(remaining);
 }
 
-function _pomoPhaseEnd(s){
-  _pomoBeep();
-  // Log the focus session before switching
+function _pomoFabPhaseEnd(s){
+  _pomoFabBeep();
   let logged = null;
   if(s.phase === 'work'){
-    logged = _pomoLogSession(s, POMO_WORK_MIN);
+    logged = _pomoFabLogSession(s, POMO_FAB_WORK_MIN);
   }
-  _pomoNotify(s.phase==='work' ? 'Fine focus — 10 min di pausa' : 'Fine pausa — torna a lavorare');
+  _pomoFabNotify(s.phase==='work' ? 'Fine focus — 10 min di pausa' : 'Fine pausa — torna a lavorare');
   const next = s.phase==='work' ? 'break' : 'work';
-  const dur = (next==='work' ? POMO_WORK_MIN : POMO_BREAK_MIN) * 60 * 1000;
-  const ns = Object.assign(_pomoGet(), {
+  const dur = (next==='work' ? POMO_FAB_WORK_MIN : POMO_FAB_BREAK_MIN) * 60 * 1000;
+  const ns = Object.assign(_pomoFabGet(), {
     phase: next, running: true, remainingMs: dur, endAt: Date.now()+dur
   });
   if(logged) ns.lastLog = logged;
-  _pomoSave(ns);
-  renderPomo();
+  _pomoFabSave(ns);
+  renderPomoFab();
 }
 
-function _pomoLogSession(s, minutes){
+function _pomoFabLogSession(s, minutes){
   try {
     if(typeof state === 'undefined' || !state) return null;
     if(!Array.isArray(state.sessions)) state.sessions = [];
-    // Anti-double: skip if logged within last 30s
-    if(Date.now() - _pomoLastLogAt < 30000) return null;
-    _pomoLastLogAt = Date.now();
+    if(Date.now() - _pomoFabLastLogAt < 30000) return null;
+    _pomoFabLastLogAt = Date.now();
     const area = s.area || 'personale';
     const note = (s.activity || '').trim();
     const entry = {
@@ -10258,7 +10336,7 @@ function _pomoLogSession(s, minutes){
   }
 }
 
-function _pomoBeep(){
+function _pomoFabBeep(){
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const o = ctx.createOscillator(), g = ctx.createGain();
@@ -10271,7 +10349,7 @@ function _pomoBeep(){
   } catch {}
 }
 
-function _pomoNotify(msg){
+function _pomoFabNotify(msg){
   try {
     if('Notification' in window && Notification.permission === 'granted'){
       new Notification('Pomodoro', { body: msg });
@@ -10279,15 +10357,15 @@ function _pomoNotify(msg){
   } catch {}
 }
 
-function pomoToggle(){
-  const s = _pomoGet();
+function pomoFabToggle(){
+  const s = _pomoFabGet();
   if(s.running){
-    s.remainingMs = _pomoCurrentRemaining(s);
+    s.remainingMs = _pomoFabCurrentRemaining(s);
     s.running = false;
     s.endAt = 0;
   } else {
     if(!s.remainingMs || s.remainingMs <= 0){
-      s.remainingMs = (s.phase==='work'?POMO_WORK_MIN:POMO_BREAK_MIN)*60*1000;
+      s.remainingMs = (s.phase==='work'?POMO_FAB_WORK_MIN:POMO_FAB_BREAK_MIN)*60*1000;
     }
     s.endAt = Date.now() + s.remainingMs;
     s.running = true;
@@ -10295,65 +10373,63 @@ function pomoToggle(){
       try { Notification.requestPermission().catch(()=>{}); } catch {}
     }
   }
-  _pomoSave(s);
-  renderPomo();
+  _pomoFabSave(s);
+  renderPomoFab();
 }
 
-function pomoReset(){
-  const s = _pomoGet();
-  const ns = Object.assign(s, { phase:'work', running:false, remainingMs: POMO_WORK_MIN*60*1000, endAt:0 });
-  _pomoSave(ns);
-  renderPomo();
+function pomoFabReset(){
+  const s = _pomoFabGet();
+  const ns = Object.assign(s, { phase:'work', running:false, remainingMs: POMO_FAB_WORK_MIN*60*1000, endAt:0 });
+  _pomoFabSave(ns);
+  renderPomoFab();
 }
 
-function pomoSkip(){
-  const s = _pomoGet();
-  // If we are in work and time elapsed, log it
+function pomoFabSkip(){
+  const s = _pomoFabGet();
   if(s.phase === 'work' && s.running){
-    const elapsedMs = (POMO_WORK_MIN*60*1000) - _pomoCurrentRemaining(s);
+    const elapsedMs = (POMO_FAB_WORK_MIN*60*1000) - _pomoFabCurrentRemaining(s);
     const elapsedMin = Math.round(elapsedMs/60000);
     if(elapsedMin >= 5){
-      const logged = _pomoLogSession(s, elapsedMin);
+      const logged = _pomoFabLogSession(s, elapsedMin);
       if(logged) s.lastLog = logged;
     }
   }
   const next = s.phase==='work' ? 'break' : 'work';
-  const dur = (next==='work' ? POMO_WORK_MIN : POMO_BREAK_MIN) * 60 * 1000;
+  const dur = (next==='work' ? POMO_FAB_WORK_MIN : POMO_FAB_BREAK_MIN) * 60 * 1000;
   Object.assign(s, { phase: next, running: false, remainingMs: dur, endAt: 0 });
-  _pomoSave(s);
-  renderPomo();
+  _pomoFabSave(s);
+  renderPomoFab();
 }
 
-function pomoCollapse(){
-  const s = _pomoGet();
+function pomoFabCollapse(){
+  const s = _pomoFabGet();
   s.collapsed = !s.collapsed;
-  _pomoSave(s);
-  renderPomo();
+  _pomoFabSave(s);
+  renderPomoFab();
 }
 
-function pomoSetActivity(text){
-  const s = _pomoGet();
+function pomoFabSetActivity(text){
+  const s = _pomoFabGet();
   s.activity = (text||'').slice(0,120);
-  _pomoSave(s);
-  // Do not re-render: would lose input focus
+  _pomoFabSave(s);
 }
 
-function pomoSetArea(area){
-  const s = _pomoGet();
+function pomoFabSetArea(area){
+  const s = _pomoFabGet();
   s.area = area;
-  _pomoSave(s);
+  _pomoFabSave(s);
 }
 
-function initPomo(){
-  if(_pomoTimer) clearInterval(_pomoTimer);
-  renderPomo();
-  _pomoTimer = setInterval(_pomoTick, 1000);
+function initPomoFab(){
+  if(_pomoFabTimer) clearInterval(_pomoFabTimer);
+  renderPomoFab();
+  _pomoFabTimer = setInterval(_pomoFabTick, 1000);
 }
 
 if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', initPomo);
+  document.addEventListener('DOMContentLoaded', initPomoFab);
 } else {
-  initPomo();
+  initPomoFab();
 }
 
 // ============ CALENDAR DRAG (create) ============
