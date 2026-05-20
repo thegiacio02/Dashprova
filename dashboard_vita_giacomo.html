@@ -965,6 +965,10 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .calendar-day-column:last-child{border-right:0}
 .calendar-block{position:absolute;left:4px;right:4px;background:#4285f4;color:#fff;border-radius:6px;padding:4px 6px;text-decoration:none;overflow:hidden;box-shadow:0 3px 9px rgba(0,0,0,.14)}
 .calendar-block.now{background:var(--green)}
+.calendar-day-column{user-select:none}
+.calendar-ghost{position:absolute;left:4px;right:4px;background:rgba(66,133,244,.35);border:2px dashed #4285f4;border-radius:6px;padding:4px 6px;pointer-events:none;z-index:10;box-sizing:border-box}
+.calendar-ghost .event-title{font-size:.66rem;font-weight:800;color:#4285f4;line-height:1.2}
+.calendar-ghost .event-time{font-size:.58rem;color:#4285f4;opacity:.9;margin-top:2px}
 .calendar-block .event-title{font-size:.66rem;font-weight:800;line-height:1.15;word-break:break-word}
 .calendar-block .event-time{font-size:.58rem;line-height:1.15;opacity:.9;margin-top:2px}
 .calendar-block .event-loc{display:none}
@@ -5406,7 +5410,10 @@ function renderGoogleCalendar(){
   }).join('');
 
   const timeLabels = hours.map(h=>`<div class="calendar-hour-label">${String(h).padStart(2,'0')}:00</div>`).join('');
-  const columns = days.map(d=>{
+  window._calWeekDays = days;
+  window._calPxPerHour = pxPerHour;
+  window._calMinHour = minHour;
+  const columns = days.map((d,dayIdx)=>{
     const timed = (byDay[dayKey(d)]||[]).filter(e=>!e.allDay && e._start);
     const blocks = timed.map(e=>{
       const startH = e._start.getHours() + e._start.getMinutes()/60;
@@ -5420,7 +5427,7 @@ function renderGoogleCalendar(){
         ${e.location?`<div class="event-loc">📍 ${escapeHtml(e.location)}</div>`:''}`;
       return makeTag(e, `calendar-block ${isNow?'now':''}`, inner, `top:${top}px;height:${height}px`);
     }).join('');
-    return `<div class="calendar-day-column">${blocks}</div>`;
+    return `<div class="calendar-day-column" data-day-idx="${dayIdx}">${blocks}</div>`;
   }).join('');
 
   const monthLabel = today.toLocaleDateString('it-IT',{month:'long',year:'numeric'});
@@ -10021,6 +10028,95 @@ ${JSON.stringify(ctx, null, 0)}`;
   }
 }
 
+// ============ CALENDAR DRAG-TO-CREATE ============
+let _calDrag = null;
+
+function _calSnap15(rawHour){
+  // snap to 15-min intervals, returns {h, m}
+  const h = Math.floor(rawHour);
+  const m = Math.round((rawHour - h) * 4) * 15;
+  return {h: Math.min(23, Math.max(0, h)), m: m >= 60 ? 45 : m};
+}
+
+function _calHourToY(h, m){
+  const pph = window._calPxPerHour || 30;
+  const minH = window._calMinHour || 8;
+  return ((h + m / 60) - minH) * pph;
+}
+
+function _calYToHour(y){
+  const pph = window._calPxPerHour || 30;
+  const minH = window._calMinHour || 8;
+  return _calSnap15(minH + y / pph);
+}
+
+function _calBuildDTLocal(dayDate, h, m){
+  // Returns YYYY-MM-DDTHH:MM in local time (for datetime-local input)
+  const pad = n => String(n).padStart(2, '0');
+  const d = new Date(dayDate);
+  d.setHours(h, m, 0, 0);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(h)}:${pad(m)}`;
+}
+
+function _calGhostLabel(sh, sm, eh, em){
+  const pad = n => String(n).padStart(2,'0');
+  return `${pad(sh)}:${pad(sm)} – ${pad(eh)}:${pad(em)}`;
+}
+
+document.addEventListener('mousedown', function(e){
+  const col = e.target.closest('.calendar-day-column');
+  if(!col) return;
+  if(e.target.closest('.calendar-block') || e.target.closest('.calendar-ghost')) return;
+  e.preventDefault();
+  const dayIdx = parseInt(col.dataset.dayIdx, 10);
+  const days = window._calWeekDays;
+  if(!days || !days[dayIdx]) return;
+  const rect = col.getBoundingClientRect();
+  const y = Math.max(0, e.clientY - rect.top);
+  const {h, m} = _calYToHour(y);
+  const ghost = document.createElement('div');
+  ghost.className = 'calendar-ghost';
+  const top = _calHourToY(h, m);
+  const pph = window._calPxPerHour || 30;
+  ghost.style.top = top + 'px';
+  ghost.style.height = pph + 'px';
+  ghost.innerHTML = `<div class="event-title">Nuovo evento</div><div class="event-time">${_calGhostLabel(h,m,h,m+30<60?m+30:m)}</div>`;
+  col.appendChild(ghost);
+  _calDrag = {col, dayDate: days[dayIdx], startY: y, startH: h, startM: m, ghost, rect};
+});
+
+document.addEventListener('mousemove', function(e){
+  if(!_calDrag) return;
+  const {col, startH, startM, ghost, rect} = _calDrag;
+  const y = Math.max(0, e.clientY - rect.top);
+  const pph = window._calPxPerHour || 30;
+  const {h: endH, m: endM} = _calYToHour(y);
+  const topY = _calHourToY(startH, startM);
+  let botY = _calHourToY(endH, endM);
+  if(botY < topY + pph) botY = topY + pph; // min 1h visually during drag
+  ghost.style.height = (botY - topY) + 'px';
+  const endTotal = Math.max(startH * 60 + startM + 30, endH * 60 + endM);
+  const eH = Math.floor(endTotal / 60);
+  const eM = endTotal % 60;
+  ghost.innerHTML = `<div class="event-title">Nuovo evento</div><div class="event-time">${_calGhostLabel(startH,startM,Math.min(eH,23),eM)}</div>`;
+  _calDrag.endH = eH; _calDrag.endM = eM;
+});
+
+document.addEventListener('mouseup', function(e){
+  if(!_calDrag) return;
+  const {col, dayDate, startH, startM, ghost, endH, endM} = _calDrag;
+  _calDrag = null;
+  ghost.remove();
+  const eH = endH !== undefined ? endH : startH + 1;
+  const eM = endM !== undefined ? endM : startM;
+  const endTotal = Math.max(startH * 60 + startM + 30, eH * 60 + eM);
+  const finalEH = Math.min(23, Math.floor(endTotal / 60));
+  const finalEM = endTotal % 60;
+  const startDT = _calBuildDTLocal(dayDate, startH, startM);
+  const endDT = _calBuildDTLocal(dayDate, finalEH, finalEM);
+  openCalendarCreateModal(startDT, endDT);
+});
+
 // ============ CALENDAR EVENT MODAL (view + create) ============
 function _calModalEl(){ return document.getElementById('cal-modal'); }
 function closeCalModal(){ const m = _calModalEl(); if(m) m.style.display='none'; }
@@ -10052,7 +10148,7 @@ function openCalendarEventModal(eventId){
   m.style.display = 'flex';
 }
 
-function openCalendarCreateModal(){
+function openCalendarCreateModal(preStart, preEnd){
   const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
   const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
   if(!syncUrl || !syncToken){
@@ -10061,11 +10157,15 @@ function openCalendarCreateModal(){
   }
   const m = _calModalEl();
   if(!m) return;
-  const now = new Date();
-  now.setMinutes(Math.ceil(now.getMinutes()/15)*15, 0, 0);
-  const start = now.toISOString().slice(0,16);
-  const endD = new Date(now.getTime() + 60*60*1000);
-  const end = endD.toISOString().slice(0,16);
+  let start = preStart;
+  let end = preEnd;
+  if(!start){
+    const now = new Date();
+    now.setMinutes(Math.ceil(now.getMinutes()/15)*15, 0, 0);
+    start = now.toISOString().slice(0,16);
+    const endD = new Date(now.getTime() + 60*60*1000);
+    end = endD.toISOString().slice(0,16);
+  }
   m.querySelector('#cal-modal-body').innerHTML = `
     <div class="cal-modal-title">+ Nuovo evento</div>
     <div class="cal-modal-form">
