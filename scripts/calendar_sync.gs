@@ -20,7 +20,11 @@
  *        FIREBASE_EMAIL        = ...
  *        FIREBASE_PASSWORD     = ...
  *        SYNC_TOKEN            = stringa random (es. uuid)
- *        CALENDAR_DAYS         = 7   (opzionale, default 7)
+ *        CALENDAR_DAYS         = 7    (opzionale, default 7)
+ *        WORK_CALENDAR_IDS     = ...  (opzionale: ID calendario lavoro condiviso,
+ *                                       separati da virgola. Es. "abc@group.calendar.google.com")
+ *        WORK_DAYS_AHEAD       = 60   (opzionale, default 60. Quanti gg in avanti
+ *                                       guardare per i tour lavoro. Indietro: sempre 30gg)
  *   4. Crea time trigger: clock icon → Add Trigger
  *        funzione: pushCalendar | event: Time-driven | Minutes timer | every 30 min
  *   5. (opzionale) Deploy → New deployment → tipo "Web app"
@@ -41,6 +45,8 @@ function getProps_() {
     out[k] = v;
   }
   out.CALENDAR_DAYS = parseInt(p.getProperty('CALENDAR_DAYS') || '7', 10);
+  out.WORK_CALENDAR_IDS = (p.getProperty('WORK_CALENDAR_IDS') || '').split(',').map(s => s.trim()).filter(Boolean);
+  out.WORK_DAYS_AHEAD = parseInt(p.getProperty('WORK_DAYS_AHEAD') || '60', 10);
   return out;
 }
 
@@ -74,16 +80,18 @@ function eventHtmlLink_(eventId, calendarId) {
   } catch (e) { return ''; }
 }
 
-function collectCalendarEvents_(days) {
+function collectCalendarEvents_(days, excludeCalendarIds) {
+  excludeCalendarIds = excludeCalendarIds || [];
   const start = new Date();
   start.setHours(0,0,0,0);
   const end = new Date(start.getTime() + days*24*60*60*1000);
   const calendars = CalendarApp.getAllCalendars();
   const events = [];
   for (const cal of calendars) {
+    const calId = cal.getId();
+    if (excludeCalendarIds.indexOf(calId) !== -1) continue;
     let items;
     try { items = cal.getEvents(start, end); } catch (e) { continue; }
-    const calId = cal.getId();
     for (const ev of items) {
       try {
         const evId = ev.getId();
@@ -112,6 +120,53 @@ function collectCalendarEvents_(days) {
   };
 }
 
+function collectWorkTours_(workCalendarIds, daysAhead) {
+  // Finestra: ultimi 30gg → +daysAhead. Vogliamo vedere tour creati di recente,
+  // anche se la data del tour è nel passato o nel futuro.
+  const lookBack = 30;
+  const now = new Date();
+  const start = new Date(now.getTime() - lookBack * 24 * 60 * 60 * 1000);
+  const end = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);
+  const events = [];
+  for (const calId of workCalendarIds) {
+    let cal;
+    try { cal = CalendarApp.getCalendarById(calId); } catch (e) { continue; }
+    if (!cal) continue;
+    let items;
+    try { items = cal.getEvents(start, end); } catch (e) { continue; }
+    for (const ev of items) {
+      try {
+        const evId = ev.getId();
+        const created = ev.getDateCreated();
+        const updated = ev.getLastUpdated();
+        const creators = (ev.getCreators && ev.getCreators()) || [];
+        events.push({
+          id: evId,
+          calendarId: calId,
+          calendar: cal.getName() || '',
+          title: ev.getTitle() || '',
+          start: ev.getStartTime().toISOString(),
+          end: ev.getEndTime().toISOString(),
+          allDay: ev.isAllDayEvent(),
+          location: ev.getLocation() || '',
+          description: (ev.getDescription() || '').slice(0, 500),
+          createdAt: created ? created.toISOString() : '',
+          updatedAt: updated ? updated.toISOString() : '',
+          creator: creators[0] || '',
+          url: eventHtmlLink_(evId, calId)
+        });
+      } catch (e) { /* skip broken event */ }
+    }
+  }
+  events.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  return {
+    events: events.slice(0, 200),
+    windowStart: start.toISOString(),
+    windowEnd: end.toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+}
+
 function toFirestoreValue_(value) {
   if (value === null || value === undefined) return {nullValue: null};
   if (Array.isArray(value)) return {arrayValue: {values: value.map(toFirestoreValue_)}};
@@ -130,13 +185,24 @@ function toFirestoreValue_(value) {
   }
 }
 
-function pushToFirestore_(props, idToken, payload) {
+function pushToFirestore_(props, idToken, fields) {
+  // fields = {calendarBriefing?: payload, workTours?: payload}
+  const dataFields = {};
+  const masks = ['updatedAt'];
+  if (fields.calendarBriefing) {
+    dataFields.calendarBriefing = toFirestoreValue_(fields.calendarBriefing);
+    masks.push('data.calendarBriefing');
+  }
+  if (fields.workTours) {
+    dataFields.workTours = toFirestoreValue_(fields.workTours);
+    masks.push('data.workTours');
+  }
   const url = 'https://firestore.googleapis.com/v1/projects/' + props.FIREBASE_PROJECT_ID +
               '/databases/(default)/documents/users/' + props.FIREBASE_UID + '/dashboard/state' +
-              '?updateMask.fieldPaths=data.calendarBriefing&updateMask.fieldPaths=updatedAt';
+              '?' + masks.map(m => 'updateMask.fieldPaths=' + encodeURIComponent(m)).join('&');
   const body = {
     fields: {
-      data: {mapValue: {fields: {calendarBriefing: toFirestoreValue_(payload)}}},
+      data: {mapValue: {fields: dataFields}},
       updatedAt: {timestampValue: new Date().toISOString()}
     }
   };
@@ -156,10 +222,17 @@ function pushToFirestore_(props, idToken, payload) {
 function pushCalendar() {
   const props = getProps_();
   const idToken = fetchFirebaseIdToken_(props);
-  const payload = collectCalendarEvents_(props.CALENDAR_DAYS);
-  pushToFirestore_(props, idToken, payload);
-  console.log('Pushed ' + payload.events.length + ' events');
-  return payload.events.length;
+  const personal = collectCalendarEvents_(props.CALENDAR_DAYS, props.WORK_CALENDAR_IDS);
+  const fields = {calendarBriefing: personal};
+  let workCount = 0;
+  if (props.WORK_CALENDAR_IDS.length) {
+    const work = collectWorkTours_(props.WORK_CALENDAR_IDS, props.WORK_DAYS_AHEAD);
+    fields.workTours = work;
+    workCount = work.events.length;
+  }
+  pushToFirestore_(props, idToken, fields);
+  console.log('Pushed personal=' + personal.events.length + ' workTours=' + workCount);
+  return personal.events.length;
 }
 
 /** Web App endpoint per CREARE eventi (POST JSON) */
@@ -197,8 +270,8 @@ function doPost(e) {
       if (!ev) throw new Error('Event not found: ' + eventId);
       ev.setTime(newStart, newEnd);
       const idToken = fetchFirebaseIdToken_(props);
-      const payload = collectCalendarEvents_(props.CALENDAR_DAYS);
-      pushToFirestore_(props, idToken, payload);
+      const payload = collectCalendarEvents_(props.CALENDAR_DAYS, props.WORK_CALENDAR_IDS);
+      pushToFirestore_(props, idToken, {calendarBriefing: payload});
       return ContentService.createTextOutput(JSON.stringify({ok:true, events:payload.events.length})).setMimeType(ContentService.MimeType.JSON);
     }
 

@@ -777,6 +777,25 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fin-kpi-sub{font-size:.7rem;color:var(--text-3);margin-top:4px;font-family:var(--mono)}
 .fin-kpi-sub.up{color:var(--up)}
 .fin-kpi-sub.down{color:var(--down)}
+.chiusure-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.chiusure-kpi{background:var(--surface-2);border:1px solid var(--hair);border-radius:8px;padding:12px 14px}
+.chiusure-kpi-label{font-size:.6rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:4px;font-family:var(--mono)}
+.chiusure-kpi-val{font-size:1.5rem;font-weight:600;color:var(--text);font-family:var(--mono);letter-spacing:-.02em;line-height:1.1}
+.chiusure-kpi-sub{font-size:.65rem;color:var(--text-3);margin-top:2px;font-family:var(--mono)}
+.chiusure-empty{padding:14px;background:var(--surface-2);border:1px dashed var(--hair-2);border-radius:8px;color:var(--muted2);font-size:.85rem;text-align:center}
+.tour-card{border:1px solid var(--hair);background:var(--surface-2);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;transition:border-color .15s}
+.tour-card.done{opacity:.55}
+.tour-card.done .tour-title{text-decoration:line-through}
+.tour-check{flex:0 0 auto;margin-top:2px}
+.tour-check input{width:18px;height:18px;cursor:pointer;accent-color:var(--acc, #4285f4)}
+.tour-body{flex:1;min-width:0}
+.tour-title{font-weight:700;font-size:.92rem;color:var(--text);line-height:1.3;word-break:break-word}
+.tour-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:5px;font-size:.72rem;color:var(--muted2);font-family:var(--mono)}
+.tour-meta-item{display:inline-flex;align-items:center;gap:4px}
+.tour-meta-item.created{color:var(--acc, #4285f4);font-weight:600}
+.tour-desc{font-size:.78rem;color:var(--text-3);margin-top:6px;line-height:1.4;white-space:pre-wrap;word-break:break-word}
+.tour-link{font-size:.7rem;color:var(--muted);text-decoration:none;display:inline-block;margin-top:6px}
+.tour-link:hover{color:var(--acc, #4285f4);text-decoration:underline}
 .fin-range-btn{background:transparent;border:1px solid var(--hair-2);color:var(--text-3);padding:4px 10px;border-radius:5px;font-size:.7rem;cursor:pointer;font-family:var(--mono);font-weight:600;transition:all .12s}
 .fin-range-btn:hover{color:var(--text);border-color:var(--hair-3)}
 .fin-range-btn.active{background:var(--acc-bg);color:var(--acc);border-color:rgba(110,240,255,.25)}
@@ -1115,6 +1134,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <nav id="tabs">
     <span class="side-group-title">Quotidiano</span>
     <button data-tab="oggi" class="side-item active">Oggi</button>
+    <button data-tab="chiusure" class="side-item">⛵ Chiusure <span id="chiusure-badge" class="side-badge">0</span></button>
     <button data-tab="todo" class="side-item">Cose da fare <span id="todo-badge" class="side-badge">0</span></button>
     <button data-tab="settimana" class="side-item">Settimana</button>
     <button data-tab="obiettivi" class="side-item">Obiettivi</button>
@@ -1372,6 +1392,34 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
+</section>
+
+<!-- ============ CHIUSURE COMO ON BOAT ============ -->
+<section class="tab" id="tab-chiusure">
+  <div class="card">
+    <h2 style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="ico">⛵</span> Chiusure del giorno <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· Como On Boat</span></span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span id="chiusure-meta" style="font-size:.72rem;color:var(--muted)">In attesa</span>
+        <button class="btn ghost sm" onclick="refreshChiusure()" id="chiusure-refresh-btn" style="font-size:.72rem;padding:4px 10px">↻ Aggiorna</button>
+      </span>
+    </h2>
+    <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">Tour aggiunti oggi sul calendario lavoro, in ordine cronologico di inserimento. Spunta "Aggiunto a sheet" appena trasferisci al foglio.</p>
+
+    <div class="chiusure-kpi-grid" id="chiusure-kpi"></div>
+
+    <div style="margin-top:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <h3 style="font-size:.95rem;margin:0;color:var(--text)">Nuovi tour di oggi</h3>
+      <span style="font-size:.7rem;color:var(--muted2)" id="chiusure-count"></span>
+    </div>
+    <div id="chiusure-today-list" style="margin-top:10px"></div>
+
+    <div style="margin-top:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <h3 style="font-size:.95rem;margin:0;color:var(--text2)">Ultimi 7 giorni</h3>
+      <button class="btn ghost sm" onclick="toggleChiusureHistory()" id="chiusure-history-toggle" style="font-size:.7rem;padding:3px 8px">Mostra</button>
+    </div>
+    <div id="chiusure-history-list" style="display:none;margin-top:10px"></div>
+  </div>
 </section>
 
 <!-- ============ COSE DA FARE ============ -->
@@ -2770,6 +2818,9 @@ function defaultState(){ return {
     frAILesson:null,
     emailBriefings:{gmail:{updatedAt:null,items:[]},outlook:{updatedAt:null,items:[]}},
     calendarBriefing:{updatedAt:null,events:[]},
+    workTours:{updatedAt:null,events:[]},
+    workToursStatus:{},
+    workToursHistoryOpen:false,
     finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null}}
   };}
 
@@ -5490,6 +5541,216 @@ function configureCalendarSync(){
   alert('Configurazione salvata. Clicca ↻ Aggiorna per testare.');
 }
 
+// ============ CHIUSURE COMO ON BOAT ============
+function _wtState(){
+  ensureState();
+  state.workTours = state.workTours || {updatedAt:null,events:[]};
+  state.workToursStatus = state.workToursStatus || {};
+  return state.workTours;
+}
+
+function _wtTodayBounds(){
+  const start = new Date(); start.setHours(0,0,0,0);
+  const end = new Date(start); end.setDate(end.getDate()+1);
+  return {start, end};
+}
+
+function _wtFmtCreatedAgo(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff/60000);
+  if(mins < 1) return 'or ora';
+  if(mins < 60) return mins+' min fa';
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return hrs+'h fa';
+  const days = Math.floor(hrs/24);
+  return days+'g fa';
+}
+
+function _wtFmtTourDate(iso, allDay){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return '';
+  if(allDay) return d.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'short'});
+  return d.toLocaleString('it-IT',{weekday:'short',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+
+function _wtCreatorShort(email){
+  if(!email) return '';
+  const name = String(email).split('@')[0];
+  return name.replace(/[._-]+/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+}
+
+function renderChiusure(){
+  const wt = _wtState();
+  const meta = document.getElementById('chiusure-meta');
+  const badge = document.getElementById('chiusure-badge');
+  const kpi = document.getElementById('chiusure-kpi');
+  const listEl = document.getElementById('chiusure-today-list');
+  const countEl = document.getElementById('chiusure-count');
+  const historyEl = document.getElementById('chiusure-history-list');
+  const historyBtn = document.getElementById('chiusure-history-toggle');
+  if(!listEl) return;
+
+  if(meta){
+    if(wt.updatedAt){
+      const ago = _wtFmtCreatedAgo(wt.updatedAt);
+      meta.textContent = 'Sync ' + ago;
+    } else {
+      meta.textContent = 'In attesa';
+    }
+  }
+
+  const events = Array.isArray(wt.events) ? wt.events.slice() : [];
+  const {start: todayStart, end: todayEnd} = _wtTodayBounds();
+  const weekStart = new Date(todayStart); weekStart.setDate(weekStart.getDate()-6);
+  const monthStart = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
+
+  // Filter by createdAt
+  const todays = events.filter(e=>{
+    const c = e.createdAt ? new Date(e.createdAt) : null;
+    return c && c >= todayStart && c < todayEnd;
+  }).sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+
+  const week = events.filter(e=>{
+    const c = e.createdAt ? new Date(e.createdAt) : null;
+    return c && c >= weekStart && c < todayEnd;
+  });
+  const month = events.filter(e=>{
+    const c = e.createdAt ? new Date(e.createdAt) : null;
+    return c && c >= monthStart && c < todayEnd;
+  });
+
+  // Pending = todays not yet added to sheet
+  const pendingToday = todays.filter(e=> !state.workToursStatus[e.id]?.addedToSheet);
+
+  if(badge){
+    badge.textContent = pendingToday.length;
+    badge.style.display = pendingToday.length ? '' : 'none';
+  }
+
+  // KPIs
+  kpi.innerHTML = `
+    <div class="chiusure-kpi">
+      <div class="chiusure-kpi-label">Oggi</div>
+      <div class="chiusure-kpi-val">${todays.length}</div>
+      <div class="chiusure-kpi-sub">${pendingToday.length} da processare</div>
+    </div>
+    <div class="chiusure-kpi">
+      <div class="chiusure-kpi-label">7 giorni</div>
+      <div class="chiusure-kpi-val">${week.length}</div>
+      <div class="chiusure-kpi-sub">incl. oggi</div>
+    </div>
+    <div class="chiusure-kpi">
+      <div class="chiusure-kpi-label">Mese (${monthStart.toLocaleDateString('it-IT',{month:'short'})})</div>
+      <div class="chiusure-kpi-val">${month.length}</div>
+      <div class="chiusure-kpi-sub">chiusure totali</div>
+    </div>
+  `;
+
+  if(countEl) countEl.textContent = todays.length ? `${todays.length} ${todays.length===1?'tour':'tour'}` : '';
+
+  // Today list
+  if(!todays.length){
+    listEl.innerHTML = `<div class="chiusure-empty">Nessuna chiusura registrata oggi.${wt.updatedAt?'':' Configura prima il sync (vedi setup Apps Script).'}</div>`;
+  } else {
+    listEl.innerHTML = todays.map(e=>_renderTourCard(e)).join('');
+  }
+
+  // History list (last 7 days, excluding today)
+  const history = events.filter(e=>{
+    const c = e.createdAt ? new Date(e.createdAt) : null;
+    return c && c >= weekStart && c < todayStart;
+  }).sort((a,b)=> (b.createdAt||'').localeCompare(a.createdAt||''));
+
+  if(historyBtn) historyBtn.textContent = (state.workToursHistoryOpen ? 'Nascondi' : 'Mostra') + ` (${history.length})`;
+  if(historyEl){
+    historyEl.style.display = state.workToursHistoryOpen ? 'block' : 'none';
+    if(state.workToursHistoryOpen){
+      historyEl.innerHTML = history.length
+        ? history.map(e=>_renderTourCard(e, true)).join('')
+        : `<div class="chiusure-empty">Nessuna chiusura negli ultimi 6 giorni.</div>`;
+    }
+  }
+}
+
+function _renderTourCard(e, compact){
+  const status = state.workToursStatus[e.id] || {};
+  const done = !!status.addedToSheet;
+  const checkedAttr = done ? 'checked' : '';
+  const tourDate = _wtFmtTourDate(e.start, e.allDay);
+  const createdAgo = _wtFmtCreatedAgo(e.createdAt);
+  const creator = _wtCreatorShort(e.creator);
+  const safeId = (e.id||'').replace(/'/g,"\\'");
+  return `
+    <div class="tour-card ${done?'done':''}">
+      <label class="tour-check" title="Aggiunto a sheet">
+        <input type="checkbox" ${checkedAttr} onchange="toggleTourSheetStatus('${escapeHtml(safeId)}', this.checked)">
+      </label>
+      <div class="tour-body">
+        <div class="tour-title">${escapeHtml(e.title||'(Senza titolo)')}</div>
+        <div class="tour-meta">
+          <span class="tour-meta-item">📅 ${escapeHtml(tourDate)}</span>
+          ${e.location?`<span class="tour-meta-item">📍 ${escapeHtml(e.location)}</span>`:''}
+          ${creator?`<span class="tour-meta-item">👤 ${escapeHtml(creator)}</span>`:''}
+          <span class="tour-meta-item created">⏱ inserito ${escapeHtml(createdAgo)}</span>
+        </div>
+        ${!compact && e.description ? `<div class="tour-desc">${escapeHtml(e.description)}</div>` : ''}
+        ${e.url?`<a class="tour-link" href="${escapeHtml(e.url)}" target="_blank" rel="noopener">Apri in Google Calendar →</a>`:''}
+      </div>
+    </div>
+  `;
+}
+
+function toggleTourSheetStatus(eventId, checked){
+  ensureState();
+  state.workToursStatus = state.workToursStatus || {};
+  if(checked){
+    state.workToursStatus[eventId] = {addedToSheet:true, addedAt:new Date().toISOString()};
+  } else {
+    delete state.workToursStatus[eventId];
+  }
+  save();
+  renderChiusure();
+}
+
+function toggleChiusureHistory(){
+  state.workToursHistoryOpen = !state.workToursHistoryOpen;
+  save();
+  renderChiusure();
+}
+
+async function refreshChiusure(){
+  const btn = document.getElementById('chiusure-refresh-btn');
+  const meta = document.getElementById('chiusure-meta');
+  const oldText = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = '↻ Aggiorno…'; }
+  try{
+    const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
+    const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+    if(syncUrl && syncToken){
+      if(meta) meta.textContent = 'Sync da Google Calendar…';
+      try{
+        const sep = syncUrl.includes('?') ? '&' : '?';
+        const resp = await fetch(`${syncUrl}${sep}token=${encodeURIComponent(syncToken)}`, {method:'GET', redirect:'follow'});
+        const body = await resp.json().catch(()=>({}));
+        if(!body.ok) throw new Error(body.error || 'Sync error');
+      }catch(e){
+        console.warn('Chiusure sync failed:', e.message);
+      }
+    }
+    await loadStateFromFirestore();
+    renderChiusure();
+  }catch(e){
+    if(meta) meta.textContent = 'Errore refresh';
+    console.warn('Chiusure refresh failed:', e.message);
+  }finally{
+    if(btn){ btn.disabled = false; btn.textContent = oldText || '↻ Aggiorna'; }
+  }
+}
+
 // ============ BRIEFING PERSONALE DEL GIORNO ============
 const PERSONAL_BRIEFING_MODES = {
   morning:{label:'Briefing del giorno', icon:'AM'}
@@ -5728,6 +5989,7 @@ function renderAll(){
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
   try { renderPersonalBriefings(); } catch(e){ console.error('renderPersonalBriefings error:', e); }
   try { renderGoogleCalendar(); } catch(e){ console.error('renderGoogleCalendar error:', e); }
+  try { renderChiusure();       } catch(e){ console.error('renderChiusure error:', e); }
   try { renderMailBriefings(); } catch(e){ console.error('renderMailBriefings error:', e); }
   try { renderDailyMotivation(); } catch(e){ console.error('renderDailyMotivation error:', e); }
   try { renderFinance();         } catch(e){ console.error('renderFinance error:', e); }
