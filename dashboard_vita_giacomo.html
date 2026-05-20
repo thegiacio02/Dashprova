@@ -1205,6 +1205,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div class="calendar-title"><span class="calendar-logo" aria-hidden="true">G</span> Calendario oggi</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
         <div class="calendar-meta" id="google-calendar-meta">In attesa</div>
+        <button class="btn ghost sm" onclick="openCalendarCreateModal()" title="Nuovo evento" style="font-size:.72rem;padding:4px 10px">+ Nuovo</button>
         <button class="btn ghost sm" onclick="refreshGoogleCalendarBox()" id="google-calendar-refresh-btn" style="font-size:.72rem;padding:4px 10px">↻ Aggiorna</button>
         <button class="btn ghost sm" onclick="configureCalendarSync()" title="Configura sync Google Calendar" style="font-size:.72rem;padding:4px 8px">⚙</button>
       </div>
@@ -5369,11 +5370,13 @@ function renderGoogleCalendar(){
   const byDay = {};
   days.forEach(d=>byDay[dayKey(d)] = []);
 
+  window._calendarEventsById = {};
   events.forEach(e=>{
     const start = e.start ? new Date(e.start) : null;
     if(!start || isNaN(start)) return;
     const key = dayKey(start);
     if(byDay[key]) byDay[key].push({...e, _start:start, _end:e.end?new Date(e.end):null});
+    if(e.id) window._calendarEventsById[e.id] = e;
   });
 
   const hours = Array.from({length:16}, (_,i)=>8+i);
@@ -5382,9 +5385,9 @@ function renderGoogleCalendar(){
   const maxHour = 24;
   const now = Date.now();
   const makeTag = (e, cls, inner, style='')=>{
-    const tag = e.url ? 'a' : 'div';
-    const href = e.url ? `href="${escapeHtml(e.url)}" target="_blank" rel="noopener"` : '';
-    return `<${tag} class="${cls}" ${href} style="${style}">${inner}</${tag}>`;
+    const evId = e.id ? `data-event-id="${escapeHtml(e.id)}"` : '';
+    const onclick = e.id ? `onclick="openCalendarEventModal('${escapeHtml(e.id)}')"` : '';
+    return `<div class="${cls}" ${evId} ${onclick} style="cursor:pointer;${style}">${inner}</div>`;
   };
 
   const dayHeaders = days.map(d=>{
@@ -10033,7 +10036,143 @@ ${JSON.stringify(ctx, null, 0)}`;
     document.getElementById('ai-chat-input')?.focus();
   }
 }
+
+// ============ CALENDAR EVENT MODAL (view + create) ============
+function _calModalEl(){ return document.getElementById('cal-modal'); }
+function closeCalModal(){ const m = _calModalEl(); if(m) m.style.display='none'; }
+function _calFmtDateTime(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleString('it-IT',{weekday:'short', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
+}
+
+function openCalendarEventModal(eventId){
+  const ev = (window._calendarEventsById||{})[eventId];
+  if(!ev){ alert('Evento non trovato.'); return; }
+  const m = _calModalEl();
+  if(!m) return;
+  const url = ev.url || '';
+  const dur = ev.allDay ? 'Tutto il giorno' : `${_calFmtDateTime(ev.start)} → ${_calFmtDateTime(ev.end)}`;
+  m.querySelector('#cal-modal-body').innerHTML = `
+    <div class="cal-modal-title">${escapeHtml(ev.title || 'Senza titolo')}</div>
+    <div class="cal-modal-row"><span class="cal-modal-k">🕒</span><span>${escapeHtml(dur)}</span></div>
+    ${ev.location ? `<div class="cal-modal-row"><span class="cal-modal-k">📍</span><span>${escapeHtml(ev.location)}</span></div>` : ''}
+    ${ev.calendar ? `<div class="cal-modal-row"><span class="cal-modal-k">📅</span><span>${escapeHtml(ev.calendar)}</span></div>` : ''}
+    ${ev.description ? `<div class="cal-modal-desc">${escapeHtml(ev.description).replace(/\n/g,'<br>')}</div>` : ''}
+    <div class="cal-modal-actions">
+      ${url ? `<a class="btn sm" href="${escapeHtml(url)}" target="_blank" rel="noopener">Apri in Google Calendar</a>` : ''}
+      <button class="btn ghost sm" onclick="closeCalModal()">Chiudi</button>
+    </div>
+  `;
+  m.style.display = 'flex';
+}
+
+function openCalendarCreateModal(){
+  const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
+  const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+  if(!syncUrl || !syncToken){
+    alert('Configura prima URL Web App e token (⚙ accanto a "Aggiorna").');
+    return;
+  }
+  const m = _calModalEl();
+  if(!m) return;
+  const now = new Date();
+  now.setMinutes(Math.ceil(now.getMinutes()/15)*15, 0, 0);
+  const start = now.toISOString().slice(0,16);
+  const endD = new Date(now.getTime() + 60*60*1000);
+  const end = endD.toISOString().slice(0,16);
+  m.querySelector('#cal-modal-body').innerHTML = `
+    <div class="cal-modal-title">+ Nuovo evento</div>
+    <div class="cal-modal-form">
+      <label>Titolo</label>
+      <input type="text" id="cal-new-title" placeholder="Es. Call con Marco">
+      <div class="cal-modal-grid">
+        <div>
+          <label>Inizio</label>
+          <input type="datetime-local" id="cal-new-start" value="${start}">
+        </div>
+        <div>
+          <label>Fine</label>
+          <input type="datetime-local" id="cal-new-end" value="${end}">
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;font-weight:500"><input type="checkbox" id="cal-new-allday"> Tutto il giorno</label>
+      <label>Luogo (opzionale)</label>
+      <input type="text" id="cal-new-location" placeholder="Es. Ufficio / Zoom link">
+      <label>Note (opzionale)</label>
+      <textarea id="cal-new-desc" rows="2"></textarea>
+      <div id="cal-new-err" style="color:var(--red);font-size:.78rem;min-height:1em"></div>
+    </div>
+    <div class="cal-modal-actions">
+      <button class="btn sm" id="cal-new-save" onclick="submitNewCalendarEvent()">Crea evento</button>
+      <button class="btn ghost sm" onclick="closeCalModal()">Annulla</button>
+    </div>
+  `;
+  m.style.display = 'flex';
+  setTimeout(()=>document.getElementById('cal-new-title')?.focus(), 50);
+}
+
+async function submitNewCalendarEvent(){
+  const title = document.getElementById('cal-new-title').value.trim();
+  const startV = document.getElementById('cal-new-start').value;
+  const endV = document.getElementById('cal-new-end').value;
+  const allDay = document.getElementById('cal-new-allday').checked;
+  const location = document.getElementById('cal-new-location').value.trim();
+  const description = document.getElementById('cal-new-desc').value.trim();
+  const errEl = document.getElementById('cal-new-err');
+  const btn = document.getElementById('cal-new-save');
+  errEl.textContent = '';
+  if(!title){ errEl.textContent = 'Titolo obbligatorio.'; return; }
+  if(!startV){ errEl.textContent = 'Inizio obbligatorio.'; return; }
+  const startISO = new Date(startV).toISOString();
+  const endISO = endV ? new Date(endV).toISOString() : '';
+  const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
+  const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+  if(!syncUrl || !syncToken){ errEl.textContent = 'Configurazione sync mancante.'; return; }
+  btn.disabled = true; btn.textContent = 'Creo…';
+  try{
+    // Apps Script Web App preferisce text/plain per evitare il preflight CORS
+    const resp = await fetch(syncUrl, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({
+        token: syncToken,
+        action: 'create',
+        title, start: startISO, end: endISO, allDay,
+        location, description
+      }),
+      redirect:'follow'
+    });
+    const body = await resp.json().catch(()=>({}));
+    if(!body.ok) throw new Error(body.error || 'Errore creazione');
+    closeCalModal();
+    await loadStateFromFirestore();
+    renderGoogleCalendar();
+  }catch(e){
+    errEl.textContent = 'Errore: ' + e.message;
+  }finally{
+    btn.disabled = false; btn.textContent = 'Crea evento';
+  }
+}
 </script>
+
+<!-- Calendar event modal -->
+<div id="cal-modal" onclick="if(event.target.id==='cal-modal')closeCalModal()" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px">
+  <div id="cal-modal-body" style="background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:10px;max-width:480px;width:100%;padding:20px 22px;box-shadow:0 12px 48px rgba(0,0,0,.5);max-height:90vh;overflow-y:auto"></div>
+</div>
+<style>
+.cal-modal-title{font-size:1.05rem;font-weight:800;margin-bottom:14px;color:var(--text)}
+.cal-modal-row{display:flex;gap:10px;align-items:flex-start;font-size:.88rem;margin:6px 0;line-height:1.4}
+.cal-modal-k{flex:0 0 auto;width:22px;text-align:center}
+.cal-modal-desc{margin-top:12px;padding:10px 12px;background:var(--surface2);border-radius:6px;font-size:.85rem;line-height:1.5;color:var(--text2)}
+.cal-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.cal-modal-form label{display:block;font-size:.74rem;color:var(--muted);margin:10px 0 4px;font-weight:600;letter-spacing:.3px}
+.cal-modal-form input[type=text],.cal-modal-form input[type=datetime-local],.cal-modal-form textarea{width:100%;padding:8px 10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);border-radius:6px;font-size:.88rem;font-family:inherit}
+.cal-modal-form textarea{resize:vertical;min-height:50px}
+.cal-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.cal-modal-grid{grid-template-columns:1fr}}
+</style>
 
 </body>
 </html>

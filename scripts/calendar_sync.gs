@@ -63,6 +63,17 @@ function fetchFirebaseIdToken_(props) {
   return body.idToken;
 }
 
+function eventHtmlLink_(eventId, calendarId) {
+  // Google Calendar event URL format: ?eid=base64url(eventId + ' ' + calendarId)
+  try {
+    const rawId = String(eventId || '').split('@')[0];
+    const cal = String(calendarId || '');
+    const raw = rawId + ' ' + cal;
+    const b64 = Utilities.base64EncodeWebSafe(raw).replace(/=+$/,'');
+    return 'https://calendar.google.com/calendar/event?eid=' + b64;
+  } catch (e) { return ''; }
+}
+
 function collectCalendarEvents_(days) {
   const start = new Date();
   start.setHours(0,0,0,0);
@@ -72,17 +83,20 @@ function collectCalendarEvents_(days) {
   for (const cal of calendars) {
     let items;
     try { items = cal.getEvents(start, end); } catch (e) { continue; }
+    const calId = cal.getId();
     for (const ev of items) {
       try {
+        const evId = ev.getId();
         events.push({
-          id: ev.getId(),
+          id: evId,
+          calendarId: calId,
           title: ev.getTitle() || '',
           start: ev.getStartTime().toISOString(),
           end: ev.getEndTime().toISOString(),
           allDay: ev.isAllDayEvent(),
           location: ev.getLocation() || '',
           calendar: cal.getName() || '',
-          url: '',
+          url: eventHtmlLink_(evId, calId),
           status: (ev.getMyStatus && ev.getMyStatus()) ? String(ev.getMyStatus()) : '',
           description: (ev.getDescription() || '').slice(0,500)
         });
@@ -146,6 +160,60 @@ function pushCalendar() {
   pushToFirestore_(props, idToken, payload);
   console.log('Pushed ' + payload.events.length + ' events');
   return payload.events.length;
+}
+
+/** Web App endpoint per CREARE eventi (POST JSON) */
+function doPost(e) {
+  try {
+    const props = getProps_();
+    let body = {};
+    try { body = JSON.parse(e.postData.contents || '{}'); } catch (er) {}
+    if ((body.token || '') !== props.SYNC_TOKEN) {
+      return ContentService.createTextOutput(JSON.stringify({ok:false, error:'unauthorized'})).setMimeType(ContentService.MimeType.JSON);
+    }
+    const action = body.action || 'create';
+    if (action !== 'create') {
+      return ContentService.createTextOutput(JSON.stringify({ok:false, error:'unsupported action'})).setMimeType(ContentService.MimeType.JSON);
+    }
+    const title = String(body.title || '').trim();
+    if (!title) throw new Error('Missing title');
+    const startISO = String(body.start || '').trim();
+    if (!startISO) throw new Error('Missing start');
+    const start = new Date(startISO);
+    if (isNaN(start)) throw new Error('Invalid start');
+    const endISO = String(body.end || '').trim();
+    const end = endISO ? new Date(endISO) : new Date(start.getTime() + 60*60*1000);
+    if (isNaN(end)) throw new Error('Invalid end');
+
+    const calendarId = String(body.calendarId || '').trim();
+    const cal = calendarId ? CalendarApp.getCalendarById(calendarId) : CalendarApp.getDefaultCalendar();
+    if (!cal) throw new Error('Calendar not found');
+
+    const options = {};
+    if (body.location) options.location = String(body.location);
+    if (body.description) options.description = String(body.description);
+
+    let created;
+    if (body.allDay) {
+      created = cal.createAllDayEvent(title, start, options);
+    } else {
+      created = cal.createEvent(title, start, end, options);
+    }
+
+    // Re-pusha lo snapshot completo del calendario su Firestore
+    const idToken = fetchFirebaseIdToken_(props);
+    const payload = collectCalendarEvents_(props.CALENDAR_DAYS);
+    pushToFirestore_(props, idToken, payload);
+
+    return ContentService.createTextOutput(JSON.stringify({
+      ok:true,
+      eventId: created.getId(),
+      url: eventHtmlLink_(created.getId(), cal.getId()),
+      events: payload.events.length
+    })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ok:false, error:String(err && err.message || err)})).setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 /** Web App endpoint per refresh on-demand */
