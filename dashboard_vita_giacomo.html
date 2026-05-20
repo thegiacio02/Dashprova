@@ -920,6 +920,36 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 #today-todos-list .oggi-todo-text.overdue{color:var(--red)}
 #today-todos-list .oggi-todo-due{font-size:.7rem;opacity:.6;margin-left:4px}
 #today-todos-list .oggi-todo-prio{flex:0 0 auto;font-size:.7rem;color:var(--red);font-weight:700;margin-top:4px}
+.today-command-layout{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:start}
+.tab.active.today-command-layout{display:grid}
+#tab-oggi.today-command-layout > *{grid-column:1/-1;margin-top:0!important}
+#personal-briefing-card{order:1;grid-column:1/-1}
+#today-action-card{order:2;grid-column:1/8;border-left:3px solid var(--green);box-shadow:0 10px 28px rgba(0,0,0,.08)}
+#daily-boost-card{order:2;grid-column:8/-1}
+#today-mail-grid{order:3;grid-column:1/-1}
+#ai-briefing-card{order:4;grid-column:1/7}
+#news-card{order:4;grid-column:7/-1}
+#ticker-tape{order:5;grid-column:1/-1}
+#quotes-card{order:6;grid-column:1/7}
+#weather-card{order:6;grid-column:7/-1}
+#today-stats-card{order:7;grid-column:1/-1}
+#today-log-grid{order:8;grid-column:1/-1}
+.today-primary-card h2{font-size:1.05rem}
+.today-primary-card input{font-size:.92rem}
+.today-muted-context{opacity:.92}
+@media(max-width:1050px){
+  #tab-oggi.today-command-layout{grid-template-columns:1fr}
+  #tab-oggi.today-command-layout > *{grid-column:1/-1!important}
+  #daily-boost-card{order:3}
+  #today-mail-grid{order:4}
+  #ai-briefing-card{order:5}
+  #news-card{order:6}
+  #ticker-tape{order:7}
+  #quotes-card{order:8}
+  #weather-card{order:9}
+  #today-stats-card{order:10}
+  #today-log-grid{order:11}
+}
 [data-theme="light"] .rtb-select{background:#fff;border-color:#ccc;color:#333}
 [data-theme="light"] #rich-content{color:#0a1426;caret-color:#cc0033}
 [data-theme="light"] #rich-content h1,[data-theme="light"] #rich-content h2{color:#000}
@@ -1097,7 +1127,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 <main>
 
 <!-- ============ OGGI ============ -->
-<section class="tab active" id="tab-oggi">
+<section class="tab active today-command-layout" id="tab-oggi">
 
   <!-- TICKER TAPE -->
   <div class="ticker-tape" id="ticker-tape" title="Mercati in tempo reale · passa col mouse per fermare">
@@ -1151,7 +1181,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 
   <!-- DA FARE OGGI -->
-  <div class="card" style="margin-top:16px">
+  <div class="card today-primary-card" id="today-action-card" style="margin-top:16px">
     <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">✅</span> Da fare oggi</span><span class="card-badge" id="today-todos-count">0</span></h2>
     <div style="display:flex;gap:6px;margin-bottom:10px">
       <input type="text" id="oggi-quick-todo" placeholder="Aggiungi al volo… (Invio)" style="flex:1" onkeydown="if(event.key==='Enter')quickAddTodo()"/>
@@ -1161,7 +1191,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 
   <!-- DAILY BOOST (collassabile, default aperto) -->
-  <div class="card collapsible daily-motivation-card" data-card-id="boost" style="margin-top:16px">
+  <div class="card collapsible daily-motivation-card" id="daily-boost-card" data-card-id="boost" style="margin-top:16px">
     <h2 onclick="toggleCard(this)" style="justify-content:space-between">
       <span style="display:flex;align-items:center;gap:8px"><span class="ico">✨</span> Daily Boost</span>
       <span style="display:flex;align-items:center;gap:8px">
@@ -1190,7 +1220,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 
   <!-- STATS STRIP (collassabile) -->
-  <div class="card collapsible collapsed" data-card-id="stats" style="margin-top:16px">
+  <div class="card collapsible collapsed today-muted-context" id="today-stats-card" data-card-id="stats" style="margin-top:16px">
     <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📊</span> Statistiche rapide</span><span class="chevron">▾</span></h2>
     <div class="card-body">
       <div class="stats-strip" id="stats-strip">
@@ -1203,7 +1233,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 
   <!-- LOG RAPIDO + LOG SONNO (collassabili) -->
-  <div class="grid grid-2" style="margin-top:16px">
+  <div class="grid grid-2 today-muted-context" id="today-log-grid" style="margin-top:16px">
     <div class="card collapsible collapsed" data-card-id="lograpido">
       <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">⚡</span> Log rapido</span><span class="chevron">▾</span></h2>
       <div class="card-body">
@@ -1249,7 +1279,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 
   <!-- MERCATI dettaglio (collassabile) -->
-  <div class="card collapsible collapsed" id="quotes-card" data-card-id="mercati" style="margin-top:16px">
+  <div class="card collapsible collapsed today-muted-context" id="quotes-card" data-card-id="mercati" style="margin-top:16px">
     <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">📈</span> Mercati · dettaglio</span><span class="chevron">▾</span></h2>
     <div class="card-body">
       <div id="quotes-content">
@@ -1261,7 +1291,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 
   <!-- METEO (in fondo, collassabile) -->
-  <div class="card collapsible collapsed" id="weather-card" data-card-id="meteo" style="margin-top:16px">
+  <div class="card collapsible collapsed today-muted-context" id="weather-card" data-card-id="meteo" style="margin-top:16px">
     <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🌤️</span> Meteo Milano</span><span class="chevron">▾</span></h2>
     <div class="card-body">
       <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
@@ -1271,7 +1301,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 
   <!-- MAIL PRIORITARIE -->
-  <div class="mail-grid">
+  <div class="mail-grid" id="today-mail-grid">
     <div class="card mail-card" id="gmail-priority-card">
       <div class="mail-box-head" onclick="toggleMailCard('gmail')">
         <h2><span class="mail-logo gmail" aria-hidden="true">M</span> Gmail · da leggere</h2>
