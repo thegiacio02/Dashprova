@@ -1393,14 +1393,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- METEO dettaglio -->
-  <div class="card" id="weather-card" data-card-id="meteo" style="margin-top:16px">
-    <h2><span class="ico">🌤️</span> Meteo Milano</h2>
-    <div id="weather-content"><div class="news-skeleton" style="height:2rem;width:60%"></div></div>
-    <div id="weather-forecast" class="weather-forecast"></div>
-    <div id="weather-detail" class="weather-detail"></div>
-  </div>
-
 </section>
 
 <!-- ============ CHIUSURE COMO ON BOAT ============ -->
@@ -6473,6 +6465,7 @@ function renderWeather(dayIdx){
   const fc = document.getElementById('weather-forecast');
   const det = document.getElementById('weather-detail');
   renderWeatherMini();
+  if(!el && !fc && !det) return;
   if(!el || !fc || !det) return;
   const dayNames = ['Dom','Lun','Mar','Mer','Gio','Ven','Sab'];
 
