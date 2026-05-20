@@ -318,6 +318,9 @@ input,select,textarea{max-width:100%}
 @media(max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}}
 .news-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 @media(max-width:900px){.news-grid{grid-template-columns:1fr}}
+.briefing-duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.briefing-duo .card{margin-top:0!important}
+@media(max-width:900px){.briefing-duo{grid-template-columns:1fr}}
 .news-source-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:10px;margin-bottom:12px;border-bottom-width:2px;border-bottom-style:solid}
 .news-source-name{font-weight:700;font-size:.82rem;letter-spacing:.3px}
 .news-count{font-size:.68rem;color:var(--muted2)}
@@ -1335,16 +1338,31 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <div class="ticker-track" id="ticker-track"><span class="ticker-item"><span class="ticker-sym">···</span><span class="ticker-price">caricamento mercati</span></span></div>
   </div>
 
-  <!-- AI BRIEFING situazione mondiale -->
-  <div class="card collapsible" id="ai-briefing-card" data-card-id="briefing" style="border-left:3px solid var(--accent);margin-top:16px">
-    <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🤖</span> Briefing AI <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· situazione mondiale</span></span><span class="chevron">▾</span></h2>
-    <div class="card-body">
-      <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
-        <span id="briefing-meta" style="font-size:.72rem;color:var(--muted);margin-right:auto"></span>
-        <button class="btn ghost sm" onclick="event.stopPropagation();refreshAIBriefing()" id="briefing-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
-        <button class="btn ghost sm" onclick="event.stopPropagation();openGeminiSetup()" title="Impostazioni AI" style="font-size:.75rem;padding:4px 10px">⚙️</button>
+  <div class="briefing-duo">
+    <!-- AI BRIEFING situazione mondiale -->
+    <div class="card collapsible" id="ai-briefing-card" data-card-id="briefing" style="border-left:3px solid var(--accent)">
+      <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🤖</span> Briefing AI <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· situazione mondiale</span></span><span class="chevron">▾</span></h2>
+      <div class="card-body">
+        <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+          <span id="briefing-meta" style="font-size:.72rem;color:var(--muted);margin-right:auto"></span>
+          <button class="btn ghost sm" onclick="event.stopPropagation();refreshAIBriefing()" id="briefing-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
+          <button class="btn ghost sm" onclick="event.stopPropagation();openGeminiSetup()" title="Impostazioni AI" style="font-size:.75rem;padding:4px 10px">⚙️</button>
+        </div>
+        <div id="briefing-content"></div>
       </div>
-      <div id="briefing-content"></div>
+    </div>
+
+    <!-- AI BRIEFING Italia -->
+    <div class="card collapsible" id="ai-italy-briefing-card" data-card-id="briefing-italia" style="border-left:3px solid var(--green)">
+      <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🇮🇹</span> Briefing AI <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· situazione italiana</span></span><span class="chevron">▾</span></h2>
+      <div class="card-body">
+        <div style="display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+          <span id="italy-briefing-meta" style="font-size:.72rem;color:var(--muted);margin-right:auto"></span>
+          <button class="btn ghost sm" onclick="event.stopPropagation();refreshAIItalyBriefing()" id="italy-briefing-refresh-btn" style="font-size:.75rem;padding:4px 10px">↻ Aggiorna</button>
+          <button class="btn ghost sm" onclick="event.stopPropagation();openGeminiSetup()" title="Impostazioni AI" style="font-size:.75rem;padding:4px 10px">⚙️</button>
+        </div>
+        <div id="italy-briefing-content"></div>
+      </div>
     </div>
   </div>
 
@@ -2796,6 +2814,7 @@ function defaultState(){ return {
     flConcepts:[],
     diario:[],
     aiBriefing:null,
+    aiItalyBriefing:null,
     focus:{},
     flTagFilter:'all',
     dailyMotivation:null,
@@ -5810,6 +5829,15 @@ function todoBriefingList(){
 function buildPersonalBriefingContext(mode){
   ensureState();
   const localDateKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const eventDateKey = e => {
+    if(!e) return '';
+    if(e.allDay && e.start) return String(e.start).slice(0,10);
+    if(e.date) return String(e.date).slice(0,10);
+    if(!e.start) return '';
+    const d = new Date(e.start);
+    if(isNaN(d)) return String(e.start).slice(0,10);
+    return localDateKey(d);
+  };
   const todayDate = new Date();
   todayDate.setHours(0,0,0,0);
   const tomorrowDate = new Date(todayDate);
@@ -5841,7 +5869,7 @@ function buildPersonalBriefingContext(mode){
     try {
       const d = new Date(iso);
       if(isNaN(d)) return false;
-      const localDate = d.toLocaleDateString('it-CA',{timeZone:'Europe/Paris'}); // YYYY-MM-DD
+      const localDate = localDateKey(d);
       return localDate === dateStr;
     } catch { return false; }
   };
@@ -5859,11 +5887,11 @@ function buildPersonalBriefingContext(mode){
     description:(e.description||'').slice(0,160)
   });
   const calendarToday = allCalEvents
-    .filter(e => _isOnDate(e.start, today) || (e.allDay && String(e.start||'').slice(0,10) === today))
+    .filter(e => eventDateKey(e) === today || _isOnDate(e.start, today))
     .slice(0,15)
     .map(mapCalendarEvent);
   const calendarTomorrow = allCalEvents
-    .filter(e => _isOnDate(e.start, tomorrow) || (e.allDay && String(e.start||'').slice(0,10) === tomorrow))
+    .filter(e => eventDateKey(e) === tomorrow || _isOnDate(e.start, tomorrow))
     .slice(0,15)
     .map(mapCalendarEvent);
   const targetDate = mode === 'evening' ? tomorrow : today;
@@ -6027,8 +6055,8 @@ async function refreshPersonalBriefing(mode, force=false){
   if(content) content.innerHTML = `<div class="pb-loading">${mode==='evening' ? 'Sto preparando il piano per domani...' : 'Sto preparando il briefing della giornata...'}</div>`;
   if(btn) btn.disabled = true;
 
-  // Pre-carica calendario se non ancora in cache
-  if(typeof refreshGoogleCalendarBox === 'function' && !state.calendarBriefing?.events?.length){
+  // Rilegge il calendario prima del briefing: evita cache vecchie tra box e prompt AI.
+  if(typeof refreshGoogleCalendarBox === 'function'){
     try{ await refreshGoogleCalendarBox(true); }catch(e){}
   }
 
@@ -6110,6 +6138,7 @@ function renderAll(){
   try { renderDiario();      } catch(e){ console.error('renderDiario error:', e); }
   try { renderTodayTodos();  } catch(e){ console.error('renderTodayTodos error:', e); }
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
+  try { renderAIItalyBriefing(); } catch(e){ console.error('renderAIItalyBriefing error:', e); }
   try { renderPersonalBriefings(); } catch(e){ console.error('renderPersonalBriefings error:', e); }
   try { renderGoogleCalendar(); } catch(e){ console.error('renderGoogleCalendar error:', e); }
   try { renderChiusure();       } catch(e){ console.error('renderChiusure error:', e); }
@@ -6246,7 +6275,12 @@ function dashInit() {
   // Ripristina il timer Pomodoro se era in corso prima del reload
   try{ _restorePomo(); }catch(e){ console.error('restorePomo:', e); }
   // AI briefing
-  setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
+  setTimeout(()=>{
+    if(getGeminiKey()){
+      fetchAIBriefing(false);
+      fetchAIItalyBriefing(false);
+    }
+  }, 4000);
   scheduleAIBriefing();
   setTimeout(()=>{ try{ autoRefreshPersonalBriefing(); }catch(e){ console.error('Personal briefing auto:', e); } }, 2600);
   // Daily Boost: render immediato (renderAll lo include già). Poi tenta refresh se nuovo giorno
@@ -6275,6 +6309,22 @@ const NEWS_SOURCES = [
       'https://www.ilsole24ore.com/rss/notizie.xml',
       'https://www.ilsole24ore.com/rss/economia.xml',
       'https://news.google.com/rss/search?q=when:1d+site:ilsole24ore.com&hl=it-IT&gl=IT&ceid=IT:it'
+  ]}
+];
+const ITALY_BRIEFING_SOURCES = [
+  { id:'corriere', name:'Corriere della Sera', color:'#111827', feeds:[
+      'https://xml2.corriereobjects.it/feed-hp/homepage-restyle-2025.xml',
+      'https://www.corriere.it/dynamic-feed/rss/section/Cronache.xml',
+      'https://www.corriere.it/dynamic-feed/rss/section/Politica.xml',
+      'https://www.corriere.it/dynamic-feed/rss/section/Economia.xml',
+      'https://news.google.com/rss/search?q=when:1d+site:corriere.it&hl=it-IT&gl=IT&ceid=IT:it'
+  ]},
+  { id:'tgcom24', name:'TGCOM24', color:'#0b63ce', feeds:[
+      'https://www.tgcom24.mediaset.it/rss/homepage.xml',
+      'https://www.tgcom24.mediaset.it/rss/ultimissime.xml',
+      'https://www.tgcom24.mediaset.it/rss/cronaca.xml',
+      'https://www.tgcom24.mediaset.it/rss/politica.xml',
+      'https://news.google.com/rss/search?q=when:1d+site:tgcom24.mediaset.it&hl=it-IT&gl=IT&ceid=IT:it'
   ]}
 ];
 const CORS_PROXIES = [
@@ -6312,6 +6362,12 @@ async function fetchSource(src){
     if(items && items.length){ window._newsCache[src.id] = items; return items; }
   }
   return null;
+}
+
+async function loadItalyBriefingNews(force=false){
+  const cache = window._newsCache || {};
+  if(!force && ITALY_BRIEFING_SOURCES.every(src => Array.isArray(cache[src.id]) && cache[src.id].length)) return;
+  await Promise.all(ITALY_BRIEFING_SOURCES.map(src => fetchSource(src)));
 }
 
 function newsSkeletons(col){
@@ -8468,8 +8524,10 @@ Lascia vuoto e conferma per rimuoverla.`;
   setGeminiKey(k);
   if(k.trim()){
     fetchAIBriefing(true);
+    if(typeof fetchAIItalyBriefing === 'function') fetchAIItalyBriefing(true);
   } else {
     renderAIBriefing();
+    if(typeof renderAIItalyBriefing === 'function') renderAIItalyBriefing();
   }
 }
 
@@ -8487,6 +8545,25 @@ function gatherNewsHeadlines(){
     });
   });
   return titles.slice(0,40);
+}
+
+function gatherItalyNewsHeadlines(){
+  const cache = window._newsCache || {};
+  const srcNameMap = {};
+  ITALY_BRIEFING_SOURCES.forEach(s => srcNameMap[s.id] = s.name);
+  const titles = [];
+  Object.entries(cache).forEach(([srcId, items])=>{
+    if(!srcNameMap[srcId] || !Array.isArray(items)) return;
+    const srcName = srcNameMap[srcId];
+    items.slice(0,12).forEach(it=>{
+      const t = (it.title||'')
+        .replace(/\s+-\s+(Corriere della Sera|Corriere|TGCOM24|Tgcom24|Mediaset).*$/i,'')
+        .trim();
+      const link = (it.link||'').trim();
+      if(t) titles.push(link ? `[${srcName}] ${t} — URL: ${link}` : `[${srcName}] ${t}`);
+    });
+  });
+  return titles.slice(0,30);
 }
 
 let _briefingInFlight = false;
@@ -8636,14 +8713,164 @@ function renderAIBriefing(){
   }
 }
 
+let _italyBriefingInFlight = false;
+async function fetchAIItalyBriefing(force=false){
+  ensureState();
+  const content = document.getElementById('italy-briefing-content');
+  const key = getGeminiKey();
+  if(!key){ renderAIItalyBriefing(); return; }
+
+  const last = state.aiItalyBriefing;
+  if(!force && last && last.timestamp){
+    const age = Date.now() - new Date(last.timestamp).getTime();
+    if(age < BRIEFING_REFRESH_MS){ renderAIItalyBriefing(); return; }
+  }
+  if(!force && state.aiItalyBriefingBackoffUntil && Date.now() < state.aiItalyBriefingBackoffUntil){
+    renderAIItalyBriefing(); return;
+  }
+  if(_italyBriefingInFlight) return;
+  _italyBriefingInFlight = true;
+
+  const btn = document.getElementById('italy-briefing-refresh-btn');
+  if(content) content.innerHTML = '<div style="color:var(--muted)">⏳ Leggo Corriere e TGCOM24…</div>';
+  if(btn) btn.disabled = true;
+
+  try { await loadItalyBriefingNews(true); } catch(e){}
+  const headlines = gatherItalyNewsHeadlines();
+  if(!headlines.length){
+    _italyBriefingInFlight = false;
+    if(btn) btn.disabled = false;
+    if(content) content.innerHTML = '<div style="color:var(--muted)">Nessun titolo italiano disponibile. Riprova tra qualche secondo.</div>';
+    return;
+  }
+
+  if(content) content.innerHTML = '<div style="color:var(--muted)">⏳ Genero il briefing Italia…</div>';
+  const ctrl = new AbortController();
+  const timeoutId = setTimeout(() => ctrl.abort(), 30000);
+
+  try{
+    const today = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    const prompt = `Sei un analista italiano che prepara un briefing quotidiano per Giacomo.
+
+Da questi titoli pubblicati oggi (${today}), seleziona e sintetizza in italiano LE 3 NOTIZIE ITALIANE PIU' IMPORTANTI per capire il Paese: politica, economia, cronaca nazionale, istituzioni, imprese, società.
+
+Usa solo Corriere della Sera e TGCOM24. Se una notizia è internazionale, includila solo se ha impatto diretto sull'Italia.
+
+Regole:
+- Esattamente 3 notizie, numerate 1. 2. 3.
+- Massimo 2 righe per notizia.
+- Per ogni notizia: cosa è successo + perché conta per la giornata di Giacomo.
+- Tono asciutto, concreto, niente preamboli.
+- IMPORTANTE: alla fine di ogni notizia, cita la fonte come link HTML cliccabile usando ESATTAMENTE l'URL fornito nei titoli (quello dopo "URL:"). Formato: <a href="URL_ESATTO" target="_blank">NOME_TESTATA</a>. NON inventare URL.
+- A parte i tag <a>, niente altro markdown o HTML.
+
+TITOLI ITALIANI DI OGGI:
+${headlines.join('\n')}`;
+
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      signal: ctrl.signal,
+      body: JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{
+          temperature:0.35,
+          maxOutputTokens:1600,
+          thinkingConfig:{thinkingBudget:0}
+        }
+      })
+    });
+    if(!resp.ok){
+      const errText = await resp.text();
+      throw new Error('HTTP '+resp.status+' — '+errText.slice(0,200));
+    }
+    const data = await resp.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if(!text) throw new Error('Risposta vuota dal modello.');
+
+    state.aiItalyBriefing = {text:text.trim(), timestamp:new Date().toISOString(), model:'gemini-2.5-flash'};
+    save();
+    renderAIItalyBriefing();
+  }catch(e){
+    if(e.name === 'AbortError'){
+      if(content) content.innerHTML = '<div style="color:var(--red);font-size:.85rem">Timeout: Gemini non ha risposto entro 30s. Riprova.</div>';
+    }else{
+      if(/429|quota|rate/i.test(e.message)){
+        state.aiItalyBriefingBackoffUntil = Date.now() + 2*60*60*1000;
+        save();
+      }
+      if(content) content.innerHTML = `<div style="color:var(--red);font-size:.85rem">Errore: ${escapeHtml(e.message)}<br><br><button class="btn ghost sm" onclick="openGeminiSetup()">Controlla API key</button></div>`;
+    }
+  }finally{
+    clearTimeout(timeoutId);
+    _italyBriefingInFlight = false;
+    if(btn) btn.disabled = false;
+  }
+}
+
+function renderAIItalyBriefing(){
+  const content = document.getElementById('italy-briefing-content');
+  const meta = document.getElementById('italy-briefing-meta');
+  if(!content) return;
+
+  const key = getGeminiKey();
+  if(!key){
+    content.innerHTML = `
+      <div style="text-align:center;padding:14px 8px">
+        <p style="margin:0 0 12px;color:var(--muted2);font-size:.88rem">🔑 Configura Gemini per attivare il briefing Italia</p>
+        <button class="btn sm" onclick="openGeminiSetup()">Configura ora</button>
+      </div>`;
+    if(meta) meta.textContent = '';
+    return;
+  }
+
+  const b = state.aiItalyBriefing;
+  if(!b || !b.text){
+    content.innerHTML = `<div style="color:var(--muted);font-size:.88rem">Nessun briefing Italia ancora generato. Clicca <strong>↻ Aggiorna</strong> per iniziare.</div>`;
+    if(meta) meta.textContent = '';
+    return;
+  }
+
+  const linkSlots = [];
+  let raw = (b.text||'').replace(/<a\s+href=["']?(https?:\/\/[^"'>\s]+)["']?[^>]*>([\s\S]*?)<\/a>/gi, (m, href, label)=>{
+    const idx = linkSlots.length;
+    linkSlots.push({href, label: label.replace(/<[^>]+>/g,'').trim() || 'Fonte'});
+    return `__LINK_${idx}__`;
+  });
+  let formatted = escapeHtml(raw)
+    .replace(/\r/g,'')
+    .replace(/\n{2,}/g, '\n\n')
+    .replace(/\n/g, '<br>')
+    .replace(/(^|<br>)\s*(\d+[\.\)])\s+/g, '$1<strong style="color:var(--green)">$2</strong> ');
+  formatted = formatted.replace(/__LINK_(\d+)__/g, (_, i)=>{
+    const l = linkSlots[+i]; if(!l) return '';
+    const safeHref = l.href.replace(/"/g,'%22');
+    return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer" style="color:var(--green);text-decoration:underline">${escapeHtml(l.label)}</a>`;
+  });
+  content.innerHTML = `<div style="line-height:1.75;font-size:.92rem">${formatted}</div>`;
+
+  if(meta){
+    const ago = formatTimeAgo(new Date(b.timestamp));
+    meta.textContent = `aggiornato ${ago}`;
+  }
+}
+
 function refreshAIBriefing(){
   if(!getGeminiKey()){ openGeminiSetup(); return; }
   fetchAIBriefing(true);
 }
 
+function refreshAIItalyBriefing(){
+  if(!getGeminiKey()){ openGeminiSetup(); return; }
+  fetchAIItalyBriefing(true);
+}
+
 function scheduleAIBriefing(){
   if(_briefingTimer) clearInterval(_briefingTimer);
-  _briefingTimer = setInterval(()=>{ fetchAIBriefing(false); }, 20*60*1000); // check every 20 min, refreshes only se >1h vecchio
+  _briefingTimer = setInterval(()=>{
+    fetchAIBriefing(false);
+    fetchAIItalyBriefing(false);
+  }, 20*60*1000); // check every 20 min, refreshes only se >1h vecchio
 }
 
 // ----- TODAY TODOS -----
