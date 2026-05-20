@@ -5524,46 +5524,42 @@ function buildPersonalBriefingContext(mode){
     gmail:(state.emailBriefings?.gmail?.items || []).slice(0,5).map(m=>({from:m.from||'',subject:m.subject||'',reason:m.reason||'',unread:!!m.unread})),
     outlook:(state.emailBriefings?.outlook?.items || []).slice(0,5).map(m=>({from:m.from||'',subject:m.subject||'',reason:m.reason||'',unread:!!m.unread}))
   };
+  // Converti orari in locale (Europe/Paris) prima di passare all'AI
+  const _fmtLocal = iso => {
+    if(!iso) return '';
+    try{
+      const d = new Date(iso);
+      if(isNaN(d)) return iso;
+      return d.toLocaleString('it-IT',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',weekday:'short',day:'2-digit',month:'2-digit'});
+    }catch(e){ return iso; }
+  };
   const calendar = (state.calendarBriefing?.events || []).slice(0,12).map(e=>({
     title:e.title||'',
-    start:e.start||'',
-    end:e.end||'',
+    start:_fmtLocal(e.start),
+    end:_fmtLocal(e.end),
     allDay:!!e.allDay,
     location:e.location||'',
     description:(e.description||'').slice(0,160)
   }));
-  // News rilevanti dalla cache live (RSS già aggregati nella tab Oggi)
-  let news_headlines = [];
-  try{
-    news_headlines = (typeof gatherNewsHeadlines === 'function' ? gatherNewsHeadlines() : [])
-      .slice(0,12)
-      .map(h => h.replace(/\s+—\s+URL:\s+\S+$/,'')); // strip URL per ridurre token
-  }catch(e){}
-  const goals = (state.goals||[]).slice(0,10).map(g=>{
+  const goals = (state.goals||[]).slice(0,6).map(g=>{
     let pace = null;
     try{ pace = _goalPace(g); }catch(e){}
     return {title:g.title, progress:g.current, target:g.target, unit:g.unit||'', deadline:g.deadline||'', status:pace?.state||''};
   });
   const pomToday = (state.pomodoros||[]).filter(p=>p.date===today).length;
-  const pomYesterday = (state.pomodoros||[]).filter(p=>p.date===yesterday).length;
   const shutdownYesterday = (state.shutdowns||[]).find(s=>s.date===yesterday);
   return {
-    mode,
     today,
-    time:new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}),
+    time:new Date().toLocaleTimeString('it-IT',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'}),
     todos:todoBriefingList(),
     mit,
     energy,
-    time_blocks:blocks,
     calendar_events:calendar,
     email_priority:mail,
     goals,
-    inbox:(state.inbox||[]).filter(i=>!i.done).slice(-10).map(i=>i.text||''),
+    inbox:(state.inbox||[]).filter(i=>!i.done).slice(-8).map(i=>i.text||''),
     pomodori_today:pomToday,
-    pomodori_yesterday:pomYesterday,
-    distractions_today:state.distractions?.[today] || 0,
-    shutdown_yesterday:shutdownYesterday ? {completed:!!shutdownYesterday.completed, checks:shutdownYesterday.checks||{}} : null,
-    news_headlines
+    shutdown_yesterday:shutdownYesterday ? {completed:!!shutdownYesterday.completed} : null
   };
 }
 
@@ -5625,38 +5621,26 @@ async function refreshPersonalBriefing(mode, force=false){
   }
 
   const ctx = buildPersonalBriefingContext(mode);
-  const prompt = `Sei l'agente personale operativo di Giacomo dentro la sua dashboard.
-Il tuo compito: prepararlo alla giornata. Devi essere il suo capo di stato maggiore: chiaro, conciso, operativo, tenerlo sul pezzo.
+  const prompt = `Sei l'assistente personale di Giacomo. Preparagli il briefing della giornata: diretto, breve, operativo.
 
-Usa SOLO i dati JSON sotto. Se un dato manca, non inventarlo. Se il calendario è vuoto, dillo.
-Scrivi in italiano, tono diretto e calmo, ZERO fronzoli, NO emoji decorativi nel corpo.
-Cita date/orari come hh:mm, non timestamp completi.
+Usa SOLO i dati JSON sotto. Non inventare nulla. Gli orari sono già in fuso orario locale (Europe/Paris).
+Scrivi in italiano. Niente emoji nel testo.
 
-Formato OBBLIGATORIO (rispetta titoli in grassetto ed elenchi):
+Formato OBBLIGATORIO:
 
 **Focus**
-2-3 frasi che inquadrano oggi: stato attuale (energia, sonno se rilevante), 1 tema chiave della giornata, posta in gioco.
+1-2 frasi: tema chiave della giornata.
 
 **Agenda**
-- Per ogni evento del calendario di OGGI: \`hh:mm – titolo · luogo (se c'è)\`
-- Aggiungi 1 riga di preparazione concreta SOLO per gli eventi importanti (riunioni, call, appuntamenti esterni).
-- Se non ci sono eventi: scrivi "Calendario libero — usa il tempo come spiegato sotto."
+- Elenca gli eventi del calendario di OGGI con orario: \`hh:mm – titolo · luogo\`
+- Tutti i giorni, solo quelli (allDay) li metti come "Evento giornaliero: titolo".
+- Se calendario vuoto: "Nessun impegno in calendario."
 
-**Piano operativo**
-- Esattamente 3 azioni concrete da fare oggi, in ordine di priorità. Scegliendole tra: todos scaduti/oggi, MIT, follow-up email importanti, preparazione eventi.
-- Per ognuna: max 12 parole, verbo all'imperativo (es. "Chiudi", "Rispondi a", "Prepara").
+**Piano del giorno**
+- 3 cose da fare oggi, in ordine priorità. Verbo imperativo, max 10 parole cad.
 
-**Promemoria attivi**
-- Lista corta (max 4) di altri todos/inbox/follow-up in sospeso ma non urgenti, per non perderli di vista. Solo titoli.
-
-**Attenzione**
-- Massimo 2 rischi reali: scadenze imminenti, email critiche, obiettivi off-track, sonno basso, sovraccarico calendario.
-
-**Mondo oggi**
-- 2 sole notizie tra le headlines fornite che potrebbero davvero interessarlo (lavora in finanza, vive a Parigi, segue macro/mercati/tech). 1 riga a testa, sintesi neutra.
-
-**Prossima mossa**
-- UNA singola azione da fare ADESSO in <2 minuti. Concreta, verificabile.
+**Promemoria**
+- Max 4 cose in sospeso non urgenti.
 
 DATI:
 ${JSON.stringify(ctx, null, 0)}`;
@@ -5668,8 +5652,8 @@ ${JSON.stringify(ctx, null, 0)}`;
       body: JSON.stringify({
         contents:[{parts:[{text:prompt}]}],
         generationConfig:{
-          temperature:0.4,
-          maxOutputTokens:2000,
+          temperature:0.35,
+          maxOutputTokens:800,
           thinkingConfig:{thinkingBudget:0}
         }
       })
