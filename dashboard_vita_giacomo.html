@@ -922,6 +922,26 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .dm-advice{font-size:.85rem;line-height:1.6;color:var(--text);background:linear-gradient(135deg,rgba(245,158,11,.06),rgba(139,92,246,.06));padding:10px 12px;border-radius:8px;border-left:3px solid #f59e0b}
 .dm-advice strong{color:var(--accent)}
 .dm-error{color:var(--red);font-size:.82rem;line-height:1.5}
+/* === PERSONAL BRIEFINGS === */
+.personal-briefing-card{position:relative;overflow:hidden;border-left:3px solid var(--teal)}
+.personal-briefing-card::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),#f59e0b,#8b5cf6);opacity:.75}
+.pb-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:900px){.pb-grid{grid-template-columns:1fr}}
+.pb-panel{border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.025);padding:12px;min-width:0}
+.pb-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.pb-title{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--text);font-size:.9rem}
+.pb-icon{width:24px;height:24px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:.85rem;font-weight:900;flex:0 0 auto}
+.pb-icon.morning{background:linear-gradient(135deg,#f59e0b,#06b6d4)}
+.pb-icon.evening{background:linear-gradient(135deg,#4f46e5,#a855f7)}
+.pb-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pb-meta{font-size:.68rem;color:var(--muted2);font-family:var(--mono);text-align:right;line-height:1.35}
+.pb-content{font-size:.85rem;line-height:1.65;color:var(--text);min-height:74px;word-break:break-word}
+.pb-content strong{color:var(--accent);font-weight:750}
+.pb-content ul{margin:6px 0 0 18px;padding:0}
+.pb-content li{margin:4px 0}
+.pb-empty{color:var(--muted2);font-size:.82rem;line-height:1.55;padding:8px 0}
+.pb-loading{color:var(--muted);font-size:.82rem;padding:8px 0}
+.pb-error{color:var(--red);font-size:.82rem;line-height:1.5;padding:8px 0}
 /* === AI CHAT === */
 #ai-fab{position:fixed;right:24px;bottom:24px;z-index:99998;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;border:0;cursor:pointer;font-size:1.4rem;box-shadow:0 6px 20px rgba(0,0,0,.18),0 0 0 1px rgba(255,255,255,.1) inset;display:flex;align-items:center;justify-content:center;transition:transform .15s,box-shadow .15s}
 #ai-fab:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 10px 26px rgba(0,0,0,.22)}
@@ -1063,6 +1083,39 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <!-- TICKER TAPE -->
   <div class="ticker-tape" id="ticker-tape" title="Mercati in tempo reale · passa col mouse per fermare">
     <div class="ticker-track" id="ticker-track"><span class="ticker-item"><span class="ticker-sym">···</span><span class="ticker-price">caricamento mercati</span></span></div>
+  </div>
+
+  <!-- BRIEFING PERSONALE MATTINA/SERA -->
+  <div class="card collapsible personal-briefing-card" id="personal-briefing-card" data-card-id="personal-briefing" style="margin-top:16px">
+    <h2 onclick="toggleCard(this)" style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="ico">🧭</span> Briefing personale <span style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· mattina / sera</span></span>
+      <span class="chevron">▾</span>
+    </h2>
+    <div class="card-body">
+      <div class="pb-grid">
+        <div class="pb-panel">
+          <div class="pb-panel-head">
+            <div class="pb-title"><span class="pb-icon morning">AM</span> Mattina</div>
+            <div class="pb-actions">
+              <span class="pb-meta" id="morning-briefing-meta"></span>
+              <button class="btn ghost sm" id="morning-briefing-btn" onclick="event.stopPropagation();refreshPersonalBriefing('morning', true)" style="font-size:.72rem;padding:4px 10px">↻ Genera</button>
+            </div>
+          </div>
+          <div class="pb-content" id="morning-briefing-content"></div>
+        </div>
+
+        <div class="pb-panel">
+          <div class="pb-panel-head">
+            <div class="pb-title"><span class="pb-icon evening">PM</span> Sera</div>
+            <div class="pb-actions">
+              <span class="pb-meta" id="evening-briefing-meta"></span>
+              <button class="btn ghost sm" id="evening-briefing-btn" onclick="event.stopPropagation();refreshPersonalBriefing('evening', true)" style="font-size:.72rem;padding:4px 10px">↻ Genera</button>
+            </div>
+          </div>
+          <div class="pb-content" id="evening-briefing-content"></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- AI BRIEFING (collassabile, default aperto) -->
@@ -2587,6 +2640,7 @@ function defaultState(){ return {
     flTagFilter:'all',
     aiChat:{messages:[]},
     dailyMotivation:null,
+    personalBriefings:{morning:null,evening:null},
     frAILesson:null,
     emailBriefings:{gmail:{updatedAt:null,items:[]},outlook:{updatedAt:null,items:[]}},
     finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null}}
@@ -4913,6 +4967,194 @@ function renderMailBriefing(kind, data){
   }).join('');
 }
 
+// ============ BRIEFING PERSONALE MATTINA/SERA ============
+const PERSONAL_BRIEFING_MODES = {
+  morning:{label:'Mattina', icon:'AM'},
+  evening:{label:'Sera', icon:'PM'}
+};
+let _personalBriefingInFlight = {morning:false, evening:false};
+
+function currentPersonalBriefingMode(){
+  const h = new Date().getHours();
+  return h >= 17 ? 'evening' : 'morning';
+}
+
+function todoBriefingList(){
+  const today = todayISO();
+  const prioOrder = {high:0, med:1, low:2};
+  return (state.todos||[])
+    .filter(t=>!t.done)
+    .sort((a,b)=>{
+      const ad = a.due || '9999-12-31';
+      const bd = b.due || '9999-12-31';
+      if(ad !== bd) return ad.localeCompare(bd);
+      return (prioOrder[a.prio||'med']||1) - (prioOrder[b.prio||'med']||1);
+    })
+    .slice(0,12)
+    .map(t=>({
+      text:t.text,
+      due:t.due || '',
+      due_status:t.due && t.due < today ? 'scaduta' : (t.due === today ? 'oggi' : ''),
+      priority:t.prio || 'med',
+      area:t.area || ''
+    }));
+}
+
+function buildPersonalBriefingContext(mode){
+  ensureState();
+  const today = todayISO();
+  const y = new Date(); y.setDate(y.getDate()-1);
+  const yesterday = y.toISOString().slice(0,10);
+  const mit = (state.mit?.[today] || []).map(m=>typeof m==='object'?m:{text:m||'',done:false}).filter(m=>m.text);
+  const energy = state.energy?.[today] || {};
+  const blocks = (state.timeBlocks?.[today] || []).map(b=>({start:b.start,end:b.end,what:b.what}));
+  const mail = {
+    gmail:(state.emailBriefings?.gmail?.items || []).slice(0,5).map(m=>({from:m.from||'',subject:m.subject||'',reason:m.reason||'',unread:!!m.unread})),
+    outlook:(state.emailBriefings?.outlook?.items || []).slice(0,5).map(m=>({from:m.from||'',subject:m.subject||'',reason:m.reason||'',unread:!!m.unread}))
+  };
+  const goals = (state.goals||[]).slice(0,10).map(g=>{
+    let pace = null;
+    try{ pace = _goalPace(g); }catch(e){}
+    return {title:g.title, progress:g.current, target:g.target, unit:g.unit||'', deadline:g.deadline||'', status:pace?.state||''};
+  });
+  const pomToday = (state.pomodoros||[]).filter(p=>p.date===today).length;
+  const pomYesterday = (state.pomodoros||[]).filter(p=>p.date===yesterday).length;
+  const shutdownYesterday = (state.shutdowns||[]).find(s=>s.date===yesterday);
+  return {
+    mode,
+    today,
+    time:new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}),
+    todos:todoBriefingList(),
+    mit,
+    energy,
+    time_blocks:blocks,
+    email_priority:mail,
+    goals,
+    inbox:(state.inbox||[]).filter(i=>!i.done).slice(-10).map(i=>i.text||''),
+    pomodori_today:pomToday,
+    pomodori_yesterday:pomYesterday,
+    distractions_today:state.distractions?.[today] || 0,
+    shutdown_yesterday:shutdownYesterday ? {completed:!!shutdownYesterday.completed, checks:shutdownYesterday.checks||{}} : null
+  };
+}
+
+function renderPersonalBriefings(){
+  ensureState();
+  state.personalBriefings = state.personalBriefings || {morning:null, evening:null};
+  renderPersonalBriefing('morning');
+  renderPersonalBriefing('evening');
+}
+
+function renderPersonalBriefing(mode){
+  const content = document.getElementById(`${mode}-briefing-content`);
+  const meta = document.getElementById(`${mode}-briefing-meta`);
+  if(!content) return;
+  const b = state.personalBriefings?.[mode];
+  if(!getGeminiKey()){
+    content.innerHTML = `<div class="pb-empty">Configura Gemini per generare il briefing ${PERSONAL_BRIEFING_MODES[mode].label.toLowerCase()} dai tuoi dati.</div>`;
+    if(meta) meta.textContent = '';
+    return;
+  }
+  if(!b || !b.text){
+    content.innerHTML = `<div class="pb-empty">Nessun briefing ${PERSONAL_BRIEFING_MODES[mode].label.toLowerCase()} ancora generato.</div>`;
+    if(meta) meta.textContent = '';
+    return;
+  }
+  content.innerHTML = formatAIChatText(b.text);
+  if(meta){
+    const sameDay = b.date === todayISO();
+    const ago = b.timestamp ? formatTimeAgo(new Date(b.timestamp)) : '';
+    meta.textContent = sameDay ? `oggi · ${ago}` : (b.date || '');
+  }
+}
+
+async function refreshPersonalBriefing(mode, force=false){
+  if(!PERSONAL_BRIEFING_MODES[mode]) return;
+  ensureState();
+  state.personalBriefings = state.personalBriefings || {morning:null, evening:null};
+  const key = getGeminiKey();
+  if(!key){ openGeminiSetup(); return; }
+  const existing = state.personalBriefings[mode];
+  if(!force && existing?.date === todayISO() && existing?.text){
+    renderPersonalBriefing(mode);
+    return;
+  }
+  if(_personalBriefingInFlight[mode]) return;
+  _personalBriefingInFlight[mode] = true;
+
+  const content = document.getElementById(`${mode}-briefing-content`);
+  const btn = document.getElementById(`${mode}-briefing-btn`);
+  if(content) content.innerHTML = `<div class="pb-loading">Sto preparando il briefing ${PERSONAL_BRIEFING_MODES[mode].label.toLowerCase()}...</div>`;
+  if(btn) btn.disabled = true;
+
+  const ctx = buildPersonalBriefingContext(mode);
+  const modeInstruction = mode === 'morning'
+    ? `Crea un briefing del mattino: orienta la giornata, scegli la prossima azione, segnala rischi e fai emergere cosa ignorare.`
+    : `Crea un briefing della sera: fai review della giornata, evidenzia aperti residui, proponi una chiusura leggera e prepara domani.`;
+  const prompt = `Sei l'agente personale operativo di Giacomo dentro la sua dashboard.
+${modeInstruction}
+
+Usa SOLO i dati JSON sotto. Se un dato manca, non inventarlo.
+Scrivi in italiano, tono diretto e calmo.
+Formato obbligatorio:
+**Focus**
+- una frase concreta
+
+**Da fare**
+- massimo 3 punti operativi
+
+**Attenzione**
+- massimo 2 rischi o follow-up, anche da Gmail/Outlook se rilevanti
+
+**Prossima mossa**
+- una singola azione da fare adesso
+
+DATI:
+${JSON.stringify(ctx, null, 0)}`;
+
+  try{
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(key)}`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        contents:[{parts:[{text:prompt}]}],
+        generationConfig:{
+          temperature:0.45,
+          maxOutputTokens:1200,
+          thinkingConfig:{thinkingBudget:0}
+        }
+      })
+    });
+    if(!resp.ok){
+      const err = await resp.text();
+      throw new Error('HTTP '+resp.status+' — '+err.slice(0,180));
+    }
+    const data = await resp.json();
+    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if(!text.trim()) throw new Error('Risposta vuota dal modello.');
+    state.personalBriefings[mode] = {
+      date: todayISO(),
+      text: text.trim(),
+      timestamp: new Date().toISOString(),
+      model:'gemini-2.5-flash'
+    };
+    save();
+    renderPersonalBriefing(mode);
+  }catch(e){
+    if(content) content.innerHTML = `<div class="pb-error">Errore briefing: ${escapeHtml(e.message)}</div>`;
+  }finally{
+    _personalBriefingInFlight[mode] = false;
+    if(btn) btn.disabled = false;
+  }
+}
+
+function autoRefreshPersonalBriefing(){
+  if(!getGeminiKey()) return;
+  const mode = currentPersonalBriefingMode();
+  const b = state.personalBriefings?.[mode];
+  if(!b || b.date !== todayISO()) refreshPersonalBriefing(mode, false);
+}
+
 // ============ MASTER RENDER ============
 function renderAll(){
   paintCornice();
@@ -4945,6 +5187,7 @@ function renderAll(){
   try { renderDiario();      } catch(e){ console.error('renderDiario error:', e); }
   try { renderTodayTodos();  } catch(e){ console.error('renderTodayTodos error:', e); }
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
+  try { renderPersonalBriefings(); } catch(e){ console.error('renderPersonalBriefings error:', e); }
   try { renderMailBriefings(); } catch(e){ console.error('renderMailBriefings error:', e); }
   try { renderDailyMotivation(); } catch(e){ console.error('renderDailyMotivation error:', e); }
   try { renderFinance();         } catch(e){ console.error('renderFinance error:', e); }
@@ -5078,6 +5321,7 @@ function dashInit() {
   // AI briefing
   setTimeout(()=>{ if(getGeminiKey()) fetchAIBriefing(false); }, 4000);
   scheduleAIBriefing();
+  setTimeout(()=>{ try{ autoRefreshPersonalBriefing(); }catch(e){ console.error('Personal briefing auto:', e); } }, 2600);
   // Daily Boost: render immediato (renderAll lo include già). Poi tenta refresh se nuovo giorno
   try{ renderDailyMotivation(); }catch(e){ console.error('Daily Boost render:', e); }
   setTimeout(()=>refreshDailyMotivation(false), 1500);
