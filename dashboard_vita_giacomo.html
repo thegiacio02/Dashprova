@@ -942,17 +942,34 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .calendar-title{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--text)}
 .calendar-logo{width:22px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#4285f4,#34a853);color:#fff;font-family:var(--mono);font-weight:900;font-size:.78rem}
 .calendar-meta{font-size:.7rem;color:var(--muted2);font-family:var(--mono)}
-.calendar-list{display:flex;flex-direction:column;gap:8px}
-.calendar-event{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;padding:9px 10px;border:1px solid var(--border);border-left:3px solid #4285f4;border-radius:8px;background:rgba(255,255,255,.025);text-decoration:none;color:inherit}
-.calendar-event.now{border-left-color:var(--green);background:rgba(34,197,94,.06)}
-.calendar-event.next{border-left-color:var(--accent);background:rgba(0,229,255,.045)}
-.calendar-time{font-size:.72rem;color:var(--muted2);font-family:var(--mono);line-height:1.35}
-.calendar-event.now .calendar-time{color:var(--green);font-weight:800}
-.calendar-main{min-width:0}
-.calendar-name{font-size:.88rem;color:var(--text);font-weight:750;line-height:1.35;overflow-wrap:anywhere}
-.calendar-extra{font-size:.72rem;color:var(--muted2);margin-top:2px;line-height:1.35}
+.calendar-list{display:block}
+.calendar-week-scroll{overflow-x:auto;padding-bottom:2px}
+.calendar-week{min-width:860px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.02)}
+.calendar-week-days{display:grid;grid-template-columns:56px repeat(7,minmax(0,1fr));border-bottom:1px solid var(--border);background:rgba(255,255,255,.035)}
+.calendar-week-corner{border-right:1px solid var(--border)}
+.calendar-week-day{padding:9px 8px;text-align:center;border-right:1px solid var(--border);min-width:0}
+.calendar-week-day:last-child{border-right:0}
+.calendar-week-day .dow{font-size:.67rem;color:var(--muted2);font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.calendar-week-day .num{font-size:1.15rem;color:var(--text);font-weight:700;margin-top:2px}
+.calendar-week-day.today .dow{color:#4285f4}
+.calendar-week-day.today .num{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#4285f4;color:#fff}
+.calendar-allday{display:grid;grid-template-columns:56px repeat(7,minmax(0,1fr));border-bottom:1px solid var(--border);min-height:42px}
+.calendar-allday-label{font-size:.62rem;color:var(--muted2);font-family:var(--mono);padding:8px 6px;border-right:1px solid var(--border);line-height:1.25}
+.calendar-allday-cell{padding:5px;border-right:1px solid var(--border);min-height:42px}
+.calendar-allday-cell:last-child{border-right:0}
+.calendar-pill{display:block;background:#4285f4;color:#fff;border-radius:6px;padding:3px 7px;font-size:.72rem;font-weight:700;line-height:1.2;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+.calendar-week-body{display:grid;grid-template-columns:56px repeat(7,minmax(0,1fr))}
+.calendar-time-labels{border-right:1px solid var(--border);background:rgba(255,255,255,.015)}
+.calendar-hour-label{height:52px;border-bottom:1px solid var(--border);font-size:.66rem;color:var(--muted2);font-family:var(--mono);text-align:right;padding:3px 6px 0 0;box-sizing:border-box}
+.calendar-day-column{position:relative;height:832px;border-right:1px solid var(--border);background:repeating-linear-gradient(to bottom,transparent 0,transparent 51px,var(--border) 52px)}
+.calendar-day-column:last-child{border-right:0}
+.calendar-block{position:absolute;left:6px;right:6px;background:#4285f4;color:#fff;border-radius:8px;padding:6px 8px;text-decoration:none;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.16)}
+.calendar-block.now{background:var(--green)}
+.calendar-block .event-title{font-size:.76rem;font-weight:800;line-height:1.2;word-break:break-word}
+.calendar-block .event-time{font-size:.68rem;line-height:1.2;opacity:.9;margin-top:3px}
+.calendar-block .event-loc{font-size:.66rem;line-height:1.2;opacity:.85;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .calendar-empty{font-size:.82rem;color:var(--muted2);text-align:center;padding:10px 0}
-@media(max-width:640px){.calendar-event{grid-template-columns:1fr}.calendar-time{font-size:.7rem}}
+@media(max-width:640px){.calendar-week{min-width:760px}.calendar-day-column{height:768px}.calendar-hour-label{height:48px}}
 @media(max-width:1050px){
   #tab-oggi.today-command-layout{grid-template-columns:1fr}
   #tab-oggi.today-command-layout > *{grid-column:1/-1!important}
@@ -5350,29 +5367,79 @@ function renderGoogleCalendar(){
     return;
   }
 
-  const now = Date.now();
-  const today = todayISO();
-  const tomorrow = addDaysISO(today, 1);
-  const sorted = events.sort((a,b)=>String(a.start||'').localeCompare(String(b.start||''))).slice(0,8);
-  wrap.innerHTML = sorted.map((e,i)=>{
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const weekStart = new Date(today);
+  weekStart.setDate(today.getDate() - ((today.getDay()+6)%7));
+  const days = Array.from({length:7}, (_,i)=>{
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate()+i);
+    return d;
+  });
+  const dayKey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const todayKey = dayKey(today);
+  const byDay = {};
+  days.forEach(d=>byDay[dayKey(d)] = []);
+
+  events.forEach(e=>{
     const start = e.start ? new Date(e.start) : null;
-    const end = e.end ? new Date(e.end) : null;
-    const day = start && !isNaN(start) ? start.toISOString().slice(0,10) : '';
-    const dayLabel = day === today ? 'Oggi' : day === tomorrow ? 'Domani' : (start ? start.toLocaleDateString('it-IT',{weekday:'short',day:'2-digit',month:'2-digit'}) : '');
-    const time = e.allDay ? 'Tutto il giorno' : `${calendarDateLabel(e.start)}${e.end ? ' - '+calendarDateLabel(e.end) : ''}`;
-    const isNow = start && end && start.getTime() <= now && end.getTime() > now;
-    const cls = isNow ? 'now' : (i===0 ? 'next' : '');
+    if(!start || isNaN(start)) return;
+    const key = dayKey(start);
+    if(byDay[key]) byDay[key].push({...e, _start:start, _end:e.end?new Date(e.end):null});
+  });
+
+  const hours = Array.from({length:16}, (_,i)=>8+i);
+  const pxPerHour = window.innerWidth <= 640 ? 48 : 52;
+  const minHour = 8;
+  const maxHour = 24;
+  const now = Date.now();
+  const makeTag = (e, cls, inner, style='')=>{
     const tag = e.url ? 'a' : 'div';
     const href = e.url ? `href="${escapeHtml(e.url)}" target="_blank" rel="noopener"` : '';
-    return `<${tag} class="calendar-event ${cls}" ${href}>
-      <div class="calendar-time">${escapeHtml(dayLabel)}<br>${escapeHtml(time)}</div>
-      <div class="calendar-main">
-        <div class="calendar-name">${escapeHtml(e.title || 'Senza titolo')}</div>
-        ${e.location?`<div class="calendar-extra">📍 ${escapeHtml(e.location)}</div>`:''}
-        ${e.calendar?`<div class="calendar-extra">${escapeHtml(e.calendar)}</div>`:''}
-      </div>
-    </${tag}>`;
+    return `<${tag} class="${cls}" ${href} style="${style}">${inner}</${tag}>`;
+  };
+
+  const dayHeaders = days.map(d=>{
+    const isToday = dayKey(d) === todayKey;
+    return `<div class="calendar-week-day ${isToday?'today':''}">
+      <div class="dow">${d.toLocaleDateString('it-IT',{weekday:'short'}).replace('.','')}</div>
+      <div class="num">${d.getDate()}</div>
+    </div>`;
   }).join('');
+
+  const allDayRow = days.map(d=>{
+    const items = (byDay[dayKey(d)]||[]).filter(e=>e.allDay);
+    return `<div class="calendar-allday-cell">
+      ${items.map(e=>makeTag(e,'calendar-pill',escapeHtml(e.title||'Senza titolo'))).join('')}
+    </div>`;
+  }).join('');
+
+  const timeLabels = hours.map(h=>`<div class="calendar-hour-label">${String(h).padStart(2,'0')}:00</div>`).join('');
+  const columns = days.map(d=>{
+    const timed = (byDay[dayKey(d)]||[]).filter(e=>!e.allDay && e._start);
+    const blocks = timed.map(e=>{
+      const startH = e._start.getHours() + e._start.getMinutes()/60;
+      const rawEnd = e._end && !isNaN(e._end) ? e._end : new Date(e._start.getTime()+60*60*1000);
+      const endH = rawEnd.getHours() + rawEnd.getMinutes()/60;
+      const top = Math.max(0, (startH - minHour) * pxPerHour);
+      const height = Math.max(30, (Math.min(maxHour, endH || startH+1) - Math.max(minHour, startH)) * pxPerHour);
+      const isNow = e._start.getTime() <= now && rawEnd.getTime() > now;
+      const inner = `<div class="event-title">${escapeHtml(e.title||'Senza titolo')}</div>
+        <div class="event-time">${escapeHtml(calendarDateLabel(e.start))} - ${escapeHtml(calendarDateLabel(e.end))}</div>
+        ${e.location?`<div class="event-loc">📍 ${escapeHtml(e.location)}</div>`:''}`;
+      return makeTag(e, `calendar-block ${isNow?'now':''}`, inner, `top:${top}px;height:${height}px`);
+    }).join('');
+    return `<div class="calendar-day-column">${blocks}</div>`;
+  }).join('');
+
+  const monthLabel = today.toLocaleDateString('it-IT',{month:'long',year:'numeric'});
+  wrap.innerHTML = `<div class="calendar-week-scroll">
+    <div class="calendar-week" aria-label="Vista settimanale ${escapeHtml(monthLabel)}">
+      <div class="calendar-week-days"><div class="calendar-week-corner"></div>${dayHeaders}</div>
+      <div class="calendar-allday"><div class="calendar-allday-label">Tutto<br>giorno</div>${allDayRow}</div>
+      <div class="calendar-week-body"><div class="calendar-time-labels">${timeLabels}</div>${columns}</div>
+    </div>
+  </div>`;
 }
 
 // ============ BRIEFING PERSONALE MATTINA/SERA ============
