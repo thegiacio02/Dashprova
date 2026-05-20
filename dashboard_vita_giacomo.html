@@ -1206,6 +1206,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end">
         <div class="calendar-meta" id="google-calendar-meta">In attesa</div>
         <button class="btn ghost sm" onclick="refreshGoogleCalendarBox()" id="google-calendar-refresh-btn" style="font-size:.72rem;padding:4px 10px">↻ Aggiorna</button>
+        <button class="btn ghost sm" onclick="configureCalendarSync()" title="Configura sync Google Calendar" style="font-size:.72rem;padding:4px 8px">⚙</button>
       </div>
     </div>
     <div class="calendar-list" id="google-calendar-events">
@@ -5434,8 +5435,23 @@ async function refreshGoogleCalendarBox(){
   const meta = document.getElementById('google-calendar-meta');
   const oldText = btn ? btn.textContent : '';
   if(btn){ btn.disabled = true; btn.textContent = '↻ Aggiorno…'; }
-  if(meta) meta.textContent = 'Rileggo Firestore…';
   try{
+    // Se configurato, chiama l'Apps Script per spingere eventi freschi su Firestore
+    const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
+    const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+    if(syncUrl && syncToken){
+      if(meta) meta.textContent = 'Sync da Google Calendar…';
+      try{
+        const sep = syncUrl.includes('?') ? '&' : '?';
+        const resp = await fetch(`${syncUrl}${sep}token=${encodeURIComponent(syncToken)}`, {method:'GET', redirect:'follow'});
+        const body = await resp.json().catch(()=>({}));
+        if(!body.ok) throw new Error(body.error || 'Sync error');
+      }catch(e){
+        console.warn('Calendar live sync failed, ricado su Firestore esistente:', e.message);
+        if(meta) meta.textContent = 'Sync fallito · uso cache';
+      }
+    }
+    if(meta) meta.textContent = 'Rileggo Firestore…';
     await loadStateFromFirestore();
     renderGoogleCalendar();
   }catch(e){
@@ -5444,6 +5460,24 @@ async function refreshGoogleCalendarBox(){
   }finally{
     if(btn){ btn.disabled = false; btn.textContent = oldText || '↻ Aggiorna'; }
   }
+}
+
+function configureCalendarSync(){
+  const cur = localStorage.getItem('dash_calendar_sync_url') || '';
+  const url = prompt('URL Web App di Google Apps Script (lascia vuoto per disabilitare):', cur);
+  if(url === null) return;
+  if(!url.trim()){
+    localStorage.removeItem('dash_calendar_sync_url');
+    localStorage.removeItem('dash_calendar_sync_token');
+    alert('Sync calendario disabilitato.');
+    return;
+  }
+  const curTok = localStorage.getItem('dash_calendar_sync_token') || '';
+  const token = prompt('Token sync (deve combaciare con SYNC_TOKEN nelle Script Properties):', curTok);
+  if(token === null) return;
+  localStorage.setItem('dash_calendar_sync_url', url.trim());
+  localStorage.setItem('dash_calendar_sync_token', token.trim());
+  alert('Configurazione salvata. Clicca ↻ Aggiorna per testare.');
 }
 
 // ============ BRIEFING PERSONALE DEL GIORNO ============
