@@ -944,32 +944,32 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .calendar-meta{font-size:.7rem;color:var(--muted2);font-family:var(--mono)}
 .calendar-list{display:block}
 .calendar-week-scroll{overflow-x:auto;padding-bottom:2px}
-.calendar-week{min-width:860px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.02)}
-.calendar-week-days{display:grid;grid-template-columns:56px repeat(7,minmax(0,1fr));border-bottom:1px solid var(--border);background:rgba(255,255,255,.035)}
+.calendar-week{min-width:760px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:rgba(255,255,255,.02)}
+.calendar-week-days{display:grid;grid-template-columns:46px repeat(7,minmax(0,1fr));border-bottom:1px solid var(--border);background:rgba(255,255,255,.035)}
 .calendar-week-corner{border-right:1px solid var(--border)}
-.calendar-week-day{padding:9px 8px;text-align:center;border-right:1px solid var(--border);min-width:0}
+.calendar-week-day{padding:6px 6px;text-align:center;border-right:1px solid var(--border);min-width:0}
 .calendar-week-day:last-child{border-right:0}
-.calendar-week-day .dow{font-size:.67rem;color:var(--muted2);font-weight:800;text-transform:uppercase;letter-spacing:.08em}
-.calendar-week-day .num{font-size:1.15rem;color:var(--text);font-weight:700;margin-top:2px}
+.calendar-week-day .dow{font-size:.61rem;color:var(--muted2);font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.calendar-week-day .num{font-size:.95rem;color:var(--text);font-weight:700;margin-top:1px}
 .calendar-week-day.today .dow{color:#4285f4}
-.calendar-week-day.today .num{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#4285f4;color:#fff}
-.calendar-allday{display:grid;grid-template-columns:56px repeat(7,minmax(0,1fr));border-bottom:1px solid var(--border);min-height:42px}
-.calendar-allday-label{font-size:.62rem;color:var(--muted2);font-family:var(--mono);padding:8px 6px;border-right:1px solid var(--border);line-height:1.25}
-.calendar-allday-cell{padding:5px;border-right:1px solid var(--border);min-height:42px}
+.calendar-week-day.today .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#4285f4;color:#fff}
+.calendar-allday{display:grid;grid-template-columns:46px repeat(7,minmax(0,1fr));border-bottom:1px solid var(--border);min-height:32px}
+.calendar-allday-label{font-size:.56rem;color:var(--muted2);font-family:var(--mono);padding:6px 4px;border-right:1px solid var(--border);line-height:1.2}
+.calendar-allday-cell{padding:4px;border-right:1px solid var(--border);min-height:32px}
 .calendar-allday-cell:last-child{border-right:0}
-.calendar-pill{display:block;background:#4285f4;color:#fff;border-radius:6px;padding:3px 7px;font-size:.72rem;font-weight:700;line-height:1.2;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
-.calendar-week-body{display:grid;grid-template-columns:56px repeat(7,minmax(0,1fr))}
+.calendar-pill{display:block;background:#4285f4;color:#fff;border-radius:5px;padding:2px 6px;font-size:.64rem;font-weight:700;line-height:1.2;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
+.calendar-week-body{display:grid;grid-template-columns:46px repeat(7,minmax(0,1fr))}
 .calendar-time-labels{border-right:1px solid var(--border);background:rgba(255,255,255,.015)}
-.calendar-hour-label{height:52px;border-bottom:1px solid var(--border);font-size:.66rem;color:var(--muted2);font-family:var(--mono);text-align:right;padding:3px 6px 0 0;box-sizing:border-box}
-.calendar-day-column{position:relative;height:832px;border-right:1px solid var(--border);background:repeating-linear-gradient(to bottom,transparent 0,transparent 51px,var(--border) 52px)}
+.calendar-hour-label{height:30px;border-bottom:1px solid var(--border);font-size:.58rem;color:var(--muted2);font-family:var(--mono);text-align:right;padding:2px 5px 0 0;box-sizing:border-box}
+.calendar-day-column{position:relative;height:480px;border-right:1px solid var(--border);background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,var(--border) 30px)}
 .calendar-day-column:last-child{border-right:0}
-.calendar-block{position:absolute;left:6px;right:6px;background:#4285f4;color:#fff;border-radius:8px;padding:6px 8px;text-decoration:none;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.16)}
+.calendar-block{position:absolute;left:4px;right:4px;background:#4285f4;color:#fff;border-radius:6px;padding:4px 6px;text-decoration:none;overflow:hidden;box-shadow:0 3px 9px rgba(0,0,0,.14)}
 .calendar-block.now{background:var(--green)}
-.calendar-block .event-title{font-size:.76rem;font-weight:800;line-height:1.2;word-break:break-word}
-.calendar-block .event-time{font-size:.68rem;line-height:1.2;opacity:.9;margin-top:3px}
-.calendar-block .event-loc{font-size:.66rem;line-height:1.2;opacity:.85;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.calendar-block .event-title{font-size:.66rem;font-weight:800;line-height:1.15;word-break:break-word}
+.calendar-block .event-time{font-size:.58rem;line-height:1.15;opacity:.9;margin-top:2px}
+.calendar-block .event-loc{display:none}
 .calendar-empty{font-size:.82rem;color:var(--muted2);text-align:center;padding:10px 0}
-@media(max-width:640px){.calendar-week{min-width:760px}.calendar-day-column{height:768px}.calendar-hour-label{height:48px}}
+@media(max-width:640px){.calendar-week{min-width:680px}.calendar-day-column{height:448px}.calendar-hour-label{height:28px}}
 @media(max-width:1050px){
   #tab-oggi.today-command-layout{grid-template-columns:1fr}
   #tab-oggi.today-command-layout > *{grid-column:1/-1!important}
@@ -5389,7 +5389,7 @@ function renderGoogleCalendar(){
   });
 
   const hours = Array.from({length:16}, (_,i)=>8+i);
-  const pxPerHour = window.innerWidth <= 640 ? 48 : 52;
+  const pxPerHour = window.innerWidth <= 640 ? 28 : 30;
   const minHour = 8;
   const maxHour = 24;
   const now = Date.now();
