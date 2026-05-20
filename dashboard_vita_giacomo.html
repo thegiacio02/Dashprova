@@ -1854,7 +1854,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <div class="card" style="margin-top:16px">
     <h2 style="justify-content:space-between">
       <span style="display:flex;align-items:center;gap:8px"><span class="ico">💳</span> Spese mensili</span>
-      <span style="display:flex;gap:6px">
+      <span style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn ghost sm" onclick="recategorizeSpese()" style="font-size:.7rem" title="Ricategorizza le 'Altre spese' usando i pattern dei merchant">🔍 Ricategorizza</button>
         <button class="btn sm" id="spese-ai-btn" onclick="analyzeSpending()" style="font-size:.7rem">🤖 Analisi AI</button>
         <button class="btn ghost sm" style="font-size:.68rem;color:var(--down)" onclick="_clearSpese()">Svuota</button>
       </span>
@@ -6455,8 +6456,103 @@ const _SPESE_CAT_COLORS = {
   'Prelievo Contante':             'rgba(160,160,160,.5)',
   'Rimborsi':                      'rgba(74,222,128,.35)',
   'Altre Entrate':                 'rgba(74,222,128,.3)',
+  // nuove categorie smart
+  'Famiglia':                      'rgba(248,113,113,.45)',
+  'Amici/P2P':                     'rgba(244,114,182,.55)',
+  'Affitto':                       'rgba(251,146,60,.7)',
+  'Trasferimenti':                 'rgba(148,163,184,.35)',
+  'Salute':                        'rgba(45,212,191,.6)',
+  'Shopping':                      'rgba(217,119,255,.5)',
+  'Cultura':                       'rgba(110,240,255,.6)',
+  'Bar/Caffè':                     'rgba(250,204,21,.65)',
   'Altre spese':                   'rgba(200,200,200,.4)',
 };
+
+// ----- Smart categorization: pattern-based override per categorie Fineco generiche
+// Ordine importante: prima match vince. Si applica solo se Fineco ha messo
+// "Altre spese" / "Altre Entrate" / "Rimborsi" (categorie generiche).
+const _SPESE_PATTERNS = [
+  // ── TRASFERIMENTI tra conti propri (Fineco ↔ Revolut/Banking Circle/PayPal proprio)
+  {cat:'Trasferimenti', re:/Banking\s*Circle|Beneficiario:\s*Giacomo\s+Cagnano[\s\S]{0,80}Ordinante:\s*Giacomo\s+Cagnano|Ordinante:\s*Giacomo\s+Cagnano[\s\S]{0,80}Beneficiario:\s*Giacomo\s+Cagnano|Inviato da Revolut|Revolut Bank Uab|Revolut\*+\d|Paypal\*Cagnano\s+Giacomo|PAYPAL\*CAGNANO\s+GIACOMO/i},
+
+  // ── FAMIGLIA (genitori e parenti stretti)
+  {cat:'Famiglia',      re:/Cagnano\s+Antonio|Benini\s+Delia|Cazzato\s+Margherita/i},
+
+  // ── AFFITTO (Denicourt = locatore Parigi)
+  {cat:'Affitto',       re:/\bdenicourt\b|Cau:\s*Rent\s|Causale:\s*\d{1,4}\s+Rue\s+De\s+Picpus/i},
+
+  // ── UTENZE / CASA (energia, gas, canone bancario)
+  {cat:'Casa',          re:/\b(eni\s*plenitude|plenitude france|enel|edf|engie|veolia|suez)\b|canone\s+mensile\s+conto/i},
+  {cat:'Rimborsi',      re:/sconto\s+canone\s+mensile/i},
+
+  // ── ABBONAMENTI / TECH / SAAS
+  {cat:'Internet Telefono e Tecnologia', re:/\b(iliad|orange\s*recharge|recharge\s+orange|openai|chatgpt|apple\.?com|apple_com|bloomberg|babbel|linkedin|paddle\.net|paddlenet|wix|jobcopilot|spotify|netflix|disney|hbo|prime\s+video|youtube\s|google\s*one|google\s*storage|microsoft\s|adobe|notion|figma|github|aws|cloudflare|elfsight|r\.contactosrapidos)\b/i},
+
+  // ── FOOD DELIVERY (Uber Eats, ecc.) → Ristoranti
+  {cat:'Hotel Ristoranti e Viaggi', re:/\b(uber\s*\*?\s*eats|uber\s+eats|ubr\*\s*pending|paypal\s*\*pmntsbveats|paypal\s*\*uber\s*bv|deliveroo|glovo|just\s?eat|takeaway)\b/i},
+
+  // ── BIKE / SCOOTER (Lime ecc.) → Trasporti
+  {cat:'Trasporti', re:/uber\s*\*?\s*lime|lime\s+help\.uber/i},
+
+  // ── TRASPORTI (treni, metro, parcheggi, pedaggi, voli, taxi, ski lifts)
+  {cat:'Trasporti', re:/\b(bicloo|cooltra|bolt\.eu|uber\s*\*?\s*trip|atm\s*milan|cless\s+ticket|service\s+navigo|navigo|fnm\*?\s*trenord|trenitalia|sncf|tgv|satap|autogrill|easyjet|ryanair|wizz|transavia|anttripcom|sbb|aormcdonalds|ca\s*parking|fp\s*paris\s*daumesn|pila\s*spa|adamello\s*ski|teodoro\s*srl|aspit|chiosco\s*reg|gressan|piazzale\s+italiano|globeswmf|swiss|lufthansa|airfrance|alitalia|ita\s+airways|trenord|bahnhof|flughafen|starbucks\s+\d+\s+zuerich)\b/i},
+
+  // ── PRELIEVO CONTANTE (ATM in vari modi)
+  {cat:'Prelievo Contante', re:/\bprelievo\b|cash\s+withdrawal|ricarica\s+atm/i},
+
+  // ── ALIMENTARI (supermercati + panetterie/pasticcerie a basso ticket)
+  {cat:'Alimentari', re:/\b(monoprix|franprix|carrefour|auchan|u\s*express|u-express|coop|esselunga|lidl|aldi|conad|crai|despar|naturalia|biocoop|leclerc|intermarche|metro\b|simply|au\s*bec\s*sucre|bread\s+and\s+must|sumup\s*\*?\s*boulangerie|boulangerie|boulanger|pasticceria|patisserie|brea\s|laduree|primeur|lsi\s+saint|l&\s*j\s*market|cabazar|salari\s+ivan|estrele\s+cakes|nya\*?\s*monoprix|fp\s+paris\s+daumesn|auchan\s+supermar)\b/i},
+
+  // ── RISTORANTI / BAR / CAFFÈ (la lista più lunga: tutti i locali nei dati)
+  {cat:'Hotel Ristoranti e Viaggi', re:/\b(chen\s+paris|chez\s+|bojo\b|gladines|terra\s+mia|new\s+tokyo|raj\s|bonjour\s+vietnam|popolare\s+paris|camerone|brasserie|sunday\b|bouillon|hellodom|cantine|bistro|burger\s+king|mc\s*donald|mcdonald|pizza|sushi|kebab|exki|caffe|caffè|café|cafe\s|carducci|alice\s+pizza|39\s+zerodue|rotisserie|au\s+bourguignon|au\s+brisemiche|baron\b|prunieres|bb\s+restaur|scugnizzo|piazzale\s+ital|la\s+ferme|cs\s+cafe|cuisine|free\s+spirit|koyo|n\.\s*ombra|n'?\s*ombra|aux\s+petit|so\s+paris|sc-sushi|space\s+game|kaviari|deli\s+sas|cantine\s+victor|aor\s|sc-crepe|crepedesarts|tavern|trattoria|osteria|chen\b|sarl\s+anam|babo\s+anam|cafe\s+du\s+marche|fondation\s+cart|au\s+pied|paris\s+beaubourg|la\s+rasega|rifugio\s+valbiolo|adamello\s+ski\s+cida|lafayette\s+cafe|bar\s+rosa|bb\s+restaurant|aux\s+p[ea]tit|au\s+brise|so\s+paris\s+bar|chen\s|topsec|c03\s+paris|au\s+bec|ernest\s+et\s+valent|pasticceria|gladines\s+saint|bonjour\s+vietnam|chez\s+ma\s+belle|chez\s+victor|chez\s+francis|chez\s+suzette|la\s+taverne|piazzale|terra\s+mia|cucina|hellodom|salari\s+ivan|free\s+spirit|aspit\s+bergamo|au\s+bec\s+sucre|la\s+perla\s+bar|wine|enoteca)\b/i},
+
+  // ── CULTURA / EVENTI / MUSEI / LIBRI
+  {cat:'Cultura', re:/\b(zoo\s+paris|b\.?n\.?f\.?|bnf\b|mnhn|fondation\s+cart|cinema|theatre|teatro|museo|museum|opera|concert|festival|weezevent|bowling|sc-lib|shakespeare|fnac|libro|libreria|book\b|photomaton|carti\b|sc-lib\s+shakespe|nyx\*dallmayreliteda|nyx\s+dallmayrelite|exposition|biblioth|mostra|esposizione)\b/i},
+
+  // ── SHOPPING (abbigliamento, beauty, casa)
+  {cat:'Shopping', re:/\b(uniqlo|zara|h&m|asos|zalando|shein|nike|adidas|footlocker|sephora|nyx\b|decathlon|ikea|leroy\s+merlin|aliexpress|temu|primark|pull&bear|bershka|stradivarius|levi'?s)\b/i},
+
+  // ── E-COMMERCE
+  {cat:'E-Commerce', re:/\b(amazon|amzn|aliexpress|temu|asos|zalando)\b/i},
+
+  // ── SALUTE / FARMACIA
+  {cat:'Salute', re:/\b(pharmacie|farmacia|pharma\b|medico|dottore|ospedale|hopital|h[ôo]pital|dental|dentista|psicologo|optician|ottico)\b/i},
+
+  // ── P2P con amici (PayPal Visa Direct = trasferimento peer-to-peer)
+  {cat:'Amici/P2P', re:/Paypal\s*\*[\w.]+\s*Visa Direct/i},
+];
+
+// Restituisce la categoria "migliorata" se Fineco aveva messo qualcosa di generico.
+// Mantiene la categoria esistente se è già specifica (Alimentari, Trasporti, etc.)
+function _smartCategorize(desc, currentCat){
+  if(!desc) return currentCat || 'Altre spese';
+  const isGeneric = !currentCat || /^Altre\s+(spese|Entrate)$/i.test(currentCat) || currentCat==='';
+  if(!isGeneric) return currentCat;
+  for(const p of _SPESE_PATTERNS){
+    if(p.re.test(desc)) return p.cat;
+  }
+  return currentCat || 'Altre spese';
+}
+
+function recategorizeSpese(){
+  const txs = (state.finance && state.finance.transactions) || [];
+  if(!txs.length){ alert('Nessuna transazione da ricategorizzare. Importa prima un Excel Fineco.'); return; }
+  let upgraded = 0;
+  const cats = {};
+  txs.forEach(t => {
+    const before = t.cat;
+    const after  = _smartCategorize(t.desc, t.cat);
+    if(after !== before){
+      t.cat = after;
+      upgraded++;
+      cats[after] = (cats[after]||0)+1;
+    }
+  });
+  save();
+  renderSpese();
+  const summary = Object.entries(cats).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([c,n])=>`${c}: ${n}`).join('\n');
+  alert(`✓ Ricategorizzate ${upgraded} transazioni su ${txs.length}.\n\nNuove categorie principali:\n${summary || '(nessuna)'}`);
+}
 
 let _speseActiveMonth = new Date().toISOString().slice(0,7);
 let _speseCatChart = null;
@@ -6516,7 +6612,8 @@ function importSpese(file){
         if(amount===0) continue;
 
         const desc = iDesc>=0 && r[iDesc] ? String(r[iDesc]).trim() : '';
-        const cat  = iCat>=0  && r[iCat]  ? String(r[iCat]).trim()  : 'Altre spese';
+        const finecoCat = iCat>=0 && r[iCat] ? String(r[iCat]).trim() : 'Altre spese';
+        const cat  = _smartCategorize(desc, finecoCat);
         const month = date.slice(0,7);
         const _key  = `${date}|${amount}|${desc.slice(0,60)}`;
         txs.push({id:uid(), date, desc, amount, cat, month, _key});
