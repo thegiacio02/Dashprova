@@ -963,7 +963,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .calendar-hour-label{height:30px;border-bottom:1px solid var(--border);font-size:.58rem;color:var(--muted2);font-family:var(--mono);text-align:right;padding:2px 5px 0 0;box-sizing:border-box}
 .calendar-day-column{position:relative;height:480px;border-right:1px solid var(--border);background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,var(--border) 30px)}
 .calendar-day-column:last-child{border-right:0}
-.calendar-block{position:absolute;left:4px;right:4px;background:#4285f4;color:#fff;border-radius:6px;padding:4px 6px;text-decoration:none;overflow:hidden;box-shadow:0 3px 9px rgba(0,0,0,.14)}
+.calendar-block{position:absolute;left:4px;right:4px;background:#4285f4;color:#fff;border-radius:6px;padding:4px 6px;text-decoration:none;overflow:hidden;box-shadow:0 3px 9px rgba(0,0,0,.14);cursor:grab}
+.cal-drag-floater{cursor:grabbing!important;box-shadow:0 8px 24px rgba(0,0,0,.35)!important}
 .calendar-block.now{background:var(--green)}
 .calendar-day-column{user-select:none}
 .calendar-ghost{position:absolute;left:4px;right:4px;background:rgba(66,133,244,.35);border:2px dashed #4285f4;border-radius:6px;padding:4px 6px;pointer-events:none;z-index:10;box-sizing:border-box}
@@ -10028,45 +10029,73 @@ ${JSON.stringify(ctx, null, 0)}`;
   }
 }
 
-// ============ CALENDAR DRAG-TO-CREATE ============
-let _calDrag = null;
+// ============ CALENDAR DRAG (create + move) ============
+let _calDrag = null;  // drag-to-create state
+let _calMove = null;  // drag-to-move state
 
 function _calSnap15(rawHour){
-  // snap to 15-min intervals, returns {h, m}
   const h = Math.floor(rawHour);
   const m = Math.round((rawHour - h) * 4) * 15;
   return {h: Math.min(23, Math.max(0, h)), m: m >= 60 ? 45 : m};
 }
-
 function _calHourToY(h, m){
   const pph = window._calPxPerHour || 30;
   const minH = window._calMinHour || 8;
   return ((h + m / 60) - minH) * pph;
 }
-
 function _calYToHour(y){
   const pph = window._calPxPerHour || 30;
   const minH = window._calMinHour || 8;
   return _calSnap15(minH + y / pph);
 }
-
 function _calBuildDTLocal(dayDate, h, m){
-  // Returns YYYY-MM-DDTHH:MM in local time (for datetime-local input)
   const pad = n => String(n).padStart(2, '0');
   const d = new Date(dayDate);
   d.setHours(h, m, 0, 0);
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(h)}:${pad(m)}`;
 }
-
 function _calGhostLabel(sh, sm, eh, em){
   const pad = n => String(n).padStart(2,'0');
   return `${pad(sh)}:${pad(sm)} – ${pad(eh)}:${pad(em)}`;
 }
+function _calFindDestCol(cx, cy){
+  // Find calendar-day-column under cursor (the floater has pointer-events:none)
+  for(const el of document.elementsFromPoint(cx, cy)){
+    if(el.classList && el.classList.contains('calendar-day-column')) return el;
+  }
+  return null;
+}
 
 document.addEventListener('mousedown', function(e){
+  if(e.button !== 0) return;
+
+  // --- MOVE: drag on existing block ---
+  const block = e.target.closest('.calendar-block[data-event-id]');
+  if(block){
+    const eventId = block.dataset.eventId;
+    const ev = (window._calendarEventsById || {})[eventId];
+    if(!ev) return;
+    e.preventDefault();
+    const blockRect = block.getBoundingClientRect();
+    const offsetY = e.clientY - blockRect.top;
+    const durationMs = Math.max(30*60*1000, new Date(ev.end) - new Date(ev.start));
+    // Floater: fixed-position clone following cursor
+    const floater = document.createElement('div');
+    floater.className = 'calendar-block cal-drag-floater';
+    floater.style.cssText = `position:fixed;width:${blockRect.width}px;left:${blockRect.left}px;top:${blockRect.top}px;pointer-events:none;z-index:9000;opacity:.82;box-sizing:border-box`;
+    floater.innerHTML = block.innerHTML;
+    document.body.appendChild(floater);
+    block.style.opacity = '0.25';
+    _calMove = {block, eventId, ev, offsetY, durationMs, floater,
+      startX: e.clientX, startY: e.clientY, moved: false,
+      ghost: null, ghostCol: null, destH: null, destM: null, destDayDate: null};
+    return;
+  }
+
+  // --- CREATE: drag on empty column space ---
   const col = e.target.closest('.calendar-day-column');
   if(!col) return;
-  if(e.target.closest('.calendar-block') || e.target.closest('.calendar-ghost')) return;
+  if(e.target.closest('.calendar-ghost')) return;
   e.preventDefault();
   const dayIdx = parseInt(col.dataset.dayIdx, 10);
   const days = window._calWeekDays;
@@ -10086,14 +10115,53 @@ document.addEventListener('mousedown', function(e){
 });
 
 document.addEventListener('mousemove', function(e){
+  // --- MOVE drag ---
+  if(_calMove){
+    const {floater, offsetY, durationMs, startX, startY, ev} = _calMove;
+    if(!_calMove.moved && (Math.abs(e.clientX - startX) > 4 || Math.abs(e.clientY - startY) > 4))
+      _calMove.moved = true;
+    floater.style.left = (e.clientX - 40) + 'px';
+    floater.style.top = (e.clientY - offsetY) + 'px';
+    const destCol = _calFindDestCol(e.clientX, e.clientY);
+    if(destCol){
+      const dayIdx = parseInt(destCol.dataset.dayIdx, 10);
+      const days = window._calWeekDays;
+      const rect = destCol.getBoundingClientRect();
+      const y = Math.max(0, e.clientY - rect.top - offsetY);
+      const {h, m} = _calYToHour(y);
+      const pph = window._calPxPerHour || 30;
+      const durationH = durationMs / 3600000;
+      const endTotalMin = h * 60 + m + Math.round(durationMs / 60000);
+      const eH = Math.min(23, Math.floor(endTotalMin / 60));
+      const eM = endTotalMin % 60;
+      // Move ghost between columns if needed
+      if(_calMove.ghostCol !== destCol){
+        if(_calMove.ghost) _calMove.ghost.remove();
+        const g = document.createElement('div');
+        g.className = 'calendar-ghost';
+        destCol.appendChild(g);
+        _calMove.ghost = g;
+        _calMove.ghostCol = destCol;
+      }
+      const topY = _calHourToY(h, m);
+      _calMove.ghost.style.top = topY + 'px';
+      _calMove.ghost.style.height = Math.max(pph, durationH * pph) + 'px';
+      _calMove.ghost.innerHTML = `<div class="event-title">${escapeHtml(ev.title||'Evento')}</div><div class="event-time">${_calGhostLabel(h,m,eH,eM)}</div>`;
+      _calMove.destH = h; _calMove.destM = m;
+      _calMove.destDayDate = days && days[dayIdx];
+    }
+    return;
+  }
+
+  // --- CREATE drag ---
   if(!_calDrag) return;
-  const {col, startH, startM, ghost, rect} = _calDrag;
+  const {startH, startM, ghost, rect} = _calDrag;
   const y = Math.max(0, e.clientY - rect.top);
   const pph = window._calPxPerHour || 30;
   const {h: endH, m: endM} = _calYToHour(y);
   const topY = _calHourToY(startH, startM);
   let botY = _calHourToY(endH, endM);
-  if(botY < topY + pph) botY = topY + pph; // min 1h visually during drag
+  if(botY < topY + pph) botY = topY + pph;
   ghost.style.height = (botY - topY) + 'px';
   const endTotal = Math.max(startH * 60 + startM + 30, endH * 60 + endM);
   const eH = Math.floor(endTotal / 60);
@@ -10103,8 +10171,27 @@ document.addEventListener('mousemove', function(e){
 });
 
 document.addEventListener('mouseup', function(e){
+  // --- MOVE end ---
+  if(_calMove){
+    const {block, eventId, ev, floater, ghost, moved, destH, destM, destDayDate, durationMs} = _calMove;
+    _calMove = null;
+    floater.remove();
+    if(ghost) ghost.remove();
+    block.style.opacity = '';
+    if(moved && destDayDate !== null && destH !== null){
+      const newStart = new Date(destDayDate);
+      newStart.setHours(destH, destM, 0, 0);
+      const newEnd = new Date(newStart.getTime() + durationMs);
+      submitCalendarEventMove(eventId, ev.calendarId || '', ev.title, newStart.toISOString(), newEnd.toISOString());
+    } else if(!moved){
+      openCalendarEventModal(eventId);
+    }
+    return;
+  }
+
+  // --- CREATE end ---
   if(!_calDrag) return;
-  const {col, dayDate, startH, startM, ghost, endH, endM} = _calDrag;
+  const {dayDate, startH, startM, ghost, endH, endM} = _calDrag;
   _calDrag = null;
   ghost.remove();
   const eH = endH !== undefined ? endH : startH + 1;
@@ -10116,6 +10203,28 @@ document.addEventListener('mouseup', function(e){
   const endDT = _calBuildDTLocal(dayDate, finalEH, finalEM);
   openCalendarCreateModal(startDT, endDT);
 });
+
+async function submitCalendarEventMove(eventId, calendarId, title, startISO, endISO){
+  const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
+  const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+  if(!syncUrl || !syncToken){ alert('Sync non configurato.'); return; }
+  try{
+    const resp = await fetch(syncUrl, {
+      method:'POST', redirect:'follow',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({token:syncToken, action:'update', eventId, calendarId, title, start:startISO, end:endISO})
+    });
+    const body = await resp.json().catch(()=>({}));
+    if(!body.ok) throw new Error(body.error || 'Update failed');
+    await loadStateFromFirestore();
+    renderGoogleCalendar();
+  }catch(err){
+    console.warn('Move failed:', err.message);
+    alert('Spostamento fallito: ' + err.message);
+    await loadStateFromFirestore();
+    renderGoogleCalendar();
+  }
+}
 
 // ============ CALENDAR EVENT MODAL (view + create) ============
 function _calModalEl(){ return document.getElementById('cal-modal'); }

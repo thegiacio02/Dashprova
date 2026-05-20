@@ -172,9 +172,40 @@ function doPost(e) {
       return ContentService.createTextOutput(JSON.stringify({ok:false, error:'unauthorized'})).setMimeType(ContentService.MimeType.JSON);
     }
     const action = body.action || 'create';
+
+    if (action === 'update') {
+      const eventId = String(body.eventId || '').trim();
+      if (!eventId) throw new Error('Missing eventId');
+      const newStart = new Date(String(body.start || ''));
+      const newEnd   = new Date(String(body.end   || ''));
+      if (isNaN(newStart)) throw new Error('Invalid start');
+      if (isNaN(newEnd))   throw new Error('Invalid end');
+      // Find event across all calendars
+      const calendarId = String(body.calendarId || '').trim();
+      let ev = null;
+      if (calendarId) {
+        const cal = CalendarApp.getCalendarById(calendarId);
+        if (cal) ev = cal.getEventById(eventId);
+      }
+      if (!ev) {
+        // fallback: search all calendars
+        for (const cal of CalendarApp.getAllCalendars()) {
+          ev = cal.getEventById(eventId);
+          if (ev) break;
+        }
+      }
+      if (!ev) throw new Error('Event not found: ' + eventId);
+      ev.setTime(newStart, newEnd);
+      const idToken = fetchFirebaseIdToken_(props);
+      const payload = collectCalendarEvents_(props.CALENDAR_DAYS);
+      pushToFirestore_(props, idToken, payload);
+      return ContentService.createTextOutput(JSON.stringify({ok:true, events:payload.events.length})).setMimeType(ContentService.MimeType.JSON);
+    }
+
     if (action !== 'create') {
       return ContentService.createTextOutput(JSON.stringify({ok:false, error:'unsupported action'})).setMimeType(ContentService.MimeType.JSON);
     }
+
     const title = String(body.title || '').trim();
     if (!title) throw new Error('Missing title');
     const startISO = String(body.start || '').trim();
@@ -200,7 +231,6 @@ function doPost(e) {
       created = cal.createEvent(title, start, end, options);
     }
 
-    // Re-pusha lo snapshot completo del calendario su Firestore
     const idToken = fetchFirebaseIdToken_(props);
     const payload = collectCalendarEvents_(props.CALENDAR_DAYS);
     pushToFirestore_(props, idToken, payload);
