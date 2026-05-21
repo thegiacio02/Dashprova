@@ -1,12 +1,16 @@
 /**
- * Google Apps Script - Calendar → Firestore sync
+ * Google Apps Script - Calendar + Gmail → Firestore sync
  *
  * Legge gli eventi del tuo Google Calendar (default + secondari) per i prossimi
  * N giorni e li pusha sul documento Firestore della dashboard:
  *   users/{FIREBASE_UID}/dashboard/state, campo data.calendarBriefing
  *
+ * Legge anche le ultime N mail Gmail (non lette + recenti prioritarie) e le pusha
+ * sul campo data.emailBriefings.gmail
+ *
  * Funzionalità:
- *   - pushCalendar()  : funzione richiamabile da time trigger ogni 30 min
+ *   - pushAll()       : funzione richiamabile da time trigger ogni 30 min
+ *   - pushCalendar()  : alias di pushAll() per compatibilità col trigger esistente
  *   - doGet(e)        : endpoint Web App per refresh on-demand dalla dashboard
  *                       (richiede ?token=... che corrisponde a SYNC_TOKEN)
  *
@@ -25,15 +29,16 @@
  *                                       separati da virgola. Es. "abc@group.calendar.google.com")
  *        WORK_DAYS_AHEAD       = 60   (opzionale, default 60. Quanti gg in avanti
  *                                       guardare per i tour lavoro. Indietro: sempre 30gg)
+ *        GMAIL_MAX_ITEMS       = 10   (opzionale, default 10)
  *   4. Crea time trigger: clock icon → Add Trigger
- *        funzione: pushCalendar | event: Time-driven | Minutes timer | every 30 min
+ *        funzione: pushCalendar | event: Time-driven | Hour timer | every 1 hour
  *   5. (opzionale) Deploy → New deployment → tipo "Web app"
  *        - Execute as: Me
  *        - Who has access: Anyone
  *        - Copia l'URL e incollalo nella dashboard (impostazioni calendario)
  */
 
-const SCRIPT_VERSION = '1.0.0';
+const SCRIPT_VERSION = '1.1.0';
 
 function getProps_() {
   const p = PropertiesService.getScriptProperties();
@@ -47,6 +52,7 @@ function getProps_() {
   out.CALENDAR_DAYS = parseInt(p.getProperty('CALENDAR_DAYS') || '7', 10);
   out.WORK_CALENDAR_IDS = (p.getProperty('WORK_CALENDAR_IDS') || '').split(',').map(s => s.trim()).filter(Boolean);
   out.WORK_DAYS_AHEAD = parseInt(p.getProperty('WORK_DAYS_AHEAD') || '60', 10);
+  out.GMAIL_MAX_ITEMS = parseInt(p.getProperty('GMAIL_MAX_ITEMS') || '10', 10);
   return out;
 }
 
@@ -167,6 +173,67 @@ function collectWorkTours_(workCalendarIds, daysAhead) {
   };
 }
 
+function collectGmailBriefing_(maxItems) {
+  maxItems = maxItems || 10;
+  const items = [];
+  const seen = {};
+
+  // 1. Non letti in arrivo (ultimi 3 giorni)
+  const unreadThreads = GmailApp.search('is:unread in:inbox newer_than:3d', 0, maxItems);
+  for (const thread of unreadThreads) {
+    if (items.length >= maxItems) break;
+    try {
+      const msg = thread.getMessages()[0];
+      const id = thread.getId();
+      if (seen[id]) continue;
+      seen[id] = true;
+      items.push({
+        from: msg.getFrom().slice(0, 120),
+        subject: thread.getFirstMessageSubject().slice(0, 240),
+        snippet: thread.getLastMessageSubject() !== thread.getFirstMessageSubject()
+          ? ('Re: ' + thread.getLastMessageSubject()).slice(0, 500)
+          : msg.getPlainBody().replace(/\s+/g, ' ').trim().slice(0, 500),
+        ts: msg.getDate().toISOString(),
+        url: 'https://mail.google.com/mail/u/0/#inbox/' + id,
+        unread: true,
+        reason: 'Non letto'
+      });
+    } catch (e) { /* skip */ }
+  }
+
+  // 2. Letti recenti di mittenti con cui hai risposto di recente (solo se slots liberi)
+  if (items.length < maxItems) {
+    const recentThreads = GmailApp.search('in:inbox is:read newer_than:1d', 0, maxItems);
+    for (const thread of recentThreads) {
+      if (items.length >= maxItems) break;
+      try {
+        const id = thread.getId();
+        if (seen[id]) continue;
+        seen[id] = true;
+        const msgs = thread.getMessages();
+        const last = msgs[msgs.length - 1];
+        items.push({
+          from: last.getFrom().slice(0, 120),
+          subject: thread.getFirstMessageSubject().slice(0, 240),
+          snippet: last.getPlainBody().replace(/\s+/g, ' ').trim().slice(0, 500),
+          ts: last.getDate().toISOString(),
+          url: 'https://mail.google.com/mail/u/0/#inbox/' + id,
+          unread: false,
+          reason: 'Recente'
+        });
+      } catch (e) { /* skip */ }
+    }
+  }
+
+  // Sort by date DESC
+  items.sort((a, b) => (b.ts || '').localeCompare(a.ts || ''));
+
+  return {
+    updatedAt: new Date().toISOString(),
+    items: items.slice(0, maxItems)
+  };
+}
+
 function toFirestoreValue_(value) {
   if (value === null || value === undefined) return {nullValue: null};
   if (Array.isArray(value)) return {arrayValue: {values: value.map(toFirestoreValue_)}};
@@ -186,7 +253,7 @@ function toFirestoreValue_(value) {
 }
 
 function pushToFirestore_(props, idToken, fields) {
-  // fields = {calendarBriefing?: payload, workTours?: payload}
+  // fields = {calendarBriefing?, workTours?, emailBriefings?}
   const dataFields = {};
   const masks = ['updatedAt'];
   if (fields.calendarBriefing) {
@@ -196,6 +263,10 @@ function pushToFirestore_(props, idToken, fields) {
   if (fields.workTours) {
     dataFields.workTours = toFirestoreValue_(fields.workTours);
     masks.push('data.workTours');
+  }
+  if (fields.emailBriefings) {
+    dataFields.emailBriefings = toFirestoreValue_(fields.emailBriefings);
+    masks.push('data.emailBriefings');
   }
   const url = 'https://firestore.googleapis.com/v1/projects/' + props.FIREBASE_PROJECT_ID +
               '/databases/(default)/documents/users/' + props.FIREBASE_UID + '/dashboard/state' +
@@ -219,7 +290,7 @@ function pushToFirestore_(props, idToken, fields) {
 }
 
 /** Entry point: chiamato dal time trigger e dal doGet */
-function pushCalendar() {
+function pushAll() {
   const props = getProps_();
   const idToken = fetchFirebaseIdToken_(props);
   const personal = collectCalendarEvents_(props.CALENDAR_DAYS, props.WORK_CALENDAR_IDS);
@@ -230,10 +301,23 @@ function pushCalendar() {
     fields.workTours = work;
     workCount = work.events.length;
   }
+  try {
+    const gmail = collectGmailBriefing_(props.GMAIL_MAX_ITEMS);
+    fields.emailBriefings = {
+      gmail: gmail,
+      outlook: {updatedAt: new Date().toISOString(), items: []}
+    };
+    console.log('Gmail items=' + gmail.items.length);
+  } catch (e) {
+    console.warn('Gmail collection failed: ' + e.message);
+  }
   pushToFirestore_(props, idToken, fields);
   console.log('Pushed personal=' + personal.events.length + ' workTours=' + workCount);
   return personal.events.length;
 }
+
+/** Alias per compatibilità col trigger esistente */
+function pushCalendar() { return pushAll(); }
 
 /** Web App endpoint per CREARE eventi (POST JSON) */
 function doPost(e) {
