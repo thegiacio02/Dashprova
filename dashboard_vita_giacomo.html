@@ -992,11 +992,14 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .calendar-allday-cell{padding:4px;border-right:1px solid var(--border);min-height:32px}
 .calendar-allday-cell:last-child{border-right:0}
 .calendar-pill{display:block;background:#4285f4;color:#fff;border-radius:5px;padding:2px 6px;font-size:.64rem;font-weight:700;line-height:1.2;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px}
-.calendar-week-body{display:grid;grid-template-columns:46px repeat(7,minmax(0,1fr))}
+.calendar-week-body{display:grid;grid-template-columns:46px repeat(7,minmax(0,1fr));position:relative}
 .calendar-time-labels{border-right:1px solid var(--border);background:rgba(255,255,255,.015)}
 .calendar-hour-label{height:30px;border-bottom:1px solid var(--border);font-size:.58rem;color:var(--muted2);font-family:var(--mono);text-align:right;padding:2px 5px 0 0;box-sizing:border-box}
 .calendar-day-column{position:relative;height:480px;border-right:1px solid var(--border);background:repeating-linear-gradient(to bottom,transparent 0,transparent 29px,var(--border) 30px)}
 .calendar-day-column:last-child{border-right:0}
+.calendar-now-line{position:absolute;left:46px;right:0;height:2px;background:#ef4444;z-index:5;pointer-events:none;box-shadow:0 0 6px rgba(239,68,68,.5)}
+.calendar-now-line::before{content:'';position:absolute;left:-5px;top:-4px;width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px rgba(239,68,68,.6)}
+.calendar-now-label{position:absolute;left:0;right:auto;top:-6px;transform:translateX(-100%);background:#ef4444;color:#fff;font-size:.6rem;font-family:var(--mono);font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.3px;margin-left:-2px;white-space:nowrap}
 .calendar-block{position:absolute;left:4px;right:4px;background:#4285f4;color:#fff;border-radius:6px;padding:4px 6px;text-decoration:none;overflow:hidden;box-shadow:0 3px 9px rgba(0,0,0,.14)}
 .calendar-block.now{background:var(--green)}
 .calendar-day-column{user-select:none}
@@ -5482,9 +5485,37 @@ function renderGoogleCalendar(){
     <div class="calendar-week" aria-label="Vista settimanale ${escapeHtml(monthLabel)}">
       <div class="calendar-week-days"><div class="calendar-week-corner"></div>${dayHeaders}</div>
       <div class="calendar-allday"><div class="calendar-allday-label">Tutto<br>giorno</div>${allDayRow}</div>
-      <div class="calendar-week-body"><div class="calendar-time-labels">${timeLabels}</div>${columns}</div>
+      <div class="calendar-week-body"><div class="calendar-time-labels">${timeLabels}</div>${columns}<div class="calendar-now-line" id="calendar-now-line" style="display:none"><span class="calendar-now-label" id="calendar-now-label"></span></div></div>
     </div>
   </div>`;
+  updateCalendarNowLine();
+}
+
+function updateCalendarNowLine(){
+  const line = document.getElementById('calendar-now-line');
+  if(!line) return;
+  const pph = window._calPxPerHour || 30;
+  const minHour = window._calMinHour ?? 8;
+  const maxHour = 24;
+  const now = new Date();
+  const h = now.getHours() + now.getMinutes()/60;
+  if(h < minHour || h > maxHour){ line.style.display = 'none'; return; }
+  const top = (h - minHour) * pph;
+  line.style.display = 'block';
+  line.style.top = top + 'px';
+  const label = document.getElementById('calendar-now-label');
+  if(label) label.textContent = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+}
+
+let _calNowLineTimer = null;
+function _ensureCalNowLineTimer(){
+  if(_calNowLineTimer) return;
+  _calNowLineTimer = setInterval(updateCalendarNowLine, 60000);
+}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', _ensureCalNowLineTimer);
+} else {
+  _ensureCalNowLineTimer();
 }
 
 async function refreshGoogleCalendarBox(){
