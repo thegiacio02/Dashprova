@@ -2822,6 +2822,8 @@ function defaultState(){ return {
     workTours:{updatedAt:null,events:[]},
     workToursStatus:{},
     workToursHistoryOpen:false,
+    calendarSyncUrl:'',
+    calendarSyncToken:'',
     finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null}}
   };}
 
@@ -5492,8 +5494,8 @@ async function refreshGoogleCalendarBox(){
   if(btn){ btn.disabled = true; btn.textContent = '↻ Aggiorno…'; }
   try{
     // Se configurato, chiama l'Apps Script per spingere eventi freschi su Firestore
-    const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
-    const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+    const syncUrl = _calSyncUrl();
+    const syncToken = _calSyncToken();
     if(syncUrl && syncToken){
       if(meta) meta.textContent = 'Sync da Google Calendar…';
       try{
@@ -5517,22 +5519,35 @@ async function refreshGoogleCalendarBox(){
   }
 }
 
+function _calSyncUrl(){
+  return (state.calendarSyncUrl || '').trim() || (localStorage.getItem('dash_calendar_sync_url') || '').trim();
+}
+function _calSyncToken(){
+  return (state.calendarSyncToken || '').trim() || (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+}
+
 function configureCalendarSync(){
-  const cur = localStorage.getItem('dash_calendar_sync_url') || '';
+  const cur = _calSyncUrl();
   const url = prompt('URL Web App di Google Apps Script (lascia vuoto per disabilitare):', cur);
   if(url === null) return;
   if(!url.trim()){
+    state.calendarSyncUrl = '';
+    state.calendarSyncToken = '';
     localStorage.removeItem('dash_calendar_sync_url');
     localStorage.removeItem('dash_calendar_sync_token');
+    save();
     alert('Sync calendario disabilitato.');
     return;
   }
-  const curTok = localStorage.getItem('dash_calendar_sync_token') || '';
+  const curTok = _calSyncToken();
   const token = prompt('Token sync (deve combaciare con SYNC_TOKEN nelle Script Properties):', curTok);
   if(token === null) return;
+  state.calendarSyncUrl = url.trim();
+  state.calendarSyncToken = token.trim();
   localStorage.setItem('dash_calendar_sync_url', url.trim());
   localStorage.setItem('dash_calendar_sync_token', token.trim());
-  alert('Configurazione salvata. Clicca ↻ Aggiorna per testare.');
+  save();
+  alert('Configurazione salvata su tutti i dispositivi. Clicca ↻ Aggiorna per testare.');
 }
 
 // ============ CHIUSURE COMO ON BOAT ============
@@ -5765,8 +5780,8 @@ async function refreshChiusure(){
   const oldText = btn ? btn.textContent : '';
   if(btn){ btn.disabled = true; btn.textContent = '↻ Aggiorno…'; }
   try{
-    const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
-    const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+    const syncUrl = _calSyncUrl();
+    const syncToken = _calSyncToken();
     if(syncUrl && syncToken){
       if(meta) meta.textContent = 'Sync da Google Calendar…';
       try{
@@ -10796,8 +10811,8 @@ function openCalendarEventModal(eventId){
 }
 
 function openCalendarCreateModal(preStart, preEnd){
-  const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
-  const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+  const syncUrl = _calSyncUrl();
+  const syncToken = _calSyncToken();
   if(!syncUrl || !syncToken){
     alert('Configura prima URL Web App e token (⚙ accanto a "Aggiorna").');
     return;
@@ -10858,8 +10873,8 @@ async function submitNewCalendarEvent(){
   if(!startV){ errEl.textContent = 'Inizio obbligatorio.'; return; }
   const startISO = new Date(startV).toISOString();
   const endISO = endV ? new Date(endV).toISOString() : '';
-  const syncUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
-  const syncToken = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+  const syncUrl = _calSyncUrl();
+  const syncToken = _calSyncToken();
   if(!syncUrl || !syncToken){ errEl.textContent = 'Configurazione sync mancante.'; return; }
   btn.disabled = true; btn.textContent = 'Creo…';
   try{
