@@ -83,6 +83,8 @@ button.side-item:hover{background:var(--surface-2);color:var(--text)}
 button.side-item:active{transform:scale(.98)}
 button.side-item.active{background:var(--surface-2);color:var(--text);font-weight:600}
 button.side-item.active::before{content:'';position:absolute;left:5px;top:50%;transform:translateY(-50%);width:3px;height:18px;background:var(--acc);border-radius:2px;box-shadow:0 0 8px rgba(110,240,255,.4)}
+button.side-item-oggi{font-size:.93rem;font-weight:700;letter-spacing:-.01em;padding-top:10px;padding-bottom:10px}
+button.side-item-oggi.active{color:var(--acc)}
 .side-badge{margin-left:auto;background:var(--surface-3);color:var(--text-3);font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:10px;font-family:var(--mono);min-width:22px;text-align:center;flex-shrink:0;transition:all .12s}
 button.side-item.active .side-badge{background:var(--acc-bg);color:var(--acc)}
 /* Sidebar footer */
@@ -1156,12 +1158,12 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
   <nav id="tabs">
     <span class="side-group-title">Quotidiano</span>
-    <button data-tab="oggi" class="side-item active">Oggi</button>
+    <button data-tab="oggi" class="side-item side-item-oggi active">☀️ Oggi</button>
     <button data-tab="notizie" class="side-item">📰 Notizie</button>
     <button data-tab="chiusure" class="side-item">⛵ Chiusure <span id="chiusure-badge" class="side-badge">0</span></button>
-    <button data-tab="todo" class="side-item">Cose da fare <span id="todo-badge" class="side-badge">0</span></button>
-    <button data-tab="settimana" class="side-item">Settimana</button>
-    <button data-tab="obiettivi" class="side-item">Obiettivi</button>
+    <button data-tab="todo" class="side-item">✅ Cose da fare <span id="todo-badge" class="side-badge">0</span></button>
+    <button data-tab="settimana" class="side-item">📅 Settimana</button>
+    <button data-tab="obiettivi" class="side-item">🎯 Obiettivi</button>
     <span class="side-group-title">Pratiche</span>
     <button data-tab="produttivita" class="side-item">Produttività</button>
     <button data-tab="francese" class="side-item">🇫🇷 Francese</button>
