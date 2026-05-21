@@ -379,7 +379,7 @@ input,select,textarea{max-width:100%}
 .wf-temps .wf-min{color:var(--muted2);font-weight:500}
 .weather-detail{margin-top:8px}
 @media(max-width:700px){.weather-forecast{grid-template-columns:repeat(7,1fr);gap:3px}.wf-name{font-size:.55rem}.wf-temps{font-size:.62rem}.wf-icon{font-size:1rem}}
-.weather-mini{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:999px;font-size:.82rem;cursor:pointer;transition:border-color .15s,transform .15s;margin-top:16px}
+.weather-mini{display:inline-flex;align-items:center;gap:10px;padding:8px 14px;background:var(--card);border:1px solid var(--border);border-radius:999px;font-size:.82rem;cursor:pointer;transition:border-color .15s,transform .15s}
 .weather-mini:hover{border-color:var(--accent);transform:translateY(-1px)}
 .weather-mini-icon{font-size:1.1rem;line-height:1}
 .weather-mini-temp{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
@@ -957,18 +957,33 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .today-command-layout{grid-template-columns:repeat(12,minmax(0,1fr));gap:16px;align-items:start}
 .tab.active.today-command-layout{display:grid}
 #tab-oggi.today-command-layout > *{grid-column:1/-1;margin-top:0!important}
-#personal-briefing-card{order:1;grid-column:1/-1}
-#calendar-today-card{order:2;grid-column:1/-1;border-left:3px solid #4285f4}
-#today-action-card{order:3;grid-column:1/8;border-left:3px solid var(--green);box-shadow:0 10px 28px rgba(0,0,0,.08)}
-#daily-boost-card{order:3;grid-column:8/-1}
-#today-mail-grid{order:4;grid-column:1/-1}
-#ai-briefing-card{order:5;grid-column:1/7}
-#news-card{order:5;grid-column:7/-1}
-#ticker-tape{order:6;grid-column:1/-1}
-#quotes-card{order:7;grid-column:1/7}
-#weather-card{order:7;grid-column:7/-1}
-#today-stats-card{order:8;grid-column:1/-1}
-#today-log-grid{order:9;grid-column:1/-1}
+/* ===== OGGI HERO ===== */
+#oggi-hero-header{order:0;grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:6px 0 2px;flex-wrap:wrap;gap:10px}
+.oggi-hero-left{display:flex;flex-direction:column;gap:2px}
+.oggi-hero-greeting{font-size:1.35rem;font-weight:800;color:var(--text);line-height:1.1}
+.oggi-hero-date{font-size:.82rem;color:var(--muted2);font-weight:500;letter-spacing:.03em;text-transform:capitalize}
+/* ===== OGGI SECTION SEPARATORS ===== */
+.oggi-section-sep{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin:8px 0 -4px}
+.oggi-section-sep::before,.oggi-section-sep::after{content:'';flex:1;height:1px;background:var(--border)}
+.oggi-section-sep span{font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);white-space:nowrap;padding:0 2px}
+/* ===== OGGI GRID ORDERS ===== */
+#oggi-sep-briefing{order:1}
+#personal-briefing-card{order:2;grid-column:1/-1}
+#oggi-sep-agenda{order:3}
+#calendar-today-card{order:4;grid-column:1/-1;border-left:3px solid #4285f4}
+#oggi-sep-azioni{order:5}
+#today-action-card{order:6;grid-column:1/8;border-left:3px solid var(--green);box-shadow:0 10px 28px rgba(0,0,0,.08)}
+#daily-boost-card{order:6;grid-column:8/-1}
+#oggi-sep-inbox{order:7}
+#today-mail-grid{order:8;grid-column:1/-1}
+#oggi-sep-contesto{order:9}
+#today-log-grid{order:10;grid-column:1/-1}
+#ai-briefing-card{order:11;grid-column:1/7}
+#news-card{order:11;grid-column:7/-1}
+#ticker-tape{order:12;grid-column:1/-1}
+#quotes-card{order:13;grid-column:1/7}
+#weather-card{order:13;grid-column:7/-1}
+#today-stats-card{order:14;grid-column:1/-1}
 .today-primary-card h2{font-size:1.05rem}
 .today-primary-card input{font-size:.92rem}
 .today-muted-context{opacity:.92}
@@ -1014,17 +1029,24 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 @media(max-width:1050px){
   #tab-oggi.today-command-layout{grid-template-columns:1fr}
   #tab-oggi.today-command-layout > *{grid-column:1/-1!important}
-  #calendar-today-card{order:2}
-  #today-action-card{order:3}
-  #daily-boost-card{order:4}
-  #today-mail-grid{order:5}
-  #ai-briefing-card{order:6}
-  #news-card{order:7}
-  #ticker-tape{order:8}
-  #quotes-card{order:9}
-  #weather-card{order:10}
-  #today-stats-card{order:11}
-  #today-log-grid{order:12}
+  #oggi-hero-header{order:0}
+  #oggi-sep-briefing{order:1}
+  #personal-briefing-card{order:2}
+  #oggi-sep-agenda{order:3}
+  #calendar-today-card{order:4}
+  #oggi-sep-azioni{order:5}
+  #today-action-card{order:6}
+  #daily-boost-card{order:7}
+  #oggi-sep-inbox{order:8}
+  #today-mail-grid{order:9}
+  #oggi-sep-contesto{order:10}
+  #today-log-grid{order:11}
+  #ai-briefing-card{order:12}
+  #news-card{order:13}
+  #ticker-tape{order:14}
+  #quotes-card{order:15}
+  #weather-card{order:16}
+  #today-stats-card{order:17}
 }
 [data-theme="light"] .rtb-select{background:#fff;border-color:#ccc;color:#333}
 [data-theme="light"] #rich-content{color:#0a1426;caret-color:#cc0033}
@@ -1187,6 +1209,22 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 <!-- ============ OGGI ============ -->
 <section class="tab active today-command-layout" id="tab-oggi">
 
+  <!-- HERO HEADER -->
+  <div id="oggi-hero-header">
+    <div class="oggi-hero-left">
+      <div class="oggi-hero-greeting" id="oggi-hero-greeting">Buongiorno</div>
+      <div class="oggi-hero-date" id="oggi-hero-date"></div>
+    </div>
+    <div class="weather-mini" id="weather-mini" onclick="switchTab('notizie')" title="Apri sezione Notizie per il dettaglio">
+      <span class="weather-mini-icon" id="weather-mini-icon">🌤️</span>
+      <span class="weather-mini-temp" id="weather-mini-temp">—°</span>
+      <span class="weather-mini-summary" id="weather-mini-summary">Meteo Milano</span>
+    </div>
+  </div>
+
+  <!-- SEP: BRIEFING -->
+  <div class="oggi-section-sep" id="oggi-sep-briefing"><span>🧭 Briefing</span></div>
+
   <!-- BRIEFING PERSONALE MATTINA/SERA -->
   <div class="card collapsible personal-briefing-card" id="personal-briefing-card" data-card-id="personal-briefing">
     <h2 onclick="toggleCard(this)" style="justify-content:space-between">
@@ -1207,6 +1245,9 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
+  <!-- SEP: AGENDA -->
+  <div class="oggi-section-sep" id="oggi-sep-agenda"><span>🗓 Agenda</span></div>
+
   <!-- GOOGLE CALENDAR -->
   <div class="card" id="calendar-today-card">
     <div class="calendar-head">
@@ -1223,8 +1264,11 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
+  <!-- SEP: AZIONI -->
+  <div class="oggi-section-sep" id="oggi-sep-azioni"><span>✅ Azioni del giorno</span></div>
+
   <!-- DA FARE OGGI -->
-  <div class="card today-primary-card" id="today-action-card" style="margin-top:16px">
+  <div class="card today-primary-card" id="today-action-card">
     <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">✅</span> Da fare oggi</span><span class="card-badge" id="today-todos-count">0</span></h2>
     <div style="display:flex;gap:6px;margin-bottom:10px">
       <input type="text" id="oggi-quick-todo" placeholder="Aggiungi al volo… (Invio)" style="flex:1" onkeydown="if(event.key==='Enter')quickAddTodo()"/>
@@ -1234,7 +1278,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   </div>
 
   <!-- DAILY BOOST (collassabile, default aperto) -->
-  <div class="card collapsible daily-motivation-card" id="daily-boost-card" data-card-id="boost" style="margin-top:16px">
+  <div class="card collapsible daily-motivation-card" id="daily-boost-card" data-card-id="boost">
     <h2 onclick="toggleCard(this)" style="justify-content:space-between">
       <span style="display:flex;align-items:center;gap:8px"><span class="ico">✨</span> Daily Boost</span>
       <span style="display:flex;align-items:center;gap:8px">
@@ -1249,15 +1293,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- METEO mini widget -->
-  <div class="weather-mini" id="weather-mini" onclick="switchTab('notizie')" title="Apri sezione Notizie per il dettaglio">
-    <span class="weather-mini-icon" id="weather-mini-icon">🌤️</span>
-    <span class="weather-mini-temp" id="weather-mini-temp">—°</span>
-    <span class="weather-mini-summary" id="weather-mini-summary">Meteo Milano</span>
-  </div>
-
-  <!-- LOG RAPIDO + LOG SONNO (collassabili) -->
-  <div class="grid grid-2 today-muted-context" id="today-log-grid" style="margin-top:16px">
+  <!-- LOG RAPIDO + LOG SONNO (collassabili, ordine CSS = 10) -->
+  <div class="grid grid-2 today-muted-context" id="today-log-grid">
     <div class="card collapsible collapsed" data-card-id="lograpido">
       <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">⚡</span> Log rapido</span><span class="chevron">▾</span></h2>
       <div class="card-body">
@@ -1302,7 +1339,13 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- MAIL PRIORITARIE -->
+  <!-- SEP: INBOX (ordine CSS = 7) -->
+  <div class="oggi-section-sep" id="oggi-sep-inbox"><span>📬 Inbox</span></div>
+
+  <!-- SEP: CONTESTO (ordine CSS = 9) -->
+  <div class="oggi-section-sep" id="oggi-sep-contesto"><span>🌱 Contesto</span></div>
+
+  <!-- MAIL PRIORITARIE (ordine CSS = 8) -->
   <div class="mail-grid" id="today-mail-grid">
     <div class="card mail-card" id="gmail-priority-card">
       <div class="mail-box-head" onclick="toggleMailCard('gmail')">
@@ -6033,8 +6076,20 @@ function autoRefreshPersonalBriefing(){
   if(!b || b.date !== todayISO()) refreshPersonalBriefing(mode, false);
 }
 
+// ============ OGGI HERO ============
+function renderOggiHero(){
+  const greetEl = document.getElementById('oggi-hero-greeting');
+  const dateEl = document.getElementById('oggi-hero-date');
+  if(!greetEl || !dateEl) return;
+  const h = new Date().getHours();
+  const greeting = h < 12 ? 'Buongiorno, Giacomo' : h < 19 ? 'Buon pomeriggio, Giacomo' : 'Buona sera, Giacomo';
+  greetEl.textContent = greeting;
+  dateEl.textContent = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}
+
 // ============ MASTER RENDER ============
 function renderAll(){
+  try { renderOggiHero(); } catch(e){}
   paintCornice();
   renderTopKpis();
   renderWeekly();
