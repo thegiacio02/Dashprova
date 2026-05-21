@@ -1515,123 +1515,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <div class="pomo-progress" id="pomo-dots"></div>
   </div>
 
-  <div class="grid grid-3" style="margin-top:16px">
-    <div class="card stat-card">
-      <h3>Pomodori oggi</h3>
-      <div class="kpi"><span class="v" id="stat-pomo-today">0</span><span class="t">sessioni</span></div>
-      <div class="kpi-sub" id="stat-pomo-time">0 min focus</div>
-    </div>
-    <div class="card stat-card">
-      <h3>Pomodori settimana</h3>
-      <div class="kpi"><span class="v" id="stat-pomo-week">0</span><span class="t">sessioni</span></div>
-      <div class="kpi-sub" id="stat-pomo-week-h">0h</div>
-    </div>
-    <div class="card stat-card">
-      <h3>Streak focus</h3>
-      <div class="kpi"><span class="v" id="stat-streak">0</span><span class="t">giorni</span></div>
-      <div class="kpi-sub">≥4 pomodori/giorno</div>
-    </div>
-  </div>
-
-  <!-- MIT - 3 priorità -->
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card">
-      <h2><span class="ico">🎯</span> Le 3 priorità di oggi (MIT)</h2>
-      <p style="font-size:.74rem;color:var(--muted2);margin-bottom:10px">Most Important Tasks · scrivi le 3 cose che, se le fai oggi, la giornata è un successo. Non di più.</p>
-      <div id="mit-list"></div>
-      <div class="legend">Riempi la sera prima o appena sveglio. Le altre task vanno nel "parcheggio".</div>
-    </div>
-
-    <div class="card">
-      <h2><span class="ico">🔋</span> Energia oggi</h2>
-      <p style="font-size:.74rem;color:var(--muted2);margin-bottom:10px">Misura 3 volte al giorno (1=esausto, 5=energia alta). Capisci quando sei più produttivo.</p>
-      <div class="energy-slots">
-        <div class="energy-slot">
-          <div class="slot-name">🌅 Mattino</div>
-          <div class="slot-buttons" data-slot="morning"></div>
-        </div>
-        <div class="energy-slot">
-          <div class="slot-name">☀️ Pomeriggio</div>
-          <div class="slot-buttons" data-slot="afternoon"></div>
-        </div>
-        <div class="energy-slot">
-          <div class="slot-name">🌙 Sera</div>
-          <div class="slot-buttons" data-slot="evening"></div>
-        </div>
-      </div>
-      <div class="canvas-wrap" style="height:140px;margin-top:12px"><canvas id="chart-energy"></canvas></div>
-    </div>
-  </div>
-
-  <!-- INBOX + DISTRACTIONS -->
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card">
-      <h2><span class="ico">📥</span> Quick capture (parcheggio)</h2>
-      <p style="font-size:.74rem;color:var(--muted2);margin-bottom:10px">Pensiero che ti distrae mentre lavori? Buttalo qui senza giudizio. Lo riprendi dopo.</p>
-      <div class="row">
-        <input type="text" id="inbox-text" placeholder="es. ricordare di chiamare cliente Como…" onkeydown="if(event.key==='Enter')addInbox()"/>
-        <button class="btn" style="flex:0 0 auto" onclick="addInbox()">+</button>
-      </div>
-      <div id="inbox-list" style="margin-top:12px;max-height:300px;overflow-y:auto"></div>
-    </div>
-
-    <div class="card">
-      <h2><span class="ico">🚨</span> Contatore distrazioni</h2>
-      <p style="font-size:.74rem;color:var(--muted2);margin-bottom:10px">Ogni volta che senti l'impulso di aprire telefono/social/notizie, premi il bottone (NON cedere). Tracking → consapevolezza.</p>
-      <div class="distraction-zone">
-        <div class="distraction-count" id="dist-count">0</div>
-        <div style="font-size:.75rem;color:var(--muted2);margin-bottom:14px">distrazioni resistite oggi</div>
-        <button class="btn" onclick="bumpDistraction()" style="font-size:1rem;padding:12px 24px">🛑 Resistito</button>
-      </div>
-      <div style="margin-top:14px;font-size:.75rem;color:var(--muted2)">Media ultimi 7 giorni: <strong style="color:#fff" id="dist-avg">—</strong> al giorno</div>
-    </div>
-  </div>
-
-  <!-- TIME BLOCKS + SHUTDOWN -->
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card">
-      <h2><span class="ico">📅</span> Time blocks oggi</h2>
-      <p style="font-size:.74rem;color:var(--muted2);margin-bottom:10px">Pianifica blocchi (start-end + cosa). Quello che è in calendario esiste, il resto no.</p>
-      <div class="row">
-        <input type="time" id="tb-start"/>
-        <input type="time" id="tb-end"/>
-        <input type="text" id="tb-what" placeholder="cosa fai" style="flex:2"/>
-        <button class="btn" onclick="addTimeBlock()" style="flex:0 0 auto">+</button>
-      </div>
-      <div id="tb-list" style="margin-top:12px"></div>
-    </div>
-
-    <div class="card">
-      <h2><span class="ico">🌒</span> Shutdown ritual</h2>
-      <p style="font-size:.74rem;color:var(--muted2);margin-bottom:10px">Rituale di chiusura giornata (Cal Newport). Spunta a fine giornata: separa lavoro e vita, abbassa stress.</p>
-      <div id="shutdown-list"></div>
-      <button class="btn sm" style="margin-top:10px" onclick="completeShutdown()">✓ Shutdown completo</button>
-      <div id="shutdown-streak" style="margin-top:10px;font-size:.78rem;color:var(--muted2)"></div>
-    </div>
-  </div>
-
-  <!-- WEEK STATS -->
-  <div class="card" style="margin-top:16px">
-    <h2><span class="ico">📊</span> Pomodori ultimi 14 giorni</h2>
-    <div class="canvas-wrap" style="height:200px"><canvas id="chart-pomo"></canvas></div>
-    <div class="legend">Soglia "giornata produttiva" = 4 pomodori (linea tratteggiata). 8+ = giornata eccellente.</div>
-  </div>
-
-  <!-- TIPS -->
-  <div class="card" style="margin-top:16px">
-    <h2><span class="ico">💡</span> Regole di produttività</h2>
-    <div class="grid grid-2">
-      <div class="day-block"><div class="name">Regola dei 2 minuti</div><div class="desc">Se richiede meno di 2 min, fallo subito. Altrimenti pianificalo.</div></div>
-      <div class="day-block"><div class="name">Eat the frog</div><div class="desc">Il task più sgradevole/importante per primo, prima delle email.</div></div>
-      <div class="day-block"><div class="name">Single-tasking</div><div class="desc">Multitasking = -40% produttività. Una cosa alla volta, fino in fondo.</div></div>
-      <div class="day-block"><div class="name">Telefono lontano</div><div class="desc">Non basta in DND: deve essere fisicamente fuori vista durante focus.</div></div>
-      <div class="day-block"><div class="name">Implementation intention</div><div class="desc">"Quando X, allora Y." Es: "Quando finisco il caffè, apro Aladdin."</div></div>
-      <div class="day-block"><div class="name">Friction design</div><div class="desc">Rendi facile ciò che vuoi fare, difficile ciò che vuoi evitare. Disinstalla TikTok.</div></div>
-      <div class="day-block"><div class="name">Batch processing</div><div class="desc">Email/messaggi 2-3 volte al giorno in slot fissi, non in continuo.</div></div>
-      <div class="day-block"><div class="name">Pareto 80/20</div><div class="desc">20% delle task = 80% del valore. Identificalo prima di iniziare.</div></div>
-    </div>
-  </div>
-
 </section>
 
 <!-- ============ SETTIMANA ============ -->
@@ -6168,14 +6051,14 @@ function renderAll(){
   renderTodos();
   renderGoals();
   renderContacts();
-  pomoRender();
-  renderMIT();
-  renderEnergy();
-  renderInbox();
-  renderDistractions();
-  renderTimeBlocks();
-  renderShutdown();
-  renderProductivityStats();
+  try { pomoRender(); } catch(e) {}
+  try { renderMIT(); } catch(e) {}
+  try { renderEnergy(); } catch(e) {}
+  try { renderInbox(); } catch(e) {}
+  try { renderDistractions(); } catch(e) {}
+  try { renderTimeBlocks(); } catch(e) {}
+  try { renderShutdown(); } catch(e) {}
+  try { renderProductivityStats(); } catch(e) {}
   // renderReminders() rimosso: il card Promemoria è stato eliminato dalla tab Oggi
   // renderInsights() rimosso: il card Consigli AI è stato sostituito da Daily Boost
   try { renderFinanceLab(); } catch(e){ console.error('renderFinanceLab error:', e); }
