@@ -51,7 +51,7 @@ function getProps_() {
   }
   out.CALENDAR_DAYS = parseInt(p.getProperty('CALENDAR_DAYS') || '7', 10);
   out.WORK_CALENDAR_IDS = (p.getProperty('WORK_CALENDAR_IDS') || '').split(',').map(s => s.trim()).filter(Boolean);
-  out.WORK_DAYS_AHEAD = parseInt(p.getProperty('WORK_DAYS_AHEAD') || '60', 10);
+  out.WORK_DAYS_AHEAD = parseInt(p.getProperty('WORK_DAYS_AHEAD') || '180', 10);
   out.GMAIL_MAX_ITEMS = parseInt(p.getProperty('GMAIL_MAX_ITEMS') || '10', 10);
   return out;
 }
