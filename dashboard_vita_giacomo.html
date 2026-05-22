@@ -1167,7 +1167,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <button data-tab="francese" class="side-item">🇫🇷 Francese</button>
     <button data-tab="libri" class="side-item">Libri</button>
     <button data-tab="finanze" class="side-item">Finanze</button>
-    <button data-tab="benessere" class="side-item">Benessere</button>
     <span class="side-group-title">Mente</span>
     <button data-tab="financelab" class="side-item">Finance Lab</button>
     <button data-tab="diario" class="side-item">Diario</button>
@@ -1980,37 +1979,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 </section>
 
 <!-- ============ BENESSERE ============ -->
-<section class="tab" id="tab-benessere">
-  <div class="grid grid-2">
-    <div class="card">
-      <h2><span class="ico">⚠️</span> Segnali di esaurimento</h2>
-      <p style="font-size:.78rem;color:var(--muted2);margin-bottom:10px">Spunta quelli che senti <strong>oggi</strong>. Se 2+ persistono per 1-2 settimane → reset.</p>
-      <div class="signal-grid" id="signals"></div>
-      <button class="btn sm" style="margin-top:10px" onclick="saveSignals()">Salva check di oggi</button>
-      <div id="signal-status" style="margin-top:10px"></div>
-    </div>
-  </div>
-
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card">
-      <h2><span class="ico">🏋️</span> Fitness check 4 settimane</h2>
-      <ul class="clean" id="fitness-check"></ul>
-    </div>
-    <div class="card">
-      <h2><span class="ico">🛡️</span> Gerarchia sacrifici</h2>
-      <ol class="priority-list">
-        <li><strong>Sonno (7h+)</strong> – mai sacrificabile</li>
-        <li><strong>Lavoro Double</strong> – mai in regime normale</li>
-        <li><strong>Sport (≥2/sett)</strong> – quasi mai</li>
-        <li><strong>Vita sociale base</strong> – solo emergenze</li>
-        <li><strong>Como On Boat</strong> – comprimibile, non azzerare</li>
-        <li><strong>Francese</strong> – modalità mantenimento (2-3h)</li>
-        <li><strong>Lettura strutturata</strong> – sospendibile</li>
-      </ol>
-    </div>
-  </div>
-</section>
-
 <!-- ============ CHECK MENSILE ============ -->
 <section class="tab" id="tab-check">
   <div class="card">
@@ -5978,8 +5946,8 @@ function renderAll(){
   try{ renderBsStats(); }catch(e){ console.error('renderBsStats:', e); }
   renderFrancese();
   try { renderSleepChart(); } catch(e){}
-  renderSignals();
-  renderFitness();
+  try { renderSignals(); } catch(e){}
+  try { renderFitness(); } catch(e){}
   renderCheckHistory();
   renderDataSummary();
   renderTodos();
