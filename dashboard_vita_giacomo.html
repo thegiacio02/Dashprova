@@ -1162,10 +1162,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <button data-tab="notizie" class="side-item">📰 Notizie</button>
     <button data-tab="chiusure" class="side-item">⛵ Chiusure <span id="chiusure-badge" class="side-badge">0</span></button>
     <button data-tab="todo" class="side-item">✅ Cose da fare <span id="todo-badge" class="side-badge">0</span></button>
-    <button data-tab="settimana" class="side-item">📅 Settimana</button>
     <button data-tab="obiettivi" class="side-item">🎯 Obiettivi</button>
     <span class="side-group-title">Pratiche</span>
-    <button data-tab="produttivita" class="side-item">Produttività</button>
     <button data-tab="francese" class="side-item">🇫🇷 Francese</button>
     <button data-tab="libri" class="side-item">Libri</button>
     <button data-tab="finanze" class="side-item">Finanze</button>
@@ -1295,57 +1293,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- LOG RAPIDO + LOG SONNO (collassabili, ordine CSS = 10) -->
-  <div class="grid grid-2 today-muted-context" id="today-log-grid">
-    <div class="card collapsible collapsed" data-card-id="lograpido">
-      <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">⚡</span> Log rapido</span><span class="chevron">▾</span></h2>
-      <div class="card-body">
-        <div class="field">
-          <label>Area</label>
-          <select id="log-area">
-            <option value="double">💼 Lavoro Double</option>
-            <option value="como">⛵ Como On Boat</option>
-            <option value="francese">🇫🇷 Francese</option>
-            <option value="lettura">📚 Lettura / Finance</option>
-            <option value="sport">🏋️ Sport</option>
-            <option value="social">🤝 Vita sociale</option>
-            <option value="personale">🧠 Personale</option>
-            <option value="famiglia">👨‍👩‍👦 Famiglia</option>
-            <option value="viaggio">✈️ Viaggio</option>
-            <option value="hobby">🎨 Hobby</option>
-            <option value="salute">🩺 Salute</option>
-            <option value="finanze">💰 Finanze personali</option>
-            <option value="vuoto">🌿 Tempo vuoto / decompressione</option>
-          </select>
-        </div>
-        <div class="row">
-          <div class="field"><label>Durata (ore)</label><input type="number" id="log-hours" value="1" min="0.25" step="0.25"/></div>
-          <div class="field"><label>Data</label><input type="date" id="log-date"/></div>
-        </div>
-        <div class="field"><label>Nota (opzionale)</label><input type="text" id="log-note" placeholder="es. conversazione attualità, sessione palestra…"/></div>
-        <button class="btn" onclick="addSession()">+ Aggiungi sessione</button>
-      </div>
-    </div>
-
-    <div class="card collapsible collapsed" data-card-id="logsonno">
-      <h2 onclick="toggleCard(this)" style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">🌙</span> Log sonno</span><span class="chevron">▾</span></h2>
-      <div class="card-body">
-        <div class="row">
-          <div class="field"><label>Data</label><input type="date" id="sleep-date"/></div>
-          <div class="field"><label>Ore dormite</label><input type="number" id="sleep-h" value="7.5" min="0" max="14" step="0.25"/></div>
-        </div>
-        <div class="field"><label>Qualità (1-5)</label><input type="number" id="sleep-q" value="4" min="1" max="5"/></div>
-        <button class="btn" onclick="addSleep()">+ Salva</button>
-        <div class="legend">Target: 7-8h notte. Sotto 6h cronico = problema.</div>
-      </div>
-    </div>
-  </div>
-
   <!-- SEP: INBOX (ordine CSS = 7) -->
   <div class="oggi-section-sep" id="oggi-sep-inbox"><span>📬 Inbox</span></div>
-
-  <!-- SEP: CONTESTO (ordine CSS = 9) -->
-  <div class="oggi-section-sep" id="oggi-sep-contesto"><span>🌱 Contesto</span></div>
 
   <!-- MAIL PRIORITARIE (ordine CSS = 8) -->
   <div class="mail-grid" id="today-mail-grid">
@@ -1535,74 +1484,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 </section>
 
 <!-- ============ PRODUTTIVITÀ ============ -->
-<section class="tab" id="tab-produttivita">
-
-  <!-- HERO POMODORO -->
-  <div class="card pomodoro-hero">
-    <div class="pomo-modes">
-      <button class="pmode active" data-mode="focus" data-min="25">🎯 Focus 25</button>
-      <button class="pmode" data-mode="focus" data-min="50">🧠 Deep 50</button>
-      <button class="pmode" data-mode="focus" data-min="90">🚀 Ultradian 90</button>
-      <button class="pmode" data-mode="break" data-min="5">☕ Break 5</button>
-      <button class="pmode" data-mode="break" data-min="15">🌿 Long 15</button>
-    </div>
-    <div class="timer-display" id="timer-display">25:00</div>
-    <div class="timer-label" id="timer-label">Focus · pronto a iniziare</div>
-    <div class="timer-controls">
-      <button class="btn timer-btn" id="btn-start" onclick="pomoStart()">▶ Start</button>
-      <button class="btn ghost timer-btn" id="btn-pause" onclick="pomoPause()" disabled>⏸ Pausa</button>
-      <button class="btn ghost timer-btn" onclick="pomoReset()">↺ Reset</button>
-    </div>
-    <div class="field" style="max-width:400px;margin:18px auto 0">
-      <label style="text-align:center">Su cosa stai lavorando?</label>
-      <input type="text" id="pomo-task" placeholder="es. Studio Aladdin · cap. 3 modulo Risk"/>
-    </div>
-    <div class="pomo-progress" id="pomo-dots"></div>
-  </div>
-
-</section>
-
-<!-- ============ SETTIMANA ============ -->
-<section class="tab" id="tab-settimana">
-  <div class="alert info" id="cornice-alert">Cornice attiva: <strong id="alert-cornice">B</strong>. Le barre sotto confrontano le tue ore reali questa settimana con i target della cornice.</div>
-
-  <div class="grid grid-2">
-    <div class="card">
-      <h2><span class="ico">⏱️</span> Ore questa settimana vs target</h2>
-      <div id="weekly-bars"></div>
-      <div class="legend">Settimana corrente (lun-dom). I target cambiano a seconda della cornice.</div>
-    </div>
-    <div class="card">
-      <h2><span class="ico">📊</span> Distribuzione</h2>
-      <div class="canvas-wrap"><canvas id="chart-week"></canvas></div>
-    </div>
-  </div>
-
-  <div class="grid grid-2" style="margin-top:16px">
-    <div class="card">
-      <h2><span class="ico">📝</span> Review domenicale</h2>
-      <div class="field"><label>Settimana del</label><input type="date" id="rev-date"/></div>
-      <div class="field"><label>1. Cosa è andato bene?</label><textarea id="rev-good" rows="2"></textarea></div>
-      <div class="field"><label>2. Cosa NON è andato come previsto?</label><textarea id="rev-bad" rows="2"></textarea></div>
-      <div class="field"><label>3. Obiettivo settimana prossima</label><textarea id="rev-goal" rows="2"></textarea></div>
-      <div class="field"><label>4. Ho dato spazio a tutte le 6 voci?</label>
-        <select id="rev-balance"><option>Sì, equilibrato</option><option>Manca 1 voce</option><option>Mancano 2+ voci</option></select>
-      </div>
-      <button class="btn" onclick="saveReview()">Salva review</button>
-    </div>
-
-    <div class="card">
-      <h2><span class="ico">📜</span> Storico review</h2>
-      <div id="review-history"></div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-top:16px">
-    <h2><span class="ico">📈</span> Trend ultime 8 settimane</h2>
-    <div class="canvas-wrap" style="height:280px"><canvas id="chart-trend"></canvas></div>
-  </div>
-</section>
-
+<!-- ============ SETTIMANA (rimossa) ============ -->
 <!-- ============ OBIETTIVI ============ -->
 <section class="tab" id="tab-obiettivi">
   <div class="card">
@@ -2100,11 +1982,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 <!-- ============ BENESSERE ============ -->
 <section class="tab" id="tab-benessere">
   <div class="grid grid-2">
-    <div class="card">
-      <h2><span class="ico">😴</span> Sonno ultimi 14 giorni</h2>
-      <div class="canvas-wrap"><canvas id="chart-sleep"></canvas></div>
-      <div class="legend">Target 7-8h. La linea rossa è 6h (soglia critica).</div>
-    </div>
     <div class="card">
       <h2><span class="ico">⚠️</span> Segnali di esaurimento</h2>
       <p style="font-size:.78rem;color:var(--muted2);margin-bottom:10px">Spunta quelli che senti <strong>oggi</strong>. Se 2+ persistono per 1-2 settimane → reset.</p>
@@ -6093,14 +5970,14 @@ function renderOggiHero(){
 function renderAll(){
   try { renderOggiHero(); } catch(e){}
   paintCornice();
-  renderTopKpis();
-  renderWeekly();
-  renderTrend();
-  renderReviewHistory();
+  try { renderTopKpis(); } catch(e){}
+  try { renderWeekly(); } catch(e){}
+  try { renderTrend(); } catch(e){}
+  try { renderReviewHistory(); } catch(e){}
   renderBookshelf();
   try{ renderBsStats(); }catch(e){ console.error('renderBsStats:', e); }
   renderFrancese();
-  renderSleepChart();
+  try { renderSleepChart(); } catch(e){}
   renderSignals();
   renderFitness();
   renderCheckHistory();
