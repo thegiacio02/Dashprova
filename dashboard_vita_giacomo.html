@@ -1211,8 +1211,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   <!-- HERO HEADER -->
   <div id="oggi-hero-header">
     <div class="oggi-hero-left">
-      <div class="oggi-hero-greeting" id="oggi-hero-greeting">Buongiorno</div>
-      <div class="oggi-hero-date" id="oggi-hero-date"></div>
+      <div class="oggi-hero-greeting" id="oggi-hero-greeting">Buongiorno, Giacomo</div>
+      <div class="oggi-hero-date" id="oggi-hero-date">caricamento…</div>
     </div>
     <div class="weather-mini" id="weather-mini" onclick="switchTab('notizie')" title="Apri sezione Notizie per il dettaglio">
       <span class="weather-mini-icon" id="weather-mini-icon">🌤️</span>
@@ -6443,6 +6443,8 @@ loadWeather();
 loadQuotes();
 setInterval(loadWeather, 15*60*1000);   // ogni 15min
 setInterval(loadQuotes,  5*60*1000);    // ogni 5min
+renderOggiHero();                       // saluto+data subito, senza aspettare Firestore
+setInterval(renderOggiHero, 60*1000);   // aggiorna ogni minuto (cambio ora)
 
 // ============ TICKER TAPE (trading room) ============
 const TICKER_SYMS = [
