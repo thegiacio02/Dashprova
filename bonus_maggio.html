@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ComoOnBoat – Bonus Maggio 2026</title>
+<link rel="icon" type="image/png" href="como-on-boat-logo.png"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f1e;--surface:#111827;--surface2:#1a2236;--border:#1e2d45;
+  --text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;
+  --green:#22c55e;--green-bg:#052e16;
+  --yellow:#eab308;--yellow-bg:#1c1700;
+  --red:#ef4444;--red-bg:#2d0000;
+  --blue:#3b82f6;--teal:#06b6d4;--gold:#f59e0b;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.setup-box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:40px;max-width:520px;width:100%}
+.setup-logo{font-size:2.5rem;text-align:center;margin-bottom:8px}
+.setup-box h1{text-align:center;font-size:1.4rem;color:#fff;margin-bottom:6px}
+.setup-box p{text-align:center;font-size:.82rem;color:var(--muted2);margin-bottom:28px;line-height:1.6}
+.setup-step{display:flex;gap:12px;margin-bottom:14px;font-size:.8rem;color:var(--muted2);align-items:flex-start}
+.setup-step .num{width:22px;height:22px;border-radius:50%;background:var(--teal);color:#000;font-weight:800;
+  font-size:.7rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.setup-step a{color:var(--teal);text-decoration:none}
+.setup-step a:hover{text-decoration:underline}
+.input-wrap{margin:24px 0 0}
+.input-wrap label{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px}
+.input-wrap input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+  padding:10px 14px;color:#fff;font-size:.9rem;outline:none;transition:.15s}
+.input-wrap input:focus{border-color:var(--teal)}
+.btn-primary{width:100%;margin-top:14px;padding:12px;background:linear-gradient(135deg,#1d4ed8,#0891b2);
+  border:none;border-radius:8px;color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;transition:.15s}
+.btn-primary:hover{opacity:.9}
+.setup-err{color:#f87171;font-size:.76rem;margin-top:8px;text-align:center;display:none}
+
+/* ── LOADING / ERROR ── */
+#loading-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px}
+.spinner{width:42px;height:42px;border:3px solid var(--border);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading-screen p{color:var(--muted2);font-size:.85rem}
+#error-screen{display:none;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.error-box{background:#160a00;border:1px solid #92400e;border-radius:12px;padding:32px;max-width:480px;text-align:center}
+.error-box h2{color:#fb923c;margin-bottom:10px}
+.error-box p{font-size:.82rem;color:var(--muted2);margin-bottom:20px;line-height:1.6;word-break:break-word}
+.btn-secondary{padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted2);font-size:.82rem;cursor:pointer;transition:.15s}
+.btn-secondary:hover{border-color:var(--teal);color:var(--teal)}
+
+/* ── DASHBOARD ── */
+#dashboard{display:none;max-width:880px;margin:0 auto;padding:24px 18px 60px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.brand{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;color:#fff}
+.brand img{height:30px;width:30px;object-fit:contain}
+.topbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.linkbtn{font-size:.74rem;color:var(--muted2);text-decoration:none;border:1px solid var(--border);padding:7px 12px;border-radius:8px;transition:.15s;cursor:pointer;background:transparent}
+.linkbtn:hover{border-color:var(--teal);color:var(--teal)}
+
+.hero{background:linear-gradient(160deg,#0f1d33,#0a0f1e);border:1px solid var(--border);border-radius:18px;padding:30px 26px;text-align:center;position:relative;overflow:hidden}
+.hero .eyebrow{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--teal);font-weight:700;margin-bottom:10px}
+.hero .period{font-size:.82rem;color:var(--muted2);margin-bottom:18px}
+.hero .bignum{font-size:3.4rem;font-weight:800;color:#fff;line-height:1;letter-spacing:-.02em}
+.hero .bignum .cur{font-size:1.6rem;color:var(--muted2);font-weight:600;vertical-align:super}
+.hero .goalline{font-size:.85rem;color:var(--muted2);margin-top:8px}
+.hero .goalline b{color:#fff}
+
+.progress-track{height:26px;background:var(--surface2);border:1px solid var(--border);border-radius:999px;margin:22px auto 4px;overflow:hidden;position:relative}
+.progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#0891b2,#22c55e);transition:width .6s cubic-bezier(.2,.8,.2,1);min-width:0}
+.progress-pct{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:.78rem;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+
+.status-badge{display:inline-flex;align-items:center;gap:10px;margin-top:20px;padding:12px 22px;border-radius:12px;font-weight:700;font-size:1rem}
+.status-badge.win{background:var(--green-bg);border:1px solid var(--green);color:#86efac}
+.status-badge.miss{background:var(--surface2);border:1px solid var(--border);color:var(--muted2)}
+.status-badge .amt{color:#fff}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:18px}
+.kcard{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.kcard .lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.kcard .val{font-size:1.5rem;font-weight:800;color:#fff}
+.kcard .sub{font-size:.72rem;color:var(--muted2);margin-top:3px}
+
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-top:18px}
+.panel h2{font-size:.95rem;color:#fff;margin-bottom:4px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.panel .hint{font-size:.74rem;color:var(--muted);margin-bottom:14px}
+.tag{font-size:.66rem;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--muted2);padding:2px 8px;border-radius:999px}
+
+.settings{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.settings .field{display:flex;flex-direction:column;gap:5px}
+.settings label{font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.settings input{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.82rem;font-family:inherit;color-scheme:dark;outline:none}
+.settings input:focus{border-color:var(--teal)}
+.settings input[type=number]{width:120px}
+
+.daybars{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:4px}
+.daybar{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.daybar .d{font-size:.7rem;color:var(--muted2)}
+.daybar .v{font-size:1.05rem;font-weight:800;color:#fff;margin-top:4px}
+.daybar .c{font-size:.66rem;color:var(--muted);margin-top:2px}
+
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{text-align:left;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-bottom:1px solid var(--border)}
+td{padding:9px 10px;border-bottom:1px solid #15203a;color:var(--text)}
+td.num,th.num{text-align:right}
+tr:last-child td{border-bottom:none}
+.empty{color:var(--muted);font-size:.82rem;padding:18px 4px;text-align:center}
+.foot{margin-top:22px;text-align:center;font-size:.7rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════ SETUP ════════════════════ -->
+<div id="setup-screen">
+  <div class="setup-box">
+    <div class="setup-logo" style="background:transparent;width:130px;height:130px;display:flex;align-items:center;justify-content:center;margin:0 auto">
+      <img src="como-on-boat-logo.png" alt="ComoOnBoat" style="width:130px;height:130px;object-fit:contain" onerror="this.style.display='none';this.parentElement.innerHTML='⛵';this.parentElement.style.fontSize='3.5rem'"/>
+    </div>
+    <h1>Bonus Maggio 2026</h1>
+    <p>Inserisci la Google Sheets API key per collegare la dashboard allo stesso foglio della dashboard principale. La chiave salvata viene riutilizzata automaticamente.</p>
+    <div style="margin-bottom:20px">
+      <div class="setup-step"><span class="num">1</span><span>Vai su <a href="https://console.cloud.google.com" target="_blank">console.cloud.google.com</a> &rarr; abilita <strong style="color:#fff">Google Sheets API</strong></span></div>
+      <div class="setup-step"><span class="num">2</span><span><strong style="color:#fff">Credentials &rarr; Create API Key</strong> &rarr; copia la chiave</span></div>
+      <div class="setup-step"><span class="num">3</span><span>Nel foglio: <strong style="color:#fff">Condividi &rarr; "Chiunque con il link" &rarr; Visualizzatore</strong></span></div>
+    </div>
+    <div class="input-wrap">
+      <label>Google Sheets API Key</label>
+      <input type="text" id="api-key-input" placeholder="AIzaSy..." autocomplete="off"/>
+    </div>
+    <p class="setup-err" id="setup-err"></p>
+    <button class="btn-primary" onclick="saveAndConnect()">Collega &rarr;</button>
+    <p style="font-size:.68rem;color:var(--muted);margin-top:14px;text-align:center">La chiave resta solo nel tuo browser (localStorage).</p>
+  </div>
+</div>
+
+<!-- ════════════════════ LOADING ════════════════════ -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <p id="loading-msg">Connessione a Google Sheets&hellip;</p>
+</div>
+
+<!-- ════════════════════ ERROR ════════════════════ -->
+<div id="error-screen">
+  <div class="error-box">
+    <h2>&#9888; Errore di connessione</h2>
+    <p id="error-msg"></p>
+    <button class="btn-secondary" onclick="resetKey()">Cambia API Key</button>
+  </div>
+</div>
+
+<!-- ════════════════════ DASHBOARD ════════════════════ -->
+<div id="dashboard">
+  <div class="topbar">
+    <span class="brand">
+      <img src="como-on-boat-logo.png" alt="" onerror="this.style.display='none'"/>
+      Bonus Maggio 2026
+    </span>
+    <div class="topbar-actions">
+      <a class="linkbtn" href="dashboard_giacomo_2026.html">&larr; Dashboard completa</a>
+      <button class="linkbtn" onclick="window.refreshNow()">&#8635; Aggiorna</button>
+      <button class="linkbtn" onclick="resetKey()">API Key</button>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">&#127919; Obiettivo bonus</div>
+    <div class="period" id="hero-period">&mdash;</div>
+    <div class="bignum"><span class="cur">&euro;</span><span id="hero-total">0</span></div>
+    <div class="goalline">su <b id="hero-goal">&euro;10.000</b> di fatturato chiuso</div>
+    <div class="progress-track"><div class="progress-fill" id="hero-fill" style="width:0%"></div><span class="progress-pct" id="hero-pct">0%</span></div>
+    <div id="hero-status"></div>
+  </div>
+
+  <div class="cards">
+    <div class="kcard"><div class="lbl">Tour chiusi</div><div class="val" id="kc-count">0</div><div class="sub">nel periodo</div></div>
+    <div class="kcard"><div class="lbl">Ticket medio</div><div class="val" id="kc-avg">&euro;0</div><div class="sub">per tour</div></div>
+    <div class="kcard"><div class="lbl">Manca / Extra</div><div class="val" id="kc-gap">&euro;0</div><div class="sub" id="kc-gap-sub">al traguardo</div></div>
+    <div class="kcard"><div class="lbl">Bonus a testa</div><div class="val" id="kc-bonus">&euro;200</div><div class="sub" id="kc-bonus-sub">se raggiunto</div></div>
+  </div>
+
+  <div class="panel">
+    <h2>Impostazioni periodo &amp; obiettivo</h2>
+    <p class="hint">Conta i tour la cui <strong>data di prenotazione</strong> cade nel periodo selezionato. Modifica i campi per ricalcolare al volo.</p>
+    <div class="settings">
+      <div class="field"><label>Dal</label><input type="date" id="set-from" onchange="window.recompute()"/></div>
+      <div class="field"><label>Al (incluso)</label><input type="date" id="set-to" onchange="window.recompute()"/></div>
+      <div class="field"><label>Obiettivo &euro;</label><input type="number" id="set-goal" min="0" step="500" onchange="window.recompute()"/></div>
+      <div class="field"><label>Bonus a testa &euro;</label><input type="number" id="set-bonus" min="0" step="50" onchange="window.recompute()"/></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Fatturato chiuso per giorno</h2>
+    <p class="hint">Per data di prenotazione.</p>
+    <div class="daybars" id="daybars"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Dettaglio prenotazioni conteggiate <span class="tag" id="detail-count">0</span></h2>
+    <p class="hint">Verifica: ogni riga &egrave; un tour la cui data di prenotazione cade nel periodo. Se i numeri non tornano, controlla qui prima di tutto.</p>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr>
+          <th>Data prenotazione</th><th>Data tour</th><th>Canale / Cliente</th><th>Foglio</th><th class="num">Prezzo</th>
+        </tr></thead>
+        <tbody id="detail-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="foot" id="foot">&mdash;</div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   CONFIG — stesso foglio della dashboard principale
+═══════════════════════════════════════════════════════════════════ */
+const SPREADSHEET_ID = '10aboyFug3IcYRoCFg-hnFRKxa9E2OSAR1LCkVQj1b1E';
+const CACHE_TTL_MS = 5*60*1000;
+const CACHE_VERSION = 'v6'; // allineato alla dashboard principale → cache condivisa
+
+// Default bonus: 26–31 maggio 2026, obiettivo 10.000€, bonus 200€/persona
+const DEFAULT_FROM = '2026-05-26';
+const DEFAULT_TO   = '2026-05-31';
+const DEFAULT_GOAL = 10000;
+const DEFAULT_BONUS = 200;
+
+let refreshTimer = null;
+let lastSheets = null; // cache dei dati grezzi per ricalcolo locale
+
+/* ═══════════════════════════════════════════════════════════════════
+   SCREEN SWITCH
+═══════════════════════════════════════════════════════════════════ */
+function show(id){
+  ['setup-screen','loading-screen','error-screen','dashboard'].forEach(s=>{
+    const el=document.getElementById(s);
+    if(!el) return;
+    el.style.display = s===id ? ((s==='loading-screen'||s==='error-screen')?'flex':(s==='setup-screen'?'flex':'block')) : 'none';
+  });
+}
+function showErr(msg){ const el=document.getElementById('setup-err'); el.textContent=msg; el.style.display='block'; }
+function resetKey(){ localStorage.removeItem('cob_api_key'); if(refreshTimer) clearInterval(refreshTimer); show('setup-screen'); }
+
+async function saveAndConnect(){
+  const key=document.getElementById('api-key-input').value.trim();
+  if(!key){ showErr('Inserisci la API key.'); return; }
+  document.getElementById('setup-err').style.display='none';
+  localStorage.setItem('cob_api_key', key);
+  await loadDashboard(key);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CACHE + FETCH (identico alla dashboard principale → condivide cache)
+═══════════════════════════════════════════════════════════════════ */
+function cacheGet(key){
+  try{
+    const raw=localStorage.getItem('cob_cache_'+CACHE_VERSION+'_'+key);
+    if(!raw) return null;
+    const {t,v}=JSON.parse(raw);
+    if(Date.now()-t>CACHE_TTL_MS) return null;
+    return v;
+  }catch(e){ return null; }
+}
+function cacheSet(key,val){
+  try{ localStorage.setItem('cob_cache_'+CACHE_VERSION+'_'+key, JSON.stringify({t:Date.now(),v:val})); }
+  catch(e){ console.warn('cache set fail',e.message); }
+}
+
+async function fetchSheets(apiKey){
+  const cached=cacheGet('main_'+SPREADSHEET_ID);
+  if(cached) return cached;
+  const BASE='https://sheets.googleapis.com/v4/spreadsheets';
+  const metaRes=await fetch(`${BASE}/${SPREADSHEET_ID}?key=${apiKey}`);
+  if(!metaRes.ok){
+    const err=await metaRes.json().catch(()=>({}));
+    throw new Error(err?.error?.message || `Errore API (${metaRes.status}). Verifica la chiave e che il foglio sia condiviso come "Chiunque con il link".`);
+  }
+  const meta=await metaRes.json();
+  const sheetNames=meta.sheets.map(s=>s.properties.title);
+  console.log('[Bonus] Fogli trovati:', sheetNames);
+  const allValues={};
+  await Promise.all(sheetNames.map(async name=>{
+    const enc=encodeURIComponent(name);
+    const [unformatted, formatted]=await Promise.all([
+      fetch(`${BASE}/${SPREADSHEET_ID}/values/${enc}?key=${apiKey}&valueRenderOption=UNFORMATTED_VALUE`).then(r=>r.json()),
+      fetch(`${BASE}/${SPREADSHEET_ID}/values/${enc}?key=${apiKey}&valueRenderOption=FORMATTED_VALUE`).then(r=>r.json()),
+    ]);
+    const uRows=unformatted.values||[];
+    const fRows=formatted.values||[];
+    const maxLen=Math.max(uRows.length,fRows.length);
+    allValues[name]=Array.from({length:maxLen},(_,ri)=>{
+      const uRow=uRows[ri]||[], fRow=fRows[ri]||[];
+      const colLen=Math.max(uRow.length,fRow.length);
+      return Array.from({length:colLen},(_,ci)=>{
+        const u=uRow[ci], f=fRow[ci];
+        if(typeof u==='number') return u;
+        if(u!==undefined&&u!==null&&u!=='') return u;
+        return f ?? '';
+      });
+    });
+  }));
+  cacheSet('main_'+SPREADSHEET_ID, allValues);
+  return allValues;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PARSE HELPERS (riusati dalla dashboard principale)
+═══════════════════════════════════════════════════════════════════ */
+function parseNum(v){
+  if(v===null||v===undefined||v==='') return 0;
+  if(typeof v==='number') return v;
+  let s=v.toString().replace(/[€$£\s]/g,'').trim();
+  if(!s||s==='-'||s==='—'||s.includes('DIV')||s.includes('N/A')) return 0;
+  const hasItalianDecimal=/\d,\d{1,2}$/.test(s);
+  if(hasItalianDecimal){ s=s.replace(/\./g,'').replace(',','.'); }
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s)){ s=s.replace(/\./g,''); } // dot used as thousands sep (es. 1.200 → 1200)
+  else { s=s.replace(/,/g,''); }
+  return parseFloat(s)||0;
+}
+
+const toIsoLocal=(d)=> d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+
+function parseDate(v){
+  if(v==null||v==='') return null;
+  let d=null;
+  if(v instanceof Date){ d=isNaN(v)?null:v; }
+  else if(typeof v==='number'){
+    if(v<20000||v>60000) return null;
+    const serial=Math.floor(v);
+    const utc=new Date(Math.round((serial-25569)*86400000));
+    if(isNaN(utc)) return null;
+    d=new Date(utc.getUTCFullYear(),utc.getUTCMonth(),utc.getUTCDate());
+  } else {
+    const s=String(v).trim();
+    let m;
+    if((m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/))){
+      let y=+m[3]; if(y<100) y+=2000;
+      if(y<2020||y>2030) return null;
+      d=new Date(y,+m[2]-1,+m[1]);
+    } else if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})/))){
+      const y=+m[1]; if(y<2020||y>2030) return null;
+      d=new Date(+m[1],+m[2]-1,+m[3]);
+    }
+  }
+  if(!d||isNaN(d)) return null;
+  d.setHours(0,0,0,0);
+  return d;
+}
+
+// Trova l'indice di colonna nella riga header che matcha una delle keyword
+function findCol(headerRow, keywords){
+  for(let c=0;c<headerRow.length;c++){
+    const v=String(headerRow[c]??'').toLowerCase().trim();
+    if(!v) continue;
+    if(keywords.some(k=>v.includes(k))) return c;
+  }
+  return -1;
+}
+
+const BOOKING_KW=['prenotaz','prenotato','data ordine','data prenot','booking date','data acquisto','venduto il','data vendita'];
+const PRICE_KW=['prezzo','importo','ricavo','fatturato','incasso','totale','price','amount','€'];
+const TOURDATE_KW=['data tour','data uscita','data evento','data servizio'];
+const CHANNEL_KW=['provenienza','canale','cliente','broker','nome','referente','hotel'];
+
+/* ═══════════════════════════════════════════════════════════════════
+   PARSE BOOKINGS — somma per DATA DI PRENOTAZIONE nel periodo
+═══════════════════════════════════════════════════════════════════ */
+function parseBookings(allSheets, fromDate, toDate){
+  const rowsOut=[];
+  const seen=new Set();
+
+  for(const [name,rows] of Object.entries(allSheets)){
+    if(!rows||rows.length<2) continue;
+
+    // Individua riga header + colonne (scansiona le prime 8 righe)
+    let headerRow=-1, bookingCol=-1, priceCol=-1, tourCol=-1, channelCol=-1;
+    for(let r=0;r<Math.min(rows.length,8);r++){
+      const hr=rows[r]||[];
+      const bc=findCol(hr,BOOKING_KW);
+      if(bc<0) continue;
+      headerRow=r; bookingCol=bc;
+      priceCol=findCol(hr,PRICE_KW);
+      tourCol=findCol(hr,TOURDATE_KW);
+      channelCol=findCol(hr,CHANNEL_KW);
+      break;
+    }
+    if(bookingCol<0){ console.log(`[Bonus] "${name}": nessuna colonna data prenotazione, skip`); continue; }
+
+    // Fallback prezzo: scegli la colonna numerica con media plausibile (50–20000)
+    if(priceCol<0){
+      let best=-1, bestAvg=0;
+      const sampleEnd=Math.min(rows.length, headerRow+1+200);
+      for(let c=0;c<40;c++){
+        if(c===bookingCol||c===tourCol) continue;
+        let sum=0,cnt=0;
+        for(let r=headerRow+1;r<sampleEnd;r++){
+          const cell=(rows[r]||[])[c];
+          if(parseDate(cell)) continue;
+          const n=parseNum(cell);
+          if(n>=50&&n<=20000){ sum+=n; cnt++; }
+        }
+        const avg=cnt>=3?sum/cnt:0;
+        if(avg>bestAvg){ bestAvg=avg; best=c; }
+      }
+      priceCol=best;
+    }
+
+    let added=0;
+    for(let r=headerRow+1;r<rows.length;r++){
+      const row=rows[r]||[];
+      const bd=parseDate(row[bookingCol]);
+      if(!bd) continue;
+      if(bd<fromDate||bd>toDate) continue;
+
+      // Prezzo
+      let price = priceCol>=0 ? parseNum(row[priceCol]) : 0;
+      if(!(price>0)){
+        // ultimo tentativo: primo numerico plausibile a destra della data prenotazione
+        for(let c=bookingCol+1;c<Math.min(row.length,bookingCol+8);c++){
+          if(parseDate(row[c])) continue;
+          const n=parseNum(row[c]);
+          if(n>5&&n<100000){ price=n; break; }
+        }
+      }
+      if(!(price>0)) continue; // riga senza importo → ignora
+
+      const tourD=tourCol>=0?parseDate(row[tourCol]):null;
+      let chan = channelCol>=0 ? String(row[channelCol]??'').trim() : '';
+      if(!chan){
+        for(let c=0;c<row.length;c++){
+          if(c===bookingCol||c===priceCol||c===tourCol) continue;
+          const v=String(row[c]??'').trim();
+          if(v && isNaN(+v.replace(/[.,]/g,'')) && !parseDate(v)){ chan=v; break; }
+        }
+      }
+      if(!chan) chan='—';
+
+      const bIso=toIsoLocal(bd);
+      const sig=`${bIso}|${price}|${chan.toLowerCase()}|${tourD?toIsoLocal(tourD):''}`;
+      if(seen.has(sig)) continue;
+      seen.add(sig);
+
+      rowsOut.push({ bookingIso:bIso, tourIso: tourD?toIsoLocal(tourD):null, channel:chan, price, sheet:name });
+      added++;
+    }
+    console.log(`[Bonus] "${name}": +${added} prenotazioni (bookingCol=${bookingCol}, priceCol=${priceCol}, tourCol=${tourCol})`);
+  }
+
+  rowsOut.sort((a,b)=> a.bookingIso.localeCompare(b.bookingIso) || b.price-a.price);
+  return rowsOut;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   RENDER
+═══════════════════════════════════════════════════════════════════ */
+const fmtEur=(n)=> new Intl.NumberFormat('it-IT',{maximumFractionDigits:0}).format(Math.round(n));
+const fmtDay=(iso)=>{ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}`; };
+
+function getSettings(){
+  const from=document.getElementById('set-from').value || DEFAULT_FROM;
+  const to=document.getElementById('set-to').value || DEFAULT_TO;
+  const goal=parseFloat(document.getElementById('set-goal').value)||DEFAULT_GOAL;
+  const bonus=parseFloat(document.getElementById('set-bonus').value)||0;
+  const fromDate=parseDate(from), toDate=parseDate(to);
+  return {from,to,goal,bonus,fromDate,toDate};
+}
+
+window.recompute=function(){
+  if(!lastSheets) return;
+  const s=getSettings();
+  if(!s.fromDate||!s.toDate||s.fromDate>s.toDate){ return; }
+  const bookings=parseBookings(lastSheets, s.fromDate, s.toDate);
+  renderResults(bookings, s);
+};
+
+window.refreshNow=async function(){
+  // invalida cache per forzare un fetch fresco
+  try{ localStorage.removeItem('cob_cache_'+CACHE_VERSION+'_main_'+SPREADSHEET_ID); }catch(e){}
+  const key=localStorage.getItem('cob_api_key');
+  if(key) await loadDashboard(key);
+};
+
+function renderResults(bookings, s){
+  const total=bookings.reduce((acc,b)=>acc+b.price,0);
+  const count=bookings.length;
+  const avg=count?total/count:0;
+  const pct=s.goal>0?Math.min(100, (total/s.goal)*100):0;
+  const reached=total>=s.goal;
+  const gap=Math.abs(s.goal-total);
+
+  // Periodo leggibile
+  document.getElementById('hero-period').innerHTML=`dal <b style="color:#fff">${fmtDay(s.from)}</b> al <b style="color:#fff">${fmtDay(s.to)}</b> &middot; per data di prenotazione`;
+  document.getElementById('hero-total').textContent=fmtEur(total);
+  document.getElementById('hero-goal').innerHTML='&euro;'+fmtEur(s.goal);
+  document.getElementById('hero-fill').style.width=pct+'%';
+  document.getElementById('hero-pct').textContent=Math.round(pct)+'%';
+
+  const statusEl=document.getElementById('hero-status');
+  if(reached){
+    statusEl.innerHTML=`<div class="status-badge win">&#127881; BONUS SBLOCCATO! <span class="amt">&euro;${fmtEur(s.bonus)} a testa</span></div>`;
+  }else{
+    statusEl.innerHTML=`<div class="status-badge miss">Mancano <span class="amt" style="color:#fbbf24">&euro;${fmtEur(gap)}</span> al bonus</div>`;
+  }
+
+  document.getElementById('kc-count').textContent=count;
+  document.getElementById('kc-avg').innerHTML='&euro;'+fmtEur(avg);
+  document.getElementById('kc-gap').innerHTML='&euro;'+fmtEur(gap);
+  document.getElementById('kc-gap-sub').textContent=reached?'oltre il traguardo':'al traguardo';
+  document.getElementById('kc-bonus').innerHTML='&euro;'+fmtEur(s.bonus);
+  document.getElementById('kc-bonus-sub').textContent=reached?'SBLOCCATO':'se raggiunto';
+
+  // Daybars: somma per giorno del periodo
+  const byDay=new Map();
+  bookings.forEach(b=>{ const e=byDay.get(b.bookingIso)||{rev:0,cnt:0}; e.rev+=b.price; e.cnt++; byDay.set(b.bookingIso,e); });
+  const dayEl=document.getElementById('daybars');
+  dayEl.innerHTML='';
+  const cur=new Date(s.fromDate);
+  while(cur<=s.toDate){
+    const iso=toIsoLocal(cur);
+    const e=byDay.get(iso)||{rev:0,cnt:0};
+    const div=document.createElement('div');
+    div.className='daybar';
+    div.innerHTML=`<div class="d">${fmtDay(iso)}</div><div class="v">&euro;${fmtEur(e.rev)}</div><div class="c">${e.cnt} tour</div>`;
+    dayEl.appendChild(div);
+    cur.setDate(cur.getDate()+1);
+  }
+
+  // Dettaglio
+  document.getElementById('detail-count').textContent=count+' tour';
+  const body=document.getElementById('detail-body');
+  body.innerHTML='';
+  if(!count){
+    body.innerHTML=`<tr><td colspan="5" class="empty">Nessuna prenotazione trovata nel periodo selezionato.</td></tr>`;
+  }else{
+    bookings.forEach(b=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${fmtDay(b.bookingIso)}</td><td>${b.tourIso?fmtDay(b.tourIso):'—'}</td><td>${escapeHtml(b.channel)}</td><td style="color:var(--muted2)">${escapeHtml(b.sheet)}</td><td class="num">&euro;${fmtEur(b.price)}</td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  document.getElementById('foot').textContent='Ultimo aggiornamento: '+new Date().toLocaleString('it-IT');
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   LOAD
+═══════════════════════════════════════════════════════════════════ */
+async function loadDashboard(apiKey){
+  show('loading-screen');
+  try{
+    const sheets=await fetchSheets(apiKey);
+    lastSheets=sheets;
+    show('dashboard');
+    window.recompute();
+    if(refreshTimer) clearInterval(refreshTimer);
+    refreshTimer=setInterval(async()=>{
+      try{
+        localStorage.removeItem('cob_cache_'+CACHE_VERSION+'_main_'+SPREADSHEET_ID);
+        lastSheets=await fetchSheets(apiKey);
+        window.recompute();
+      }catch(e){ console.warn('[Bonus] auto-refresh fail',e.message); }
+    }, CACHE_TTL_MS);
+  }catch(e){
+    console.error('[Bonus] load error',e);
+    document.getElementById('error-msg').textContent=e.message||String(e);
+    show('error-screen');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════════ */
+(function init(){
+  document.getElementById('set-from').value=DEFAULT_FROM;
+  document.getElementById('set-to').value=DEFAULT_TO;
+  document.getElementById('set-goal').value=DEFAULT_GOAL;
+  document.getElementById('set-bonus').value=DEFAULT_BONUS;
+  const key=localStorage.getItem('cob_api_key');
+  if(key){ loadDashboard(key); }
+  else { show('setup-screen'); }
+})();
+</script>
+</body>
+</html>
