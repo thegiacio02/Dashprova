@@ -2727,6 +2727,7 @@ function renderDashboard(data){
     {lbl:'Fatturato YTD Confermato',val:fmt(ytdActual),sub:'Gen–Apr 2026 (confermato)',
      acc:'linear-gradient(90deg,#3b82f6,#06b6d4)',
      trend:`+${Math.round((ytdActual/ytd2025-1)*100)}% vs stesso periodo 2025`,up:true},
+    {quarter:true,acc:'linear-gradient(90deg,#8b5cf6,#06b6d4)'},
   ];
   const grid = document.getElementById('kpi-grid');
   grid.innerHTML = kpiData.map(k=>{
@@ -2741,6 +2742,22 @@ function renderDashboard(data){
       <div class="val" id="week-val">${k.val}</div>
       <div class="sub" id="week-sub">${k.sub}</div>
       <span class="trend ${k.up?'up':'down'}" id="week-trend">${k.trend}</span>
+    </div>`;
+    }
+    if(k.quarter){
+      return `
+    <div class="kpi" style="--accent:${k.acc};position:relative">
+      <div class="lbl" style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <span>Trimestre</span>
+        <select id="quarter-picker"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:.65rem;padding:3px 6px;border-radius:5px;cursor:pointer;max-width:170px"></select>
+      </div>
+      <div class="val" id="quarter-val">—</div>
+      <div style="height:6px;background:var(--surface2);border:1px solid var(--border);border-radius:999px;overflow:hidden;margin:8px 0 3px">
+        <div id="quarter-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8b5cf6,#06b6d4);transition:width .5s"></div>
+      </div>
+      <div class="sub" id="quarter-sub">—</div>
+      <span class="trend up" id="quarter-trend">—</span>
     </div>`;
     }
     if(k.commission){
@@ -2850,6 +2867,43 @@ function renderDashboard(data){
     }
     wpick.addEventListener('change', (e)=> renderWeek(parseInt(e.target.value,10)));
     renderWeek(curIdx);
+  }
+
+  // Wire up quarter card (trimestre 2026: Q1 Gen–Mar · Q2 Apr–Giu · Q3 Lug–Set)
+  const qpick = document.getElementById('quarter-picker');
+  if(qpick){
+    // cal = mesi calendario (0-indexed) · scen = indici negli array SCENARIOS (0=Q1, 1=Apr, 2=Mag, 3=Giu, …)
+    const QDEF = [
+      {label:'Q1 · Gen–Mar', cal:[0,1,2], scen:[0]},
+      {label:'Q2 · Apr–Giu', cal:[3,4,5], scen:[1,2,3]},
+      {label:'Q3 · Lug–Set', cal:[6,7,8], scen:[4,5,6]},
+    ];
+    const qTours = [...(window._boatTours||[]), ...(window._casaBookings||[])];
+    const curMonthQ = today.getMonth();
+    const curQ = curMonthQ<=2 ? 0 : curMonthQ<=5 ? 1 : 2;
+    qpick.innerHTML = QDEF.map((q,i)=>`<option value="${i}"${i===curQ?' selected':''}>${q.label}${i===curQ?' (corrente)':''}</option>`).join('');
+
+    function renderQuarter(i){
+      const q = QDEF[i];
+      const rows = qTours.filter(t=>{ if(!t.date) return false; const [y,mm]=t.date.split('-').map(Number); return y===2026 && q.cal.includes(mm-1); });
+      const v2026 = rows.reduce((s,t)=>s+(t.price||0),0);
+      const n = rows.length;
+      const v2025 = q.scen.reduce((s,idx)=>s+(SCENARIOS.y2025[idx]||0),0);
+      const vBase = q.scen.reduce((s,idx)=>s+(SCENARIOS.base[idx]||0),0);
+      const pct = vBase>0 ? Math.min(100, Math.round(v2026/vBase*100)) : 0;
+      const yoy = v2025>0 ? Math.round((v2026/v2025-1)*100) : 0;
+      const lastMon = Math.max(...q.cal), firstMon = Math.min(...q.cal);
+      const stato = curMonthQ>lastMon ? 'consuntivo' : (curMonthQ<firstMon ? 'a libro' : 'a libro · in corso');
+      document.getElementById('quarter-val').textContent = fmt(v2026);
+      document.getElementById('quarter-bar').style.width = pct+'%';
+      document.getElementById('quarter-sub').textContent = `${stato} · ${n} tour · ${pct}% del target base (${fmt(vBase)})`;
+      const tr = document.getElementById('quarter-trend');
+      tr.textContent = `2025: ${fmt(v2025)} · ${yoy>=0?'+':''}${yoy}% YoY`;
+      tr.classList.toggle('up', yoy>=0);
+      tr.classList.toggle('down', yoy<0);
+    }
+    qpick.addEventListener('change', (e)=> renderQuarter(parseInt(e.target.value,10)));
+    renderQuarter(curQ);
   }
 
   // Wire up commission picker (stipendio operatore per mese)
