@@ -88,19 +88,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .panel .hint{font-size:.74rem;color:var(--muted);margin-bottom:14px}
 .tag{font-size:.66rem;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--muted2);padding:2px 8px;border-radius:999px}
 
-.settings{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
-.settings .field{display:flex;flex-direction:column;gap:5px}
-.settings label{font-size:.66rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
-.settings input{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.82rem;font-family:inherit;color-scheme:dark;outline:none}
-.settings input:focus{border-color:var(--teal)}
-.settings input[type=number]{width:120px}
-
-.daybars{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px;margin-top:4px}
-.daybar{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
-.daybar .d{font-size:.7rem;color:var(--muted2)}
-.daybar .v{font-size:1.05rem;font-weight:800;color:#fff;margin-top:4px}
-.daybar .c{font-size:.66rem;color:var(--muted);margin-top:2px}
-
 table{width:100%;border-collapse:collapse;font-size:.8rem}
 th{text-align:left;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;border-bottom:1px solid var(--border)}
 td{padding:9px 10px;border-bottom:1px solid #15203a;color:var(--text)}
@@ -181,24 +168,7 @@ tr:last-child td{border-bottom:none}
   </div>
 
   <div class="panel">
-    <h2>Impostazioni periodo &amp; obiettivo</h2>
-    <p class="hint">Conta i tour la cui <strong>data di prenotazione</strong> cade nel periodo selezionato. Modifica i campi per ricalcolare al volo.</p>
-    <div class="settings">
-      <div class="field"><label>Dal</label><input type="date" id="set-from" onchange="window.recompute()"/></div>
-      <div class="field"><label>Al (incluso)</label><input type="date" id="set-to" onchange="window.recompute()"/></div>
-      <div class="field"><label>Obiettivo &euro;</label><input type="number" id="set-goal" min="0" step="500" onchange="window.recompute()"/></div>
-      <div class="field"><label>Bonus a testa &euro;</label><input type="number" id="set-bonus" min="0" step="50" onchange="window.recompute()"/></div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <h2>Fatturato chiuso per giorno</h2>
-    <p class="hint">Per data di prenotazione.</p>
-    <div class="daybars" id="daybars"></div>
-  </div>
-
-  <div class="panel">
-    <h2>Dettaglio prenotazioni conteggiate <span class="tag" id="detail-count">0</span></h2>
+    <h2>Dettaglio tour <span class="tag" id="detail-count">0</span></h2>
     <p class="hint">Verifica: ogni riga &egrave; un tour la cui data di prenotazione cade nel periodo. Se i numeri non tornano, controlla qui prima di tutto.</p>
     <div style="overflow-x:auto">
       <table>
@@ -466,12 +436,11 @@ const fmtEur=(n)=> new Intl.NumberFormat('it-IT',{maximumFractionDigits:0}).form
 const fmtDay=(iso)=>{ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return `${d}/${m}`; };
 
 function getSettings(){
-  const from=document.getElementById('set-from').value || DEFAULT_FROM;
-  const to=document.getElementById('set-to').value || DEFAULT_TO;
-  const goal=parseFloat(document.getElementById('set-goal').value)||DEFAULT_GOAL;
-  const bonus=parseFloat(document.getElementById('set-bonus').value)||0;
-  const fromDate=parseDate(from), toDate=parseDate(to);
-  return {from,to,goal,bonus,fromDate,toDate};
+  return {
+    from:DEFAULT_FROM, to:DEFAULT_TO,
+    goal:DEFAULT_GOAL, bonus:DEFAULT_BONUS,
+    fromDate:parseDate(DEFAULT_FROM), toDate:parseDate(DEFAULT_TO)
+  };
 }
 
 window.recompute=function(){
@@ -518,28 +487,12 @@ function renderResults(bookings, s){
   document.getElementById('kc-bonus').innerHTML='&euro;'+fmtEur(s.bonus);
   document.getElementById('kc-bonus-sub').textContent=reached?'SBLOCCATO':'se raggiunto';
 
-  // Daybars: somma per giorno del periodo
-  const byDay=new Map();
-  bookings.forEach(b=>{ const e=byDay.get(b.bookingIso)||{rev:0,cnt:0}; e.rev+=b.price; e.cnt++; byDay.set(b.bookingIso,e); });
-  const dayEl=document.getElementById('daybars');
-  dayEl.innerHTML='';
-  const cur=new Date(s.fromDate);
-  while(cur<=s.toDate){
-    const iso=toIsoLocal(cur);
-    const e=byDay.get(iso)||{rev:0,cnt:0};
-    const div=document.createElement('div');
-    div.className='daybar';
-    div.innerHTML=`<div class="d">${fmtDay(iso)}</div><div class="v">&euro;${fmtEur(e.rev)}</div><div class="c">${e.cnt} tour</div>`;
-    dayEl.appendChild(div);
-    cur.setDate(cur.getDate()+1);
-  }
-
   // Dettaglio
   document.getElementById('detail-count').textContent=count+' tour';
   const body=document.getElementById('detail-body');
   body.innerHTML='';
   if(!count){
-    body.innerHTML=`<tr><td colspan="5" class="empty">Nessuna prenotazione trovata nel periodo selezionato.</td></tr>`;
+    body.innerHTML=`<tr><td colspan="5" class="empty">Nessuna prenotazione trovata nel periodo.</td></tr>`;
   }else{
     bookings.forEach(b=>{
       const tr=document.createElement('tr');
@@ -582,10 +535,6 @@ async function loadDashboard(apiKey){
    INIT
 ═══════════════════════════════════════════════════════════════════ */
 (function init(){
-  document.getElementById('set-from').value=DEFAULT_FROM;
-  document.getElementById('set-to').value=DEFAULT_TO;
-  document.getElementById('set-goal').value=DEFAULT_GOAL;
-  document.getElementById('set-bonus').value=DEFAULT_BONUS;
   const key=localStorage.getItem('cob_api_key');
   if(key){ loadDashboard(key); }
   else { show('setup-screen'); }
