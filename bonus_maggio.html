@@ -383,6 +383,13 @@ function parseBookings(allSheets, fromDate, toDate){
       headerRow=r; bookingCol=bc;
       priceCol=findCol(hr,PRICE_KW);
       tourCol=findCol(hr,TOURDATE_KW);
+      if(tourCol<0){ // colonna "DATA" generica (data del tour), escludendo la colonna prenotazione
+        for(let c=0;c<hr.length;c++){
+          if(c===bookingCol) continue;
+          const v=String(hr[c]??'').toLowerCase().trim();
+          if(v==='data'||v==='date'){ tourCol=c; break; }
+        }
+      }
       channelCol=findCol(hr,CHANNEL_KW);
       break;
     }
