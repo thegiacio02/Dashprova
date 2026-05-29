@@ -2016,6 +2016,29 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <div id="dca-sim-headline" style="margin-top:14px;padding:12px 14px;background:var(--acc-bg);border-radius:8px;font-size:.82rem;line-height:1.55;color:var(--text)"></div>
     </div>
 
+    <!-- Proiezione futura interattiva -->
+    <div id="dca-proj" style="margin-top:14px;background:var(--surface-2);border:1px solid var(--hair);border-radius:10px;padding:16px">
+      <div style="font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:3px">🔮 Proiezione: e se continui così?</div>
+      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:14px">Imposta versamento mensile, rendimento atteso e orizzonte. Parte dal valore di oggi e fa lavorare l'interesse composto in avanti.</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;align-items:end">
+        <div class="field" style="margin:0">
+          <label style="font-size:.65rem">Versamento mensile</label>
+          <input type="number" id="dca-proj-monthly" step="10" oninput="_dcaProjUpdate()" style="font-family:var(--mono)">
+        </div>
+        <div class="field" style="margin:0">
+          <label style="font-size:.65rem">Rendimento annuo %</label>
+          <input type="number" id="dca-proj-return" step="0.5" oninput="_dcaProjUpdate()" style="font-family:var(--mono)">
+        </div>
+        <div class="field" style="margin:0">
+          <label style="font-size:.65rem">Orizzonte: <strong id="dca-proj-years-lbl" style="color:var(--acc)">15</strong> anni</label>
+          <input type="range" id="dca-proj-years" min="1" max="40" value="15" oninput="_dcaProjUpdate()" style="accent-color:var(--acc);width:100%">
+        </div>
+      </div>
+      <div id="dca-proj-out" style="margin-top:16px"></div>
+      <div style="position:relative;height:230px;margin-top:12px"><canvas id="dca-proj-chart"></canvas></div>
+      <div style="font-size:.62rem;color:var(--text-4);margin-top:8px">Stima a scopo illustrativo: rendimenti reali variabili, dividendi e cambio non garantiti. QQQ storicamente ~13%/anno nel lungo periodo.</div>
+    </div>
+
     <!-- Input / management -->
     <details class="dca-input" style="margin-top:16px">
       <summary style="cursor:pointer;font-size:.8rem;color:var(--text-2);font-weight:600;padding:8px 0">➕ Aggiungi / gestisci posizioni</summary>
@@ -8182,6 +8205,7 @@ function renderEtoro(){
 let _dcaChart = null;
 let _dcaCurrency = 'USD';
 let _dcaStats = null; // dati per il simulatore interattivo (in valuta di display)
+let _dcaProjChart = null;
 
 function _ensureDca(){
   if(!state.finance) state.finance = {netWorth:[],seeded:false,transactions:[],etoro:null,dca:null};
@@ -8427,6 +8451,109 @@ function _dcaSimUpdate(){
   head.innerHTML = msg;
 }
 
+// Imposta i default della proiezione (solo se i campi sono vuoti), poi aggiorna
+function _dcaProjInit(){
+  const mEl = document.getElementById('dca-proj-monthly');
+  const rEl = document.getElementById('dca-proj-return');
+  if(!mEl || !rEl){ return; }
+  const s = _dcaStats;
+  if(mEl.value===''|| mEl.value==null){
+    mEl.value = s && s.suggestedMonthly ? s.suggestedMonthly : 150;
+  }
+  if(rEl.value==='' || rEl.value==null){
+    rEl.value = 10; // prudente per QQQ lungo periodo
+  }
+  _dcaProjUpdate();
+}
+
+// Proiezione futura: parte dal valore attuale e compone in avanti coi versamenti
+function _dcaProjUpdate(){
+  const out = document.getElementById('dca-proj-out');
+  const canvas = document.getElementById('dca-proj-chart');
+  const yrsLbl = document.getElementById('dca-proj-years-lbl');
+  if(!out || !canvas) return;
+  const s = _dcaStats;
+  const monthly = parseFloat(document.getElementById('dca-proj-monthly').value) || 0;
+  const annual  = (parseFloat(document.getElementById('dca-proj-return').value) || 0) / 100;
+  const years   = parseInt(document.getElementById('dca-proj-years').value, 10) || 15;
+  if(yrsLbl) yrsLbl.textContent = years;
+
+  if(!s || s.currentValueDisp==null){
+    out.innerHTML = '<div style="font-size:.78rem;color:var(--text-3);text-align:center;padding:8px 0">Carica i prezzi storici (↻ in alto) per attivare la proiezione.</div>';
+    if(_dcaProjChart){ _dcaProjChart.destroy(); _dcaProjChart=null; }
+    return;
+  }
+
+  const sy = s.sym;
+  const money = (v)=> sy + Math.round(v).toLocaleString('it-IT');
+  const rM = Math.pow(1+annual, 1/12) - 1; // tasso mensile equivalente
+  const months = years*12;
+
+  // baseline: oggi
+  let value = s.currentValueDisp;
+  let invested = s.investedDisp;
+  const labels=[], valueSeries=[], investedSeries=[];
+  const nowY = new Date().getFullYear();
+  labels.push(String(nowY)); valueSeries.push(value); investedSeries.push(invested);
+  for(let m=1; m<=months; m++){
+    value = value*(1+rM) + monthly;
+    invested = invested + monthly;
+    if(m%12===0){ labels.push(String(nowY + m/12)); valueSeries.push(value); investedSeries.push(invested); }
+  }
+
+  const futureValue   = value;
+  const totalInvested = invested;            // versato totale (passato + futuro)
+  const futureContrib = monthly*months;      // solo versamenti futuri
+  const compoundGain  = futureValue - totalInvested; // profitto da compounding
+  const multipleEnd   = totalInvested ? futureValue/totalInvested : 0;
+
+  out.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+      <div class="fin-kpi" style="border-color:var(--acc)">
+        <div class="fin-kpi-label">Valore tra ${years} anni</div>
+        <div class="fin-kpi-val" style="color:var(--acc)">${money(futureValue)}</div>
+        <div class="fin-kpi-sub">${multipleEnd.toFixed(1)}× il totale versato</div>
+      </div>
+      <div class="fin-kpi">
+        <div class="fin-kpi-label">Di tasca tua</div>
+        <div class="fin-kpi-val">${money(totalInvested)}</div>
+        <div class="fin-kpi-sub">oggi ${money(s.investedDisp)} + ${money(futureContrib)} futuri</div>
+      </div>
+      <div class="fin-kpi">
+        <div class="fin-kpi-label">Generato dall'interesse composto</div>
+        <div class="fin-kpi-val" style="color:var(--up)">${money(compoundGain)}</div>
+        <div class="fin-kpi-sub">${totalInvested?Math.round(compoundGain/futureValue*100):0}% del valore finale "regalato" dal mercato</div>
+      </div>
+    </div>`;
+
+  if(window.Chart){
+    const isLight = document.documentElement.dataset.theme==='light';
+    const gridColor = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
+    const textColor = isLight ? '#5a6070' : '#a4abb8';
+    if(_dcaProjChart) _dcaProjChart.destroy();
+    _dcaProjChart = new Chart(canvas.getContext('2d'), {
+      type:'line',
+      data:{ labels, datasets:[
+        {label:'Valore proiettato', data:valueSeries, borderColor:'#6ef0ff', backgroundColor:'rgba(110,240,255,.16)', borderWidth:2, tension:.25, fill:true, pointRadius:0, pointHoverRadius:5},
+        {label:'Totale versato', data:investedSeries, borderColor:'rgba(148,163,184,.9)', backgroundColor:'rgba(148,163,184,.14)', borderWidth:2, tension:.05, fill:true, pointRadius:0, pointHoverRadius:5}
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{ legend:{display:false}, tooltip:{
+          backgroundColor:isLight?'#fff':'#0f1218', borderColor:gridColor, borderWidth:1,
+          titleColor:textColor, bodyColor:isLight?'#15161a':'#e6e8ee',
+          callbacks:{ label:(c)=>`${c.dataset.label}: ${sy}${Math.round(c.parsed.y).toLocaleString('it-IT')}` }
+        }},
+        scales:{
+          x:{grid:{color:gridColor,drawBorder:false}, ticks:{color:textColor,font:{size:10,family:'JetBrains Mono'},maxRotation:0,autoSkip:true,maxTicksLimit:8}},
+          y:{grid:{color:gridColor,drawBorder:false}, ticks:{color:textColor,font:{size:10,family:'JetBrains Mono'},callback:(v)=>sy+(v/1000).toFixed(0)+'k'}}
+        }
+      }
+    });
+  }
+}
+
 function renderDca(){
   const kpiEl   = document.getElementById('dca-kpi');
   const listEl  = document.getElementById('dca-list');
@@ -8451,7 +8578,7 @@ function renderDca(){
     if(kpiEl) kpiEl.innerHTML = '';
     if(listEl) listEl.innerHTML = '';
     if(metaEl) metaEl.textContent = '';
-    _dcaStats = null; _dcaSimUpdate();
+    _dcaStats = null; _dcaSimUpdate(); _dcaProjUpdate();
     if(_dcaChart){ _dcaChart.destroy(); _dcaChart = null; }
     const ctx0 = canvas.getContext('2d');
     ctx0.clearRect(0,0,canvas.width,canvas.height);
@@ -8511,6 +8638,8 @@ function renderDca(){
 
   // dati per il simulatore interattivo (in valuta di display)
   const firstContrib = contribs[0];
+  const firstD = firstContrib ? new Date(firstContrib.date+'T00:00:00') : now;
+  const monthsElapsed = Math.max(1, (now.getFullYear()-firstD.getFullYear())*12 + (now.getMonth()-firstD.getMonth()));
   _dcaStats = {
     sym,
     investedDisp: totalInvested * fx,
@@ -8519,9 +8648,13 @@ function renderDca(){
     count: contribs.length,
     avgContribDisp: (totalInvested * fx) / contribs.length,
     firstAmountDisp: firstContrib ? firstContrib.units * firstContrib.price * fx : null,
-    firstDate: firstContrib ? firstContrib.date : null
+    firstDate: firstContrib ? firstContrib.date : null,
+    monthsElapsed,
+    suggestedMonthly: Math.round((totalInvested * fx) / monthsElapsed),
+    irrPct: irr!=null ? irr*100 : null
   };
   _dcaSimUpdate();
+  _dcaProjInit();
 
   if(kpiEl){
     const profCls = profit!=null ? (profit>=0?'up':'down') : '';
