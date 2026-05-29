@@ -969,17 +969,16 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .oggi-section-sep::before,.oggi-section-sep::after{content:'';flex:1;height:1px;background:var(--border)}
 .oggi-section-sep span{font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);white-space:nowrap;padding:0 2px}
 /* ===== OGGI GRID ORDERS ===== */
-#oggi-sep-briefing{order:1}
-#personal-briefing-card{order:2;grid-column:1/-1}
 #oggi-sep-agenda{order:3}
 #calendar-today-card{order:4;grid-column:1/-1;border-left:3px solid #4285f4}
 #oggi-sep-azioni{order:5}
-#today-action-card{order:6;grid-column:1/8;border-left:3px solid var(--green);box-shadow:0 10px 28px rgba(0,0,0,.08)}
-#daily-boost-card{order:6;grid-column:8/-1}
+#today-action-card{order:6;grid-column:1/-1;border-left:3px solid var(--green);box-shadow:0 10px 28px rgba(0,0,0,.08)}
 #oggi-sep-matrix{order:7}
 #matrix-card{order:8;grid-column:1/-1}
 #oggi-sep-inbox{order:9}
 #today-mail-grid{order:10;grid-column:1/-1}
+#oggi-sep-boost{order:29;grid-column:1/-1}
+#daily-boost-card{order:30;grid-column:1/-1}
 #oggi-sep-contesto{order:11}
 #today-log-grid{order:12;grid-column:1/-1}
 #ai-briefing-card{order:13;grid-column:1/7}
@@ -990,36 +989,48 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 #today-stats-card{order:16;grid-column:1/-1}
 /* ===== EISENHOWER MATRIX ===== */
 #matrix-card{border:none;background:transparent;padding:0;box-shadow:none}
-.matrix-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:10px;position:relative}
-.matrix-axis-h,.matrix-axis-v{font-size:.58rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);text-align:center;pointer-events:none}
-.matrix-axis-h{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:-4px}
-.matrix-axis-v{display:flex;flex-direction:column;justify-content:space-around;position:absolute;left:-22px;top:0;bottom:0;writing-mode:vertical-rl;transform:rotate(180deg);gap:10px}
-.matrix-quadrant{border-radius:12px;padding:10px 10px 8px;min-height:140px;display:flex;flex-direction:column;gap:6px;transition:box-shadow .15s,opacity .15s;border:1.5px solid transparent;position:relative}
-.matrix-quadrant.drag-over{box-shadow:0 0 0 3px currentColor;opacity:.92}
-.matrix-q1{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.25)}
-.matrix-q2{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.25)}
-.matrix-q3{background:rgba(251,191,36,.07);border-color:rgba(251,191,36,.25)}
-.matrix-q4{background:rgba(148,163,184,.07);border-color:rgba(148,163,184,.2)}
-.matrix-q-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px}
-.matrix-q-label{font-size:.6rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-.matrix-q1 .matrix-q-label{color:#ef4444}
-.matrix-q2 .matrix-q-label{color:#22c55e}
-.matrix-q3 .matrix-q-label{color:#f59e0b}
-.matrix-q4 .matrix-q-label{color:#94a3b8}
-.matrix-q-hint{font-size:.58rem;color:var(--muted2);font-style:italic}
-.matrix-items{display:flex;flex-direction:column;gap:5px;flex:1}
-.matrix-item{display:flex;align-items:flex-start;gap:6px;padding:5px 7px;border-radius:8px;background:var(--card-bg);border:1px solid var(--border);font-size:.79rem;cursor:grab;transition:box-shadow .1s;line-height:1.35}
+.matrix-axis-top{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-left:30px;margin-bottom:8px}
+.matrix-axis-top .lbl{display:flex;align-items:center;justify-content:center;gap:6px;font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)}
+.matrix-axis-top .lbl::before{content:'';width:8px;height:8px;border-radius:2px}
+.matrix-axis-top .lbl.imp::before{background:var(--green)}
+.matrix-axis-top .lbl.nonimp::before{background:#94a3b8}
+.matrix-shell{position:relative;padding-left:30px}
+.matrix-axis-side{position:absolute;left:0;top:0;bottom:0;width:24px;display:flex;flex-direction:column;justify-content:space-between;align-items:center}
+.matrix-axis-side .sl{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);display:flex;align-items:center;gap:6px;flex:1;justify-content:center}
+.matrix-axis-side .sl::before{content:'';width:8px;height:8px;border-radius:2px}
+.matrix-axis-side .sl.urg::before{background:#ef4444}
+.matrix-axis-side .sl.nonurg::before{background:#3b82f6}
+.matrix-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.matrix-quadrant{border-radius:16px;padding:0;min-height:170px;display:flex;flex-direction:column;transition:transform .12s,box-shadow .15s;border:1px solid var(--border);overflow:hidden;background:var(--surface);box-shadow:0 2px 10px rgba(0,0,0,.05)}
+.matrix-quadrant.drag-over{transform:translateY(-2px);box-shadow:0 0 0 3px var(--q-color),0 8px 22px rgba(0,0,0,.14)}
+.matrix-q1{--q-color:#ef4444;--q-soft:rgba(239,68,68,.10)}
+.matrix-q2{--q-color:#22c55e;--q-soft:rgba(34,197,94,.10)}
+.matrix-q3{--q-color:#f59e0b;--q-soft:rgba(245,158,11,.10)}
+.matrix-q4{--q-color:#94a3b8;--q-soft:rgba(148,163,184,.10)}
+.matrix-q-head{display:flex;align-items:center;gap:9px;padding:11px 13px;background:var(--q-soft);border-bottom:1px solid var(--border);position:relative}
+.matrix-q-head::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--q-color)}
+.matrix-q-emoji{font-size:1.1rem;line-height:1}
+.matrix-q-titles{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.matrix-q-label{font-size:.82rem;font-weight:800;color:var(--q-color);letter-spacing:-.01em}
+.matrix-q-hint{font-size:.62rem;color:var(--muted2);font-weight:600;letter-spacing:.02em}
+.matrix-q-count{flex:0 0 auto;min-width:22px;height:22px;padding:0 6px;border-radius:11px;background:var(--q-color);color:#fff;font-size:.7rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+.matrix-q-body{flex:1;display:flex;flex-direction:column;gap:6px;padding:10px 11px 11px}
+.matrix-items{display:flex;flex-direction:column;gap:6px;flex:1}
+.matrix-item{display:flex;align-items:flex-start;gap:7px;padding:7px 9px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);border-left:3px solid var(--q-color);font-size:.82rem;cursor:grab;transition:transform .1s,box-shadow .1s;line-height:1.35;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.matrix-item:hover{box-shadow:0 3px 10px rgba(0,0,0,.1)}
 .matrix-item:active{cursor:grabbing}
-.matrix-item.dragging{opacity:.4;box-shadow:0 4px 16px rgba(0,0,0,.18)}
-.matrix-item-text{flex:1;min-width:0;word-break:break-word;overflow-wrap:anywhere}
-.matrix-item-del{flex:0 0 auto;cursor:pointer;opacity:.35;font-size:.72rem;padding:0 2px;line-height:1;transition:opacity .1s}
-.matrix-item-del:hover{opacity:.85}
-.matrix-q-add{display:flex;gap:5px;margin-top:4px}
-.matrix-q-add input{flex:1;font-size:.78rem;padding:4px 8px;border-radius:7px;border:1px solid var(--border);background:var(--input-bg);color:var(--text)}
-.matrix-q-add button{font-size:.75rem;padding:4px 9px;border-radius:7px;border:1px solid var(--border);background:var(--card-bg);color:var(--text);cursor:pointer;transition:background .1s}
-.matrix-q-add button:hover{background:var(--border)}
-.matrix-todo-drag-hint{font-size:.7rem;color:var(--muted2);text-align:center;padding:4px 0 2px;font-style:italic}
-.matrix-drop-placeholder{border:1.5px dashed var(--border);border-radius:8px;height:32px;margin:2px 0}
+.matrix-item.dragging{opacity:.4;box-shadow:0 6px 18px rgba(0,0,0,.2)}
+.matrix-item-text{flex:1;min-width:0;word-break:break-word;overflow-wrap:anywhere;color:var(--text)}
+.matrix-item-del{flex:0 0 auto;cursor:pointer;opacity:.3;font-size:.78rem;padding:0 2px;line-height:1.2;transition:opacity .1s,color .1s}
+.matrix-item-del:hover{opacity:1;color:var(--q-color)}
+.matrix-q-add{display:flex;gap:6px;margin-top:2px}
+.matrix-q-add input{flex:1;font-size:.8rem;padding:6px 10px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);color:var(--text)}
+.matrix-q-add input:focus{outline:none;border-color:var(--q-color)}
+.matrix-q-add button{font-size:.95rem;font-weight:700;width:30px;border-radius:9px;border:none;background:var(--q-color);color:#fff;cursor:pointer;transition:opacity .1s;line-height:1}
+.matrix-q-add button:hover{opacity:.85}
+.matrix-todo-drag-hint{font-size:.72rem;color:var(--muted2);text-align:center;padding:10px 0 2px;display:flex;align-items:center;justify-content:center;gap:6px}
+.matrix-drop-placeholder{border:1.5px dashed var(--border);border-radius:9px;min-height:30px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--muted2);opacity:.7}
+@media(max-width:640px){.matrix-grid{grid-template-columns:1fr}.matrix-axis-top{grid-template-columns:1fr;padding-left:0;gap:0}.matrix-axis-top .lbl:last-child{display:none}.matrix-shell{padding-left:0}.matrix-axis-side{display:none}}
 .today-primary-card h2{font-size:1.05rem}
 .today-primary-card input{font-size:.92rem}
 .today-muted-context{opacity:.92}
@@ -1066,25 +1077,16 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   #tab-oggi.today-command-layout{grid-template-columns:1fr}
   #tab-oggi.today-command-layout > *{grid-column:1/-1!important}
   #oggi-hero-header{order:0}
-  #oggi-sep-briefing{order:1}
-  #personal-briefing-card{order:2}
   #oggi-sep-agenda{order:3}
   #calendar-today-card{order:4}
   #oggi-sep-azioni{order:5}
   #today-action-card{order:6}
-  #daily-boost-card{order:7}
   #oggi-sep-matrix{order:8}
   #matrix-card{order:9}
   #oggi-sep-inbox{order:10}
   #today-mail-grid{order:11}
-  #oggi-sep-contesto{order:12}
-  #today-log-grid{order:13}
-  #ai-briefing-card{order:14}
-  #news-card{order:15}
-  #ticker-tape{order:16}
-  #quotes-card{order:17}
-  #weather-card{order:18}
-  #today-stats-card{order:19}
+  #oggi-sep-boost{order:29}
+  #daily-boost-card{order:30}
 }
 [data-theme="light"] .rtb-select{background:#fff;border-color:#ccc;color:#333}
 [data-theme="light"] #rich-content{color:#0a1426;caret-color:#cc0033}
@@ -1257,29 +1259,6 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     </div>
   </div>
 
-  <!-- SEP: BRIEFING -->
-  <div class="oggi-section-sep" id="oggi-sep-briefing"><span>🧭 Briefing</span></div>
-
-  <!-- BRIEFING PERSONALE MATTINA/SERA -->
-  <div class="card collapsible personal-briefing-card" id="personal-briefing-card" data-card-id="personal-briefing">
-    <h2 onclick="toggleCard(this)" style="justify-content:space-between">
-      <span style="display:flex;align-items:center;gap:8px"><span class="ico">🧭</span> <span id="personal-briefing-title">Briefing personale</span> <span id="personal-briefing-subtitle" style="font-size:.65rem;color:var(--muted);font-weight:500;letter-spacing:.05em">· piano della giornata</span></span>
-      <span class="chevron">▾</span>
-    </h2>
-    <div class="card-body">
-      <div class="pb-panel">
-        <div class="pb-panel-head">
-          <div class="pb-title"><span class="pb-icon" id="personal-briefing-icon">AM</span> <span id="personal-briefing-label">Briefing del giorno</span></div>
-          <div class="pb-actions">
-            <span class="pb-meta" id="personal-briefing-meta"></span>
-            <button class="btn ghost sm" id="personal-briefing-btn" onclick="event.stopPropagation();refreshPersonalBriefing(currentPersonalBriefingMode(), true)" style="font-size:.72rem;padding:4px 10px">↻ Genera</button>
-          </div>
-        </div>
-        <div class="pb-content" id="personal-briefing-content"></div>
-      </div>
-    </div>
-  </div>
-
   <!-- SEP: AGENDA -->
   <div class="oggi-section-sep" id="oggi-sep-agenda"><span>🗓 Agenda</span></div>
 
@@ -1312,6 +1291,9 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <div id="today-todos-list"></div>
   </div>
 
+  <!-- SEP: DAILY BOOST (spostato in fondo via CSS order) -->
+  <div class="oggi-section-sep" id="oggi-sep-boost"><span>✨ Daily Boost</span></div>
+
   <!-- DAILY BOOST (collassabile, default aperto) -->
   <div class="card collapsible daily-motivation-card" id="daily-boost-card" data-card-id="boost">
     <h2 onclick="toggleCard(this)" style="justify-content:space-between">
@@ -1333,28 +1315,37 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
   <!-- EISENHOWER MATRIX -->
   <div id="matrix-card">
-    <div style="position:relative;padding-left:26px">
-      <!-- vertical axis label -->
-      <div style="position:absolute;left:0;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:center;font-size:.56rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2);white-space:nowrap;width:120px;text-align:center;margin-left:-46px">← Non urgente · Urgente →</div>
+    <!-- asse orizzontale -->
+    <div class="matrix-axis-top">
+      <div class="lbl imp">Importante</div>
+      <div class="lbl nonimp">Non importante</div>
+    </div>
+    <div class="matrix-shell">
+      <!-- asse verticale -->
+      <div class="matrix-axis-side">
+        <div class="sl urg">Urgente</div>
+        <div class="sl nonurg">Non urgente</div>
+      </div>
       <div class="matrix-grid">
-        <!-- horizontal axis labels -->
-        <div class="matrix-axis-h" style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
-          <div style="text-align:center;font-size:.58rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)">IMPORTANTE</div>
-          <div style="text-align:center;font-size:.58rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)">NON IMPORTANTE</div>
-        </div>
         <!-- Q1: Urgente + Importante -->
         <div class="matrix-quadrant matrix-q1"
           ondragover="event.preventDefault();this.classList.add('drag-over')"
           ondragleave="this.classList.remove('drag-over')"
           ondrop="matrixDrop(event,'q1');this.classList.remove('drag-over')">
           <div class="matrix-q-head">
-            <span class="matrix-q-label">🔴 Fai subito</span>
-            <span class="matrix-q-hint">Urgente · Importante</span>
+            <span class="matrix-q-emoji">🔥</span>
+            <div class="matrix-q-titles">
+              <span class="matrix-q-label">Fai subito</span>
+              <span class="matrix-q-hint">Urgente + Importante</span>
+            </div>
+            <span class="matrix-q-count" id="matrix-q1-count">0</span>
           </div>
-          <div class="matrix-items" id="matrix-q1-items"></div>
-          <div class="matrix-q-add">
-            <input type="text" id="matrix-q1-input" placeholder="Aggiungi…" onkeydown="if(event.key==='Enter')matrixQuickAdd('q1')"/>
-            <button onclick="matrixQuickAdd('q1')">+</button>
+          <div class="matrix-q-body">
+            <div class="matrix-items" id="matrix-q1-items"></div>
+            <div class="matrix-q-add">
+              <input type="text" id="matrix-q1-input" placeholder="Aggiungi attività…" onkeydown="if(event.key==='Enter')matrixQuickAdd('q1')"/>
+              <button onclick="matrixQuickAdd('q1')" title="Aggiungi">+</button>
+            </div>
           </div>
         </div>
         <!-- Q3: Urgente + Non importante -->
@@ -1363,13 +1354,19 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
           ondragleave="this.classList.remove('drag-over')"
           ondrop="matrixDrop(event,'q3');this.classList.remove('drag-over')">
           <div class="matrix-q-head">
-            <span class="matrix-q-label">🟡 Delega</span>
-            <span class="matrix-q-hint">Urgente · Non importante</span>
+            <span class="matrix-q-emoji">🤝</span>
+            <div class="matrix-q-titles">
+              <span class="matrix-q-label">Delega</span>
+              <span class="matrix-q-hint">Urgente + Non importante</span>
+            </div>
+            <span class="matrix-q-count" id="matrix-q3-count">0</span>
           </div>
-          <div class="matrix-items" id="matrix-q3-items"></div>
-          <div class="matrix-q-add">
-            <input type="text" id="matrix-q3-input" placeholder="Aggiungi…" onkeydown="if(event.key==='Enter')matrixQuickAdd('q3')"/>
-            <button onclick="matrixQuickAdd('q3')">+</button>
+          <div class="matrix-q-body">
+            <div class="matrix-items" id="matrix-q3-items"></div>
+            <div class="matrix-q-add">
+              <input type="text" id="matrix-q3-input" placeholder="Aggiungi attività…" onkeydown="if(event.key==='Enter')matrixQuickAdd('q3')"/>
+              <button onclick="matrixQuickAdd('q3')" title="Aggiungi">+</button>
+            </div>
           </div>
         </div>
         <!-- Q2: Non urgente + Importante -->
@@ -1378,13 +1375,19 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
           ondragleave="this.classList.remove('drag-over')"
           ondrop="matrixDrop(event,'q2');this.classList.remove('drag-over')">
           <div class="matrix-q-head">
-            <span class="matrix-q-label">🟢 Pianifica</span>
-            <span class="matrix-q-hint">Non urgente · Importante</span>
+            <span class="matrix-q-emoji">📅</span>
+            <div class="matrix-q-titles">
+              <span class="matrix-q-label">Pianifica</span>
+              <span class="matrix-q-hint">Non urgente + Importante</span>
+            </div>
+            <span class="matrix-q-count" id="matrix-q2-count">0</span>
           </div>
-          <div class="matrix-items" id="matrix-q2-items"></div>
-          <div class="matrix-q-add">
-            <input type="text" id="matrix-q2-input" placeholder="Aggiungi…" onkeydown="if(event.key==='Enter')matrixQuickAdd('q2')"/>
-            <button onclick="matrixQuickAdd('q2')">+</button>
+          <div class="matrix-q-body">
+            <div class="matrix-items" id="matrix-q2-items"></div>
+            <div class="matrix-q-add">
+              <input type="text" id="matrix-q2-input" placeholder="Aggiungi attività…" onkeydown="if(event.key==='Enter')matrixQuickAdd('q2')"/>
+              <button onclick="matrixQuickAdd('q2')" title="Aggiungi">+</button>
+            </div>
           </div>
         </div>
         <!-- Q4: Non urgente + Non importante -->
@@ -1393,18 +1396,24 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
           ondragleave="this.classList.remove('drag-over')"
           ondrop="matrixDrop(event,'q4');this.classList.remove('drag-over')">
           <div class="matrix-q-head">
-            <span class="matrix-q-label">⚫ Elimina</span>
-            <span class="matrix-q-hint">Non urgente · Non importante</span>
+            <span class="matrix-q-emoji">🗑️</span>
+            <div class="matrix-q-titles">
+              <span class="matrix-q-label">Elimina</span>
+              <span class="matrix-q-hint">Non urgente + Non importante</span>
+            </div>
+            <span class="matrix-q-count" id="matrix-q4-count">0</span>
           </div>
-          <div class="matrix-items" id="matrix-q4-items"></div>
-          <div class="matrix-q-add">
-            <input type="text" id="matrix-q4-input" placeholder="Aggiungi…" onkeydown="if(event.key==='Enter')matrixQuickAdd('q4')"/>
-            <button onclick="matrixQuickAdd('q4')">+</button>
+          <div class="matrix-q-body">
+            <div class="matrix-items" id="matrix-q4-items"></div>
+            <div class="matrix-q-add">
+              <input type="text" id="matrix-q4-input" placeholder="Aggiungi attività…" onkeydown="if(event.key==='Enter')matrixQuickAdd('q4')"/>
+              <button onclick="matrixQuickAdd('q4')" title="Aggiungi">+</button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <div class="matrix-todo-drag-hint" style="margin-top:8px">Trascina un todo dalla lista "Da fare oggi" in un quadrante, oppure aggiungi direttamente</div>
+    <div class="matrix-todo-drag-hint">↕ Trascina un todo da "Da fare oggi" in un quadrante, oppure aggiungilo direttamente qui</div>
   </div>
 
   <!-- SEP: INBOX (ordine CSS = 9) -->
@@ -6187,7 +6196,7 @@ function renderAll(){
   try { renderMatrix();      } catch(e){ console.error('renderMatrix error:', e); }
   try { renderAIBriefing();  } catch(e){ console.error('renderAIBriefing error:', e); }
   try { renderAIItalyBriefing(); } catch(e){ console.error('renderAIItalyBriefing error:', e); }
-  try { renderPersonalBriefings(); } catch(e){ console.error('renderPersonalBriefings error:', e); }
+  // renderPersonalBriefings() rimosso: il card briefing personale è stato eliminato dalla tab Oggi
   try { renderGoogleCalendar(); } catch(e){ console.error('renderGoogleCalendar error:', e); }
   try { renderChiusure();       } catch(e){ console.error('renderChiusure error:', e); }
   try { renderMailBriefings(); } catch(e){ console.error('renderMailBriefings error:', e); }
@@ -6332,7 +6341,7 @@ function dashInit() {
     }
   }, 4000);
   scheduleAIBriefing();
-  setTimeout(()=>{ try{ autoRefreshPersonalBriefing(); }catch(e){ console.error('Personal briefing auto:', e); } }, 2600);
+  // Briefing personale rimosso dalla tab Oggi: niente auto-refresh.
   // Daily Boost: render immediato (renderAll lo include già). Poi tenta refresh se nuovo giorno
   try{ renderDailyMotivation(); }catch(e){ console.error('Daily Boost render:', e); }
   setTimeout(()=>refreshDailyMotivation(false), 1500);
@@ -9577,6 +9586,9 @@ function _matrixItemDragStart(event, itemId, fromQ){
   event.stopPropagation();
 }
 
+// priorità todo suggerita in base al quadrante
+const _MATRIX_PRIO = {q1:'high', q2:'med', q3:'med', q4:'low'};
+
 function matrixQuickAdd(q){
   const input = document.getElementById(`matrix-${q}-input`);
   if(!input) return;
@@ -9585,10 +9597,21 @@ function matrixQuickAdd(q){
   ensureState();
   if(!state.matrix) state.matrix = {q1:[],q2:[],q3:[],q4:[]};
   if(!state.matrix[q]) state.matrix[q] = [];
-  state.matrix[q].push({id:uid(), text, todoId:null});
+  // crea anche il todo collegato così appare in "Da fare oggi"
+  state.todos = state.todos || [];
+  const todoId = uid();
+  state.todos.push({
+    id: todoId, text, done:false,
+    area: null, prio: _MATRIX_PRIO[q] || 'med',
+    due: todayISO(),
+    created: new Date().toISOString()
+  });
+  state.matrix[q].push({id:uid(), text, todoId});
   input.value = '';
   save();
   renderMatrix();
+  try { renderTodayTodos(); } catch(e){}
+  try { renderTodos(); } catch(e){}
 }
 
 function matrixRemoveItem(q, itemId){
@@ -9607,17 +9630,23 @@ function renderMatrix(){
     const el = document.getElementById(`matrix-${q}-items`);
     if(!el) return;
     const items = state.matrix[q]||[];
+    const countEl = document.getElementById(`matrix-${q}-count`);
+    if(countEl) countEl.textContent = items.length;
     if(!items.length){
-      el.innerHTML = '<div class="matrix-drop-placeholder"></div>';
+      el.innerHTML = '<div class="matrix-drop-placeholder">Trascina qui o aggiungi sotto</div>';
       return;
     }
-    el.innerHTML = items.map(item=>`
-      <div class="matrix-item" draggable="true"
+    el.innerHTML = items.map(item=>{
+      // se collegato a un todo già completato, mostralo barrato
+      const linked = item.todoId ? (state.todos||[]).find(t=>t.id===item.todoId) : null;
+      const done = linked && linked.done;
+      return `<div class="matrix-item${done?' done':''}" draggable="true"
         ondragstart="_matrixItemDragStart(event,'${item.id}','${q}')"
         title="Trascina in un altro quadrante">
-        <span class="matrix-item-text">${escapeHtml(item.text)}</span>
+        <span class="matrix-item-text"${done?' style="opacity:.5;text-decoration:line-through"':''}>${escapeHtml(item.text)}</span>
         <span class="matrix-item-del" onclick="matrixRemoveItem('${q}','${item.id}')" title="Rimuovi">✕</span>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   });
 }
 
