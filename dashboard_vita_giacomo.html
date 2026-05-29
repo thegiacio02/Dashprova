@@ -2000,6 +2000,22 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <span><span style="display:inline-block;width:12px;height:10px;background:rgba(74,222,128,.25);border:1px solid #4ade80;vertical-align:middle;margin-right:6px"></span>Valore totale (= investito + profitto)</span>
     </div>
 
+    <!-- Simulatore interattivo: effetto leva dei guadagni -->
+    <div id="dca-sim" style="margin-top:18px;background:var(--surface-2);border:1px solid var(--hair);border-radius:10px;padding:16px">
+      <div style="font-size:.85rem;font-weight:700;color:var(--text);margin-bottom:3px">🎚️ Capire l'effetto: quanto pesa un movimento di QQQ</div>
+      <div style="font-size:.72rem;color:var(--text-3);margin-bottom:14px">Trascina lo slider e simula una variazione del prezzo di QQQ. Vedi subito quanto si muove il tuo portafoglio — e quanto vale rispetto a quello che hai davvero versato.</div>
+
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <input type="range" id="dca-sim-range" min="-20" max="20" step="0.5" value="1" oninput="_dcaSimUpdate()" style="flex:1;min-width:200px;accent-color:var(--acc)">
+        <div id="dca-sim-pct" style="font-family:var(--mono);font-weight:700;font-size:1.1rem;min-width:74px;text-align:right">+1.0%</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:.6rem;color:var(--text-4);font-family:var(--mono);margin-top:2px"><span>−20%</span><span>0</span><span>+20%</span></div>
+
+      <div id="dca-sim-out" style="margin-top:16px"></div>
+
+      <div id="dca-sim-headline" style="margin-top:14px;padding:12px 14px;background:var(--acc-bg);border-radius:8px;font-size:.82rem;line-height:1.55;color:var(--text)"></div>
+    </div>
+
     <!-- Input / management -->
     <details class="dca-input" style="margin-top:16px">
       <summary style="cursor:pointer;font-size:.8rem;color:var(--text-2);font-weight:600;padding:8px 0">➕ Aggiungi / gestisci posizioni</summary>
@@ -8165,6 +8181,7 @@ function renderEtoro(){
 // ============ FORZA INTERESSE COMPOSTO (DCA) ============
 let _dcaChart = null;
 let _dcaCurrency = 'USD';
+let _dcaStats = null; // dati per il simulatore interattivo (in valuta di display)
 
 function _ensureDca(){
   if(!state.finance) state.finance = {netWorth:[],seeded:false,transactions:[],etoro:null,dca:null};
@@ -8352,6 +8369,64 @@ function _dcaXirr(flows){
   return (lo+hi)/2;
 }
 
+// Simulatore interattivo: traduce un movimento % di QQQ nell'impatto sul portafoglio
+function _dcaSimUpdate(){
+  const out  = document.getElementById('dca-sim-out');
+  const head = document.getElementById('dca-sim-headline');
+  const pctEl= document.getElementById('dca-sim-pct');
+  const range= document.getElementById('dca-sim-range');
+  if(!out || !head || !range) return;
+  const s = _dcaStats;
+  const pct = parseFloat(range.value) || 0;
+  const sign = pct>=0 ? '+' : '−';
+  const col = pct>0 ? 'var(--up)' : pct<0 ? 'var(--down)' : 'var(--text-2)';
+  if(pctEl){ pctEl.textContent = `${sign}${Math.abs(pct).toFixed(1)}%`; pctEl.style.color = col; }
+
+  if(!s || s.currentValueDisp==null){
+    out.innerHTML = '<div style="font-size:.78rem;color:var(--text-3);text-align:center;padding:8px 0">Carica i prezzi storici (↻ in alto) per attivare il simulatore.</div>';
+    head.style.display = 'none';
+    return;
+  }
+  head.style.display = '';
+
+  const sy = s.sym;
+  const money = (v)=> sy + Math.abs(Math.round(v)).toLocaleString('it-IT');
+  const valueDelta   = s.currentValueDisp * (pct/100);          // variazione € del portafoglio
+  const newValue     = s.currentValueDisp + valueDelta;
+  const pctOnInvested= s.investedDisp ? (valueDelta / s.investedDisp * 100) : 0; // % sul capitale versato
+  const contribEquiv = s.avgContribDisp ? Math.abs(valueDelta) / s.avgContribDisp : 0;
+
+  out.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px">
+      <div class="fin-kpi">
+        <div class="fin-kpi-label">Variazione portafoglio</div>
+        <div class="fin-kpi-val" style="color:${col}">${sign}${money(valueDelta)}</div>
+        <div class="fin-kpi-sub">nuovo valore: ${money(newValue)}</div>
+      </div>
+      <div class="fin-kpi">
+        <div class="fin-kpi-label">Sul capitale versato</div>
+        <div class="fin-kpi-val" style="color:${col}">${sign}${Math.abs(pctOnInvested).toFixed(1)}%</div>
+        <div class="fin-kpi-sub">un ${sign}${Math.abs(pct).toFixed(1)}% di QQQ pesa ${s.multiple.toFixed(1)}× di più</div>
+      </div>
+      <div class="fin-kpi">
+        <div class="fin-kpi-label">Equivale a…</div>
+        <div class="fin-kpi-val">${contribEquiv.toFixed(1)}×</div>
+        <div class="fin-kpi-sub">versamenti medi (${money(s.avgContribDisp)} l'uno)</div>
+      </div>
+    </div>`;
+
+  // headline: il messaggio "interesse composto" col confronto inizio vs oggi
+  const oneePctNow   = s.currentValueDisp * 0.01;
+  const oneePctStart = s.firstAmountDisp!=null ? s.firstAmountDisp * 0.01 : null;
+  const startYear = s.firstDate ? s.firstDate.slice(0,4) : '';
+  let msg = `Oggi <strong>+1%</strong> di QQQ ti fa <strong style="color:var(--up)">${money(oneePctNow)}</strong> — senza versare un euro. `;
+  if(oneePctStart!=null && oneePctStart>0){
+    const times = oneePctNow / oneePctStart;
+    msg += `Nel ${startYear}, lo stesso +1% valeva appena <strong>${money(oneePctStart)}</strong>: oggi lo stesso movimento di mercato è <strong style="color:var(--acc)">${times.toFixed(0)}× più potente</strong>. Questo è l'interesse composto: il capitale (tuo + i profitti già maturati) lavora per te.`;
+  }
+  head.innerHTML = msg;
+}
+
 function renderDca(){
   const kpiEl   = document.getElementById('dca-kpi');
   const listEl  = document.getElementById('dca-list');
@@ -8376,6 +8451,7 @@ function renderDca(){
     if(kpiEl) kpiEl.innerHTML = '';
     if(listEl) listEl.innerHTML = '';
     if(metaEl) metaEl.textContent = '';
+    _dcaStats = null; _dcaSimUpdate();
     if(_dcaChart){ _dcaChart.destroy(); _dcaChart = null; }
     const ctx0 = canvas.getContext('2d');
     ctx0.clearRect(0,0,canvas.width,canvas.height);
@@ -8432,6 +8508,20 @@ function renderDca(){
     flows.push({date:now, amount:currentValue});
     irr = _dcaXirr(flows);
   }
+
+  // dati per il simulatore interattivo (in valuta di display)
+  const firstContrib = contribs[0];
+  _dcaStats = {
+    sym,
+    investedDisp: totalInvested * fx,
+    currentValueDisp: currentValue!=null ? currentValue*fx : null,
+    multiple,
+    count: contribs.length,
+    avgContribDisp: (totalInvested * fx) / contribs.length,
+    firstAmountDisp: firstContrib ? firstContrib.units * firstContrib.price * fx : null,
+    firstDate: firstContrib ? firstContrib.date : null
+  };
+  _dcaSimUpdate();
 
   if(kpiEl){
     const profCls = profit!=null ? (profit>=0?'up':'down') : '';
