@@ -1976,6 +1976,69 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <!-- Meta -->
     <div id="etoro-meta" style="font-size:.64rem;color:var(--text-4);margin-top:8px;font-family:var(--mono)"></div>
   </div>
+
+  <!-- ── Forza dell'interesse composto ── -->
+  <div class="card" id="dca-card" style="margin-top:16px">
+    <h2 style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="ico">🔥</span> Forza dell'interesse composto · <span id="dca-ticker-label" style="font-family:var(--mono);color:var(--acc)">QQQ</span></span>
+      <span style="display:flex;gap:6px;align-items:center">
+        <span style="display:inline-flex;border:1px solid var(--hair-2);border-radius:5px;overflow:hidden">
+          <button class="dca-cur-btn active" data-cur="USD" onclick="setDcaCurrency('USD')" style="background:var(--acc-bg);border:none;color:var(--acc);padding:3px 9px;font-size:.68rem;cursor:pointer;font-family:var(--mono);font-weight:600">USD</button>
+          <button class="dca-cur-btn" data-cur="EUR" onclick="setDcaCurrency('EUR')" style="background:transparent;border:none;color:var(--text-2);padding:3px 9px;font-size:.68rem;cursor:pointer;font-family:var(--mono);font-weight:600">EUR</button>
+        </span>
+        <button class="btn sm" id="dca-history-btn" onclick="refreshDcaHistory()" style="font-size:.7rem">↻ Prezzi storici</button>
+      </span>
+    </h2>
+
+    <!-- KPI strip -->
+    <div class="fin-kpi-grid" id="dca-kpi"></div>
+
+    <!-- Chart (the fork) -->
+    <div style="position:relative;height:300px;margin-top:14px"><canvas id="dca-chart"></canvas></div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.72rem;color:var(--text-3)">
+      <span><span style="display:inline-block;width:12px;height:10px;background:rgba(148,163,184,.35);border:1px solid rgba(148,163,184,.7);vertical-align:middle;margin-right:6px"></span>Capitale investito</span>
+      <span><span style="display:inline-block;width:12px;height:10px;background:rgba(74,222,128,.25);border:1px solid #4ade80;vertical-align:middle;margin-right:6px"></span>Valore totale (= investito + profitto)</span>
+    </div>
+
+    <!-- Input / management -->
+    <details class="dca-input" style="margin-top:16px">
+      <summary style="cursor:pointer;font-size:.8rem;color:var(--text-2);font-weight:600;padding:8px 0">➕ Aggiungi / gestisci posizioni</summary>
+
+      <div style="background:var(--surface-2);border:1px solid var(--hair);border-radius:8px;padding:12px;margin-top:8px">
+        <div style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px;font-family:var(--mono)">Incolla tutte le posizioni</div>
+        <div style="font-size:.72rem;color:var(--text-3);margin-bottom:8px;line-height:1.5">
+          Una posizione per riga, formato <strong>data, unità, prezzo</strong> (separatore virgola, tab o punto e virgola).<br>
+          Es: <code style="font-family:var(--mono);color:var(--text-2)">2021-03-15, 1.56, 320.50</code> · le date accettano anche <code style="font-family:var(--mono)">15/03/2021</code>.
+        </div>
+        <textarea id="dca-bulk" rows="6" placeholder="2021-03-15, 1.56, 320.50&#10;2021-06-01, 1.42, 352.10&#10;..." style="width:100%;font-family:var(--mono);font-size:.78rem;box-sizing:border-box"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap">
+          <div class="field" style="margin:0">
+            <label style="font-size:.65rem">Ticker</label>
+            <input type="text" id="dca-ticker" value="QQQ" style="text-transform:uppercase;font-family:var(--mono);width:90px">
+          </div>
+          <button class="btn sm" onclick="parseDcaBulk()" style="font-size:.7rem">Importa posizioni</button>
+          <button class="btn ghost sm" onclick="clearDca()" style="font-size:.68rem;color:var(--down)">Svuota tutto</button>
+          <span id="dca-form-msg" style="font-size:.7rem;color:var(--text-3);margin-left:auto"></span>
+        </div>
+      </div>
+
+      <!-- single add -->
+      <div style="background:var(--surface-2);border:1px solid var(--hair);border-radius:8px;padding:12px;margin-top:10px">
+        <div style="font-size:.72rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:8px;font-family:var(--mono)">Oppure aggiungi singola posizione</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end">
+          <div class="field" style="margin:0"><label style="font-size:.65rem">Data</label><input type="date" id="dca-date"></div>
+          <div class="field" style="margin:0"><label style="font-size:.65rem">Unità</label><input type="number" id="dca-units" placeholder="1.56" step="0.0001"></div>
+          <div class="field" style="margin:0"><label style="font-size:.65rem">Prezzo ($)</label><input type="number" id="dca-price" placeholder="320.50" step="0.01"></div>
+          <button class="btn sm" onclick="addDcaContribution()" style="font-size:.7rem">+ Aggiungi</button>
+        </div>
+      </div>
+
+      <!-- contributions list -->
+      <div id="dca-list" style="margin-top:10px;max-height:280px;overflow-y:auto"></div>
+    </details>
+
+    <div id="dca-meta" style="font-size:.64rem;color:var(--text-4);margin-top:8px;font-family:var(--mono)"></div>
+  </div>
 </section>
 
 <!-- ============ BENESSERE ============ -->
@@ -2600,7 +2663,7 @@ function defaultState(){ return {
     workToursHistoryOpen:false,
     calendarSyncUrl:'',
     calendarSyncToken:'',
-    finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null}}
+    finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null},dca:{ticker:'QQQ',contributions:[],history:null,historyAt:null,eurusd:null}}
   };}
 
 function load(){
@@ -5976,6 +6039,7 @@ function renderAll(){
   try { renderFinance();         } catch(e){ console.error('renderFinance error:', e); }
   try { renderSpese();           } catch(e){ console.error('renderSpese error:', e); }
   try { renderEtoro();           } catch(e){ console.error('renderEtoro error:', e); }
+  try { renderDca();             } catch(e){ console.error('renderDca error:', e); }
 }
 
 // ============ PROMEMORIA + INSIGHTS AI ============
@@ -6095,6 +6159,7 @@ function initDateFields(){
   setVal('todo-due', todayISO());
   setVal('goal-deadline', '2026-11-30');
   setVal('plan-goal-deadline', addDaysISO(todayISO(), 30));
+  setVal('dca-date', todayISO());
 }
 
 function dashInit() {
@@ -8093,6 +8158,376 @@ function renderEtoro(){
     metaEl.textContent = [
       ts ? `Prezzi aggiornati: ${ts}` : 'Prezzi non ancora caricati — clicca ↻ Prezzi',
       eurusd && eurusd!==1 ? `EUR/USD: ${eurusd.toFixed(4)}` : ''
+    ].filter(Boolean).join(' · ');
+  }
+}
+
+// ============ FORZA INTERESSE COMPOSTO (DCA) ============
+let _dcaChart = null;
+let _dcaCurrency = 'USD';
+
+function _ensureDca(){
+  if(!state.finance) state.finance = {netWorth:[],seeded:false,transactions:[],etoro:null,dca:null};
+  if(!state.finance.dca || !Array.isArray(state.finance.dca.contributions)){
+    state.finance.dca = {ticker:'QQQ', contributions:[], history:null, historyAt:null, eurusd:null};
+  }
+  return state.finance.dca;
+}
+
+function _ym(d){ return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+
+// Parsing numerico tollerante: gestisce decimale con virgola o punto.
+function _dcaParseNum(s){
+  if(typeof s === 'number') return s;
+  s = String(s).trim().replace(/[$€\s]/g,'');
+  if(s.indexOf('.')>-1 && s.indexOf(',')>-1){
+    // formato europeo "1.234,56" → punto = migliaia, virgola = decimale
+    s = s.replace(/\./g,'').replace(',','.');
+  } else if(s.indexOf(',')>-1){
+    s = s.replace(',','.');
+  }
+  const n = parseFloat(s);
+  return isFinite(n) ? n : NaN;
+}
+
+// Parsing data: accetta YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY
+function _dcaParseDate(s){
+  s = String(s).trim();
+  let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+  if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+  const d = new Date(s);
+  if(!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+  return null;
+}
+
+function parseDcaBulk(){
+  const dca = _ensureDca();
+  const ticker = (document.getElementById('dca-ticker').value||'QQQ').trim().toUpperCase();
+  const raw = (document.getElementById('dca-bulk').value||'').trim();
+  const msg = document.getElementById('dca-form-msg');
+  if(!raw){ if(msg){ msg.textContent='Incolla almeno una riga.'; msg.style.color='var(--down)'; } return; }
+  const lines = raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  let added = 0, skipped = 0;
+  for(const line of lines){
+    // separa per tab o punto e virgola; se non bastano 3 campi, prova la virgola
+    let parts = line.split(/[\t;]+/).map(p=>p.trim()).filter(Boolean);
+    if(parts.length < 3) parts = line.split(',').map(p=>p.trim()).filter(Boolean);
+    if(parts.length < 3){ skipped++; continue; }
+    const date  = _dcaParseDate(parts[0]);
+    const units = _dcaParseNum(parts[1]);
+    const price = _dcaParseNum(parts[2]);
+    if(!date || !isFinite(units) || units<=0 || !isFinite(price) || price<=0){ skipped++; continue; }
+    dca.contributions.push({id:uid(), date, units, price});
+    added++;
+  }
+  dca.ticker = ticker;
+  dca.contributions.sort((a,b)=>a.date.localeCompare(b.date));
+  save();
+  if(added){ document.getElementById('dca-bulk').value = ''; }
+  renderDca();
+  if(msg){
+    msg.textContent = `${added} posizioni importate${skipped?` · ${skipped} righe ignorate`:''}.`;
+    msg.style.color = added ? 'var(--up)' : 'var(--down)';
+  }
+  if(added) refreshDcaHistory();
+}
+
+function addDcaContribution(){
+  const dca = _ensureDca();
+  const date  = _dcaParseDate(document.getElementById('dca-date').value);
+  const units = _dcaParseNum(document.getElementById('dca-units').value);
+  const price = _dcaParseNum(document.getElementById('dca-price').value);
+  const msg = document.getElementById('dca-form-msg');
+  if(!date || !isFinite(units) || units<=0 || !isFinite(price) || price<=0){
+    if(msg){ msg.textContent='Compila data, unità e prezzo.'; msg.style.color='var(--down)'; }
+    return;
+  }
+  dca.contributions.push({id:uid(), date, units, price});
+  dca.contributions.sort((a,b)=>a.date.localeCompare(b.date));
+  save();
+  document.getElementById('dca-units').value = '';
+  document.getElementById('dca-price').value = '';
+  renderDca();
+  refreshDcaHistory();
+}
+
+function delDcaContribution(id){
+  const dca = _ensureDca();
+  dca.contributions = dca.contributions.filter(c=>c.id!==id);
+  save();
+  renderDca();
+}
+
+function clearDca(){
+  if(!confirm('Svuotare tutte le posizioni dell\'interesse composto?')) return;
+  const dca = _ensureDca();
+  dca.contributions = [];
+  dca.history = null; dca.historyAt = null;
+  save();
+  renderDca();
+}
+
+function setDcaCurrency(cur){
+  _dcaCurrency = cur;
+  document.querySelectorAll('.dca-cur-btn').forEach(b=>{
+    const active = b.dataset.cur === cur;
+    b.classList.toggle('active', active);
+    b.style.background = active ? 'var(--acc-bg)' : 'transparent';
+    b.style.color      = active ? 'var(--acc)'    : 'var(--text-2)';
+  });
+  renderDca();
+}
+
+// Serie storica mensile (usa adjclose per includere i dividendi → total return)
+async function fetchYahooHistory(sym, range='15y', interval='1mo'){
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}`;
+  for(const proxy of CORS_PROXIES){
+    try{
+      const res = await fetch(proxy(url), {cache:'no-store'});
+      if(!res.ok) continue;
+      const data = JSON.parse(await res.text());
+      const r = data?.chart?.result?.[0];
+      const ts = r?.timestamp;
+      const closes = r?.indicators?.quote?.[0]?.close;
+      const adj = r?.indicators?.adjclose?.[0]?.adjclose;
+      if(!ts || (!closes && !adj)) continue;
+      const out = [];
+      for(let i=0;i<ts.length;i++){
+        const c = (adj && adj[i]!=null) ? adj[i] : (closes ? closes[i] : null);
+        if(c==null) continue;
+        out.push({ym:_ym(new Date(ts[i]*1000)), close:c});
+      }
+      if(out.length) return out;
+    }catch(e){}
+  }
+  return null;
+}
+
+async function refreshDcaHistory(){
+  const dca = _ensureDca();
+  if(!dca.contributions.length){ renderDca(); return; }
+  const btn = document.getElementById('dca-history-btn');
+  if(btn){ btn.disabled=true; btn.textContent='⏳...'; }
+  const meta = document.getElementById('dca-meta');
+  if(meta) meta.textContent = 'Recupero prezzi storici…';
+  // prezzi storici mensili
+  const hist = await fetchYahooHistory(dca.ticker || 'QQQ', '15y', '1mo');
+  // prezzo live attuale (per il valore del mese corrente)
+  let live = null;
+  try { const q = await fetchYahoo(dca.ticker || 'QQQ'); if(q && q.price) live = q.price; } catch(e){}
+  // EUR/USD per la conversione opzionale
+  let eurusd = null;
+  try { const fx = await fetchYahoo('EURUSD=X'); if(fx && fx.price) eurusd = fx.price; } catch(e){}
+  if(hist){
+    if(live){
+      const nowYm = _ym(new Date());
+      const lastIdx = hist.findIndex(h=>h.ym===nowYm);
+      if(lastIdx>-1) hist[lastIdx].close = live;
+      else hist.push({ym:nowYm, close:live});
+    }
+    dca.history = hist;
+    dca.historyAt = new Date().toISOString();
+  }
+  if(eurusd) dca.eurusd = eurusd;
+  save();
+  renderDca();
+  if(btn){ btn.disabled=false; btn.textContent='↻ Prezzi storici'; }
+}
+
+// IRR annualizzato (money-weighted) su flussi datati. Bisezione su NPV=0.
+function _dcaXirr(flows){
+  if(flows.length < 2) return null;
+  const t0 = flows[0].date.getTime();
+  const yrs = f => (f.date.getTime() - t0) / (365.25*24*3600*1000);
+  const npv = r => flows.reduce((s,f)=> s + f.amount/Math.pow(1+r, yrs(f)), 0);
+  let lo=-0.95, hi=5, flo=npv(lo), fhi=npv(hi);
+  if(flo*fhi > 0) return null;
+  for(let i=0;i<100;i++){
+    const mid=(lo+hi)/2, fm=npv(mid);
+    if(Math.abs(fm)<1e-6) return mid;
+    if(flo*fm < 0){ hi=mid; fhi=fm; } else { lo=mid; flo=fm; }
+  }
+  return (lo+hi)/2;
+}
+
+function renderDca(){
+  const kpiEl   = document.getElementById('dca-kpi');
+  const listEl  = document.getElementById('dca-list');
+  const metaEl  = document.getElementById('dca-meta');
+  const canvas  = document.getElementById('dca-chart');
+  if(!canvas) return; // non su questa tab
+  const dca = _ensureDca();
+  const tickerLbl = document.getElementById('dca-ticker-label');
+  if(tickerLbl) tickerLbl.textContent = dca.ticker || 'QQQ';
+
+  const contribs = (dca.contributions||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+
+  // currency
+  const eurusd = dca.eurusd || (state.finance?.etoro?.eurusd) || null;
+  const isEur  = _dcaCurrency==='EUR' && eurusd;
+  const fx     = isEur ? (1/eurusd) : 1;
+  const sym    = isEur ? '€' : '$';
+  const fmt = (v, dec=0)=> sym + (v||0).toLocaleString('it-IT', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  const fmtSigned = (v, dec=0)=> (v>=0?'+':'−') + sym + Math.abs(v||0).toLocaleString('it-IT', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+
+  if(!contribs.length){
+    if(kpiEl) kpiEl.innerHTML = '';
+    if(listEl) listEl.innerHTML = '';
+    if(metaEl) metaEl.textContent = '';
+    if(_dcaChart){ _dcaChart.destroy(); _dcaChart = null; }
+    const ctx0 = canvas.getContext('2d');
+    ctx0.clearRect(0,0,canvas.width,canvas.height);
+    ctx0.font = '13px JetBrains Mono'; ctx0.fillStyle = '#8a90a0'; ctx0.textAlign='center';
+    ctx0.fillText('Aggiungi le tue posizioni QQQ per vedere la forchetta dell\'interesse composto ↓', canvas.width/2, canvas.height/2);
+    return;
+  }
+
+  // ---- Build monthly timeline: invested vs total value ----
+  const histMap = {};
+  if(dca.history) dca.history.forEach(h=>{ histMap[h.ym] = h.close; });
+
+  const first = new Date(contribs[0].date + 'T00:00:00');
+  const now = new Date();
+  const months = [];
+  let cur = new Date(first.getFullYear(), first.getMonth(), 1);
+  const endM = new Date(now.getFullYear(), now.getMonth(), 1);
+  while(cur <= endM){ months.push(_ym(cur)); cur.setMonth(cur.getMonth()+1); }
+
+  // helper: ultima close nota a/ prima del mese
+  const sortedYms = dca.history ? dca.history.map(h=>h.ym) : [];
+  const closeAt = ym => {
+    if(histMap[ym]!=null) return histMap[ym];
+    let best=null;
+    for(const k of sortedYms){ if(k<=ym && (best===null || k>best)) best=k; }
+    return best!=null ? histMap[best] : null;
+  };
+
+  const labels = [], investedSeries = [], valueSeries = [];
+  for(const ym of months){
+    let inv=0, units=0;
+    for(const c of contribs){
+      if(c.date.slice(0,7) <= ym){ inv += c.units*c.price; units += c.units; }
+    }
+    const close = closeAt(ym);
+    labels.push(ym);
+    investedSeries.push(inv * fx);
+    valueSeries.push(close!=null ? units*close*fx : null);
+  }
+
+  // ---- KPIs ----
+  const totalInvested = contribs.reduce((s,c)=>s+c.units*c.price, 0);
+  const totalUnits    = contribs.reduce((s,c)=>s+c.units, 0);
+  const lastClose     = dca.history ? closeAt(_ym(now)) : null;
+  const currentValue  = lastClose!=null ? totalUnits*lastClose : null;
+  const profit        = currentValue!=null ? currentValue-totalInvested : null;
+  const profitPct     = (currentValue!=null && totalInvested) ? profit/totalInvested*100 : null;
+  const multiple      = (currentValue!=null && totalInvested) ? currentValue/totalInvested : null;
+
+  // IRR money-weighted
+  let irr = null;
+  if(currentValue!=null){
+    const flows = contribs.map(c=>({date:new Date(c.date+'T00:00:00'), amount:-(c.units*c.price)}));
+    flows.push({date:now, amount:currentValue});
+    irr = _dcaXirr(flows);
+  }
+
+  if(kpiEl){
+    const profCls = profit!=null ? (profit>=0?'up':'down') : '';
+    kpiEl.innerHTML = `
+      <div class="fin-kpi">
+        <div class="fin-kpi-label">Investito</div>
+        <div class="fin-kpi-val">${fmt(totalInvested*fx)}</div>
+        <div class="fin-kpi-sub">${contribs.length} posizioni · ${totalUnits.toLocaleString('it-IT',{maximumFractionDigits:2})} unità</div>
+      </div>
+      <div class="fin-kpi">
+        <div class="fin-kpi-label">Valore attuale</div>
+        <div class="fin-kpi-val">${currentValue!=null?fmt(currentValue*fx):'—'}</div>
+        <div class="fin-kpi-sub">${lastClose!=null?`${sym}${(lastClose*fx).toLocaleString('it-IT',{maximumFractionDigits:2})}/unità`:'carica i prezzi ↑'}</div>
+      </div>
+      <div class="fin-kpi">
+        <div class="fin-kpi-label">Profitto</div>
+        <div class="fin-kpi-val" style="color:${profit!=null?`var(--${profCls})`:'inherit'}">${profit!=null?fmtSigned(profit*fx):'—'}</div>
+        <div class="fin-kpi-sub" style="color:${profit!=null?`var(--${profCls})`:'inherit'}">${profitPct!=null?`${profitPct>=0?'+':''}${profitPct.toFixed(1)}%`:''}</div>
+      </div>
+      <div class="fin-kpi">
+        <div class="fin-kpi-label">Multiplo · Rendim. annuo</div>
+        <div class="fin-kpi-val">${multiple!=null?multiple.toFixed(2)+'×':'—'}</div>
+        <div class="fin-kpi-sub">${irr!=null?`${(irr*100).toFixed(1)}%/anno (IRR)`:''}</div>
+      </div>`;
+  }
+
+  // ---- Chart (the fork) ----
+  if(window.Chart){
+    const isLight = document.documentElement.dataset.theme==='light';
+    const gridColor = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
+    const textColor = isLight ? '#5a6070' : '#a4abb8';
+    if(_dcaChart) _dcaChart.destroy();
+    _dcaChart = new Chart(canvas.getContext('2d'), {
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          {label:'Valore totale', data:valueSeries, borderColor:'#4ade80', backgroundColor:'rgba(74,222,128,.18)', borderWidth:2, tension:.25, fill:true, pointRadius:0, pointHoverRadius:5, spanGaps:true},
+          {label:'Capitale investito', data:investedSeries, borderColor:'rgba(148,163,184,.9)', backgroundColor:'rgba(148,163,184,.16)', borderWidth:2, tension:.05, fill:true, pointRadius:0, pointHoverRadius:5, stepped:false}
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor: isLight?'#fff':'#0f1218', borderColor:gridColor, borderWidth:1,
+            titleColor:textColor, bodyColor:isLight?'#15161a':'#e6e8ee',
+            callbacks:{
+              label:(c)=> `${c.dataset.label}: ${c.parsed.y!=null ? sym+Math.round(c.parsed.y).toLocaleString('it-IT') : 'n/d'}`,
+              afterbody:(items)=>{
+                const v = items.find(i=>i.dataset.label==='Valore totale')?.parsed.y;
+                const inv = items.find(i=>i.dataset.label==='Capitale investito')?.parsed.y;
+                if(v!=null && inv!=null){ const p=v-inv; return `\nProfitto: ${(p>=0?'+':'−')}${sym}${Math.abs(Math.round(p)).toLocaleString('it-IT')} (${inv?((p/inv*100).toFixed(0)):0}%)`; }
+                return '';
+              }
+            }
+          }
+        },
+        scales:{
+          x:{grid:{color:gridColor,drawBorder:false}, ticks:{color:textColor,font:{size:10,family:'JetBrains Mono'},maxRotation:0,autoSkip:true,maxTicksLimit:8}},
+          y:{grid:{color:gridColor,drawBorder:false}, ticks:{color:textColor,font:{size:10,family:'JetBrains Mono'},callback:(v)=>sym+(v/1000).toFixed(0)+'k'}}
+        }
+      }
+    });
+  }
+
+  // ---- list ----
+  if(listEl){
+    const recent = contribs.slice().reverse();
+    listEl.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:.76rem">
+        <thead><tr style="color:var(--text-3);text-align:left;font-family:var(--mono);font-size:.66rem">
+          <th style="padding:6px 4px">Data</th><th style="padding:6px 4px;text-align:right">Unità</th>
+          <th style="padding:6px 4px;text-align:right">Prezzo</th><th style="padding:6px 4px;text-align:right">Investito</th><th></th>
+        </tr></thead>
+        <tbody>
+        ${recent.map(c=>`
+          <tr style="border-top:1px solid var(--hair)">
+            <td style="padding:6px 4px;font-family:var(--mono)">${c.date}</td>
+            <td style="padding:6px 4px;text-align:right;font-family:var(--mono)">${c.units.toLocaleString('it-IT',{maximumFractionDigits:4})}</td>
+            <td style="padding:6px 4px;text-align:right;font-family:var(--mono)">$${c.price.toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+            <td style="padding:6px 4px;text-align:right;font-family:var(--mono)">$${(c.units*c.price).toLocaleString('it-IT',{maximumFractionDigits:0})}</td>
+            <td style="padding:6px 4px;text-align:right"><button class="btn ghost sm" onclick="delDcaContribution('${c.id}')" style="font-size:.62rem;padding:2px 7px;color:var(--down)">✕</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  if(metaEl){
+    const ts = dca.historyAt ? new Date(dca.historyAt).toLocaleString('it-IT') : null;
+    metaEl.textContent = [
+      ts ? `Prezzi storici aggiornati: ${ts}` : 'Prezzi storici non ancora caricati — clicca ↻ Prezzi storici',
+      'Valore basato su prezzi adjusted (dividendi inclusi)',
+      isEur && eurusd ? `EUR/USD: ${eurusd.toFixed(4)}` : ''
     ].filter(Boolean).join(' · ');
   }
 }
