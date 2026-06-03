@@ -1,0 +1,99 @@
+{
+  "slug": "hidden-gems-meduca-2026-06-01",
+  "title": "Hidden Gems of Lake Como",
+  "subtitle": "6 Hours Private Tour Proposal",
+  "date": "1 June 2026",
+  "location": "Como",
+  "cover_image": "cover-lake-boat",
+  "intro_title": "An elegant day on the water",
+  "intro": "A 6-hour private experience that pairs effortless cruising on Lake Como with a relaxing stop for lunch at the Grand Hotel Tremezzo. You will glide past the lake's most iconic villas — from Villa d'Este to George Clooney's and the Hollywood villas of Gucci, Star Wars and Casino Royale — before discovering hidden waterfalls and timeless lakeside towns. Departure from Como with a chilled Prosecco aperitivo on board.",
+  "schedule": {
+    "departure": "Como · 11:00",
+    "return": "Como · 17:00",
+    "duration": "6 hours",
+    "guests": "Private · 1 boat"
+  },
+  "itinerary": [
+    "Villa Olmo & Villa Geno",
+    "Villa Erba · Villa d'Este · Villa Versace",
+    "George Clooney's Villa",
+    "Villa La Cassinella",
+    "Villa Balbiano — House of Gucci",
+    "Villa del Balbianello — Star Wars & Casino Royale",
+    "Isola Comacina — the only island of the lake",
+    "Tremezzo · lunch at Grand Hotel Tremezzo",
+    "Bellagio — the pearl of the lake",
+    "Varenna",
+    "Villa Melzi Gardens · Lezzeno",
+    "Orrido di Nesso — hidden waterfall",
+    "Villa Pliniana · Mandarin Oriental"
+  ],
+  "highlights": [
+    {
+      "name": "Villa Pliniana",
+      "tagline": "Tour Highlight",
+      "desc": "A historic 16th-century villa on Lake Como, in Torno. A scenic waterfall runs through the property, creating a dramatic natural feature behind the villa.",
+      "images": ["villa-pliniana-1", "villa-pliniana-2"]
+    },
+    {
+      "name": "Villa La Cassinella",
+      "tagline": "Tour Highlight",
+      "desc": "A luxurious private villa on the shores of Lake Como, known for its stunning views and exclusive, secluded setting. Accessible only by boat, it is one of the most prestigious and private residences in the region.",
+      "images": ["villa-cassinella-1", "villa-cassinella-2"]
+    },
+    {
+      "name": "Villa del Balbianello",
+      "tagline": "Tour Highlight",
+      "desc": "Disembark at the exclusive FAI dock for a self-guided walk through the lush terraced gardens of one of the most photographed landmarks on the lake, featured in Star Wars and James Bond films.",
+      "images": ["villa-balbianello-1", "villa-balbianello-2"]
+    },
+    {
+      "name": "Bellagio",
+      "tagline": "Stop & Explore",
+      "desc": "Step ashore for a gelato stop in the charming cobbled streets of Bellagio, often referred to as the pearl of Lake Como.",
+      "images": ["bellagio-1", "bellagio-2"]
+    },
+    {
+      "name": "Orrido di Nesso",
+      "tagline": "Tour Highlight",
+      "desc": "A breathtaking natural gorge where a powerful waterfall flows through the village of Nesso, passing under a picturesque medieval stone bridge — one of the most photogenic hidden gems of the lake, best admired from the water.",
+      "images": ["orrido-nesso-1", "orrido-nesso-2", "orrido-nesso-3"]
+    },
+    {
+      "name": "Varenna",
+      "tagline": "Stop & Explore",
+      "desc": "Disembark and wander the romantic lanes of Varenna, enjoying a gelato in one of the most enchanting villages on the eastern shore.",
+      "images": ["varenna-1", "varenna-2"]
+    }
+  ],
+  "boat": {
+    "name": "Gozzo Sorrentino",
+    "desc": "A traditional Italian wooden boat, common along the Mediterranean coasts. Stable and elegant in its simplicity, it is the authentic way to enjoy the lake — calm, intimate and timeless.",
+    "images": ["boat-7", "boat-2", "boat-3", "boat-4", "boat-5", "boat-6"]
+  },
+  "extras": [
+    { "title": "Franciacorta", "desc": "2 bottles of fine Italian sparkling wine", "image": "extra-1" },
+    { "title": "Photographer", "desc": "4 hours · 40 edited pictures", "image": "extra-3" },
+    { "title": "Flower Bouquet", "desc": "A fresh seasonal bouquet on board", "image": "extra-2" }
+  ],
+  "included": [
+    "English Speaking Captain",
+    "Soft Drinks & Prosecco",
+    "Fuel",
+    "Insurance",
+    "Tax"
+  ],
+  "pricing": {
+    "label": "One exclusive boat, all inclusive",
+    "base": 1850,
+    "extras_total": 590,
+    "total": 2440,
+    "currency": "€",
+    "note": "6 hours"
+  },
+  "contacts": {
+    "email": "info@comoonboat.com",
+    "ig": "@comoonboat",
+    "phone": "+39 351 363 0708"
+  }
+}
