@@ -554,8 +554,13 @@ ul.clean li:last-child{border-bottom:none}
 /* Stats */
 .bs-stats-bar{display:flex;gap:18px;flex-wrap:wrap;align-items:center;font-size:.8rem}
 .bs-kpi{display:flex;flex-direction:column;gap:3px;min-width:72px}
-.bs-kpi-val{font-size:1.5rem;font-weight:800;color:#fff;font-family:var(--mono);line-height:1}
+.bs-kpi-val{font-size:1.5rem;font-weight:800;color:var(--text);font-family:var(--mono);line-height:1}
 .bs-kpi-label{font-size:.64rem;color:var(--muted2);text-transform:uppercase;letter-spacing:.6px}
+/* Toggle compatto per il form note */
+.bs-add-toggle{margin-left:auto;font-size:.66rem;font-weight:700;padding:2px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--accent);cursor:pointer;text-transform:none;letter-spacing:0;transition:all .15s}
+.bs-add-toggle:hover{border-color:var(--accent);background:rgba(0,229,255,.08)}
+/* Cronologia lettura (read-only) */
+.bs-hist-empty{color:var(--muted);font-size:.76rem;padding:6px 0}
 .bss-range.active{background:rgba(0,229,255,.15);color:var(--accent);border-color:var(--accent)}
 .bs-stat{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px}
 .bs-stat-val{font-size:1.4rem;font-weight:800;color:var(--accent);line-height:1}
@@ -1421,41 +1426,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <div class="matrix-todo-drag-hint">↕ Trascina un todo da "Da fare oggi" in un quadrante, oppure aggiungilo direttamente qui</div>
   </div>
 
-  <!-- SEP: INBOX (ordine CSS = 9) -->
-  <div class="oggi-section-sep" id="oggi-sep-inbox"><span>📬 Inbox</span></div>
-
-  <!-- MAIL PRIORITARIE (ordine CSS = 8) -->
-  <div class="mail-grid" id="today-mail-grid">
-    <div class="card mail-card" id="gmail-priority-card">
-      <div class="mail-box-head" onclick="toggleMailCard('gmail')">
-        <h2><span class="mail-logo gmail" aria-hidden="true">M</span> Gmail · da leggere</h2>
-        <div class="mail-head-right">
-          <div class="mail-meta" id="gmail-priority-meta">In attesa</div>
-          <span class="chevron">▾</span>
-        </div>
-      </div>
-      <div class="mail-body">
-        <div class="mail-list" id="gmail-priority-list">
-          <div class="mail-empty">Nessun riepilogo Gmail ancora salvato.</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card mail-card" id="outlook-priority-card">
-      <div class="mail-box-head" onclick="toggleMailCard('outlook')">
-        <h2><span class="mail-logo outlook" aria-hidden="true">O</span> Outlook · da leggere</h2>
-        <div class="mail-head-right">
-          <div class="mail-meta" id="outlook-priority-meta">In attesa</div>
-          <span class="chevron">▾</span>
-        </div>
-      </div>
-      <div class="mail-body">
-        <div class="mail-list" id="outlook-priority-list">
-          <div class="mail-empty">Nessun riepilogo Outlook ancora salvato.</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Sezione Inbox (Gmail/Outlook) rimossa: il sync mail non è più attivo -->
 
 </section>
 
@@ -3000,7 +2971,20 @@ function _bsRestoreDrafts(){
   Object.keys(_bsDrafts).forEach(id=>{
     const el = document.getElementById(id);
     if(el && _bsDrafts[id] !== undefined && _bsDrafts[id] !== '') el.value = _bsDrafts[id];
+    // se c'è una bozza di nota non salvata, riapri il relativo form (è nascosto di default)
+    if(/^bstxt-/.test(id) && _bsDrafts[id]){
+      const form = document.getElementById('bsform-' + id.slice('bstxt-'.length));
+      if(form) form.style.display = 'flex';
+    }
   });
+}
+
+function toggleBsNoteForm(id){
+  const form = document.getElementById('bsform-' + id);
+  if(!form) return;
+  const show = form.style.display === 'none' || !form.style.display;
+  form.style.display = show ? 'flex' : 'none';
+  if(show){ const ta = document.getElementById('bstxt-' + id); if(ta) ta.focus(); }
 }
 
 function _bsMigrateOnce(){
@@ -3424,8 +3408,10 @@ function renderBookshelf(){
         </div>`:''}
 
         <div class="bs-section">
-          <div class="bs-section-title">📝 Le tue note <span class="count">${noteCount}</span></div>
-          <div class="bs-add-note">
+          <div class="bs-section-title">📝 Le tue note <span class="count">${noteCount}</span>
+            <button class="bs-add-toggle" onclick="toggleBsNoteForm('${b.id}')">+ Aggiungi nota</button>
+          </div>
+          <div class="bs-add-note" id="bsform-${b.id}" style="display:none">
             <select id="bsnt-${b.id}">
               <option value="nota">📝 Nota</option>
               <option value="citazione">💬 Citazione</option>
@@ -3441,20 +3427,10 @@ function renderBookshelf(){
           <div class="bs-notes-list">${notesHtml}</div>
         </div>
 
-        <div class="bs-section">
-          <div class="bs-section-title">📅 Sessioni di lettura <span class="count">${sessCount}</span></div>
-          <div class="bs-session-add">
-            <input type="date" id="bssess-date-${b.id}" value="${todayISO()}"/>
-            <span style="font-size:.72rem;color:var(--muted2)">da pag</span>
-            <input type="number" id="bssess-from-${b.id}" placeholder="${b.currentPage||0}" min="0"/>
-            <span style="font-size:.72rem;color:var(--muted2)">a pag</span>
-            <input type="number" id="bssess-to-${b.id}" placeholder="" min="0"/>
-            <span style="font-size:.72rem;color:var(--muted2)">·</span>
-            <input type="number" id="bssess-min-${b.id}" placeholder="min" min="0"/>
-            <button class="btn sm" onclick="addBookSession('${b.id}')">+ Sessione</button>
-          </div>
+        ${sessCount?`<div class="bs-section">
+          <div class="bs-section-title">📅 Cronologia lettura <span class="count">${sessCount}</span></div>
           <div class="bs-session-list">${sessionsHtml}</div>
-        </div>
+        </div>`:''}
 
         <div class="bs-section">
           <div class="bs-section-title">⚙️ Dettagli</div>
