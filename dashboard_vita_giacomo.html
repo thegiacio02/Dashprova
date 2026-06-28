@@ -1528,6 +1528,7 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <span style="display:flex;align-items:center;gap:8px">
         <span id="chiusure-meta" style="font-size:.72rem;color:var(--muted)">In attesa</span>
         <button class="btn ghost sm" onclick="refreshChiusure()" id="chiusure-refresh-btn" style="font-size:.72rem;padding:4px 10px">↻ Aggiorna</button>
+        <button class="btn ghost sm" onclick="configureCalendarSync()" title="Configura sync Google Calendar" style="font-size:.72rem;padding:4px 8px">⚙</button>
       </span>
     </h2>
     <p style="font-size:.78rem;color:var(--muted2);margin-bottom:14px">Tour aggiunti oggi sul calendario lavoro, in ordine cronologico di inserimento. Spunta "Aggiunto a sheet" appena trasferisci al foglio.</p>
@@ -2601,6 +2602,7 @@ async function authCheck() {
     overlay.style.display = 'none';
     await loadPrivateSettings();
     await loadStateFromFirestore();
+    migrateCalendarSyncToFirestore();
     if(!dashStarted){
       dashStarted = true;
       dashInit();
@@ -5564,6 +5566,23 @@ function _calSyncToken(){
   return (state.calendarSyncToken || '').trim() || (localStorage.getItem('dash_calendar_sync_token') || '').trim();
 }
 
+// Le vecchie configurazioni del sync calendario venivano salvate SOLO in localStorage
+// (quindi funzionavano solo sul PC originale). Qui le promuoviamo nello state sincronizzato
+// su Firestore così "Aggiorna" funziona da qualsiasi dispositivo.
+function migrateCalendarSyncToFirestore(){
+  try{
+    const lsUrl = (localStorage.getItem('dash_calendar_sync_url') || '').trim();
+    const lsTok = (localStorage.getItem('dash_calendar_sync_token') || '').trim();
+    let changed = false;
+    if(lsUrl && !(state.calendarSyncUrl || '').trim()){ state.calendarSyncUrl = lsUrl; changed = true; }
+    if(lsTok && !(state.calendarSyncToken || '').trim()){ state.calendarSyncToken = lsTok; changed = true; }
+    if(changed){
+      save();
+      console.log('Calendar sync config migrata su Firestore (ora disponibile su tutti i dispositivi).');
+    }
+  }catch(e){ console.warn('migrateCalendarSyncToFirestore:', e.message); }
+}
+
 function configureCalendarSync(){
   const cur = _calSyncUrl();
   const url = prompt('URL Web App di Google Apps Script (lascia vuoto per disabilitare):', cur);
@@ -5830,6 +5849,10 @@ async function refreshChiusure(){
       }catch(e){
         console.warn('Chiusure sync failed:', e.message);
       }
+    }else{
+      // Sync non configurato su QUESTO dispositivo: avvisa l'utente invece di non fare nulla
+      if(meta) meta.textContent = 'Sync non configurato su questo dispositivo';
+      alert('Il sync con Google Calendar non è ancora configurato su questo dispositivo.\n\nApri la dashboard sul PC dove funziona (così la configurazione viene salvata su Firestore), oppure clicca ⚙ per inserire URL e token anche qui.');
     }
     await loadStateFromFirestore();
     renderChiusure();
