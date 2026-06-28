@@ -758,6 +758,11 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fl-tag-badge{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px}
 .fl-ticker{font-size:.65rem;font-family:var(--mono);color:var(--accent);background:rgba(0,229,255,.08);padding:2px 7px;border-radius:4px;border:1px solid rgba(0,229,255,.2);font-weight:700}
 .fl-thought-date{font-size:.63rem;color:var(--muted);font-family:var(--mono);margin-left:auto}
+/* fl-thought / fl-concept: in tema chiaro usa superfici chiare e testo scuro (i colori dark hardcoded rendevano i box scuri illeggibili) */
+[data-theme="light"] .fl-thought{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+[data-theme="light"] .fl-thought:hover{background:var(--surface-2)}
+[data-theme="light"] .fl-thought-title{color:var(--text)}
+[data-theme="light"] .fl-concept{background:var(--surface)}
 
 .fl-tag-filter-btn{font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--muted2);cursor:pointer;font-family:var(--mono);text-transform:uppercase;letter-spacing:.4px;transition:all .15s}
 .fl-tag-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.08)}
