@@ -221,6 +221,20 @@ nav.tabs{display:none}
 .goal-controls button{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:6px;font-size:.74rem;cursor:pointer;font-weight:600}
 .goal-controls button:hover{border-color:var(--teal);color:var(--teal)}
 .goal-controls .gc-danger:hover{color:var(--red);border-color:var(--red)}
+.goal-controls .gc-done{background:var(--green);border-color:var(--green);color:#fff}
+.goal-controls .gc-done:hover{opacity:.88;color:#fff;border-color:var(--green)}
+.goal-controls .gc-undo:hover{color:var(--muted2);border-color:var(--muted2)}
+/* Badge tipo obiettivo */
+.goal-type-badge{font-size:.72rem;margin-left:4px;opacity:.65;cursor:default}
+/* Tappe inline nella card (per obiettivi a tappe / traguardo) */
+.goal-ms-inline{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;align-items:center}
+.goal-ms-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:18px;border:1px solid var(--border);background:var(--surface2);font-size:.76rem;cursor:pointer;transition:all .15s;color:var(--text)}
+.goal-ms-chip input[type=checkbox]{width:13px;height:13px;cursor:pointer;margin:0}
+.goal-ms-chip.done{background:rgba(34,197,94,.10);border-color:rgba(34,197,94,.4)}
+.goal-ms-chip.done span{text-decoration:line-through;color:var(--muted2)}
+.goal-ms-empty{font-size:.74rem;color:var(--muted);font-style:italic}
+.goal-ms-add.inline{flex:0 0 auto;margin-top:0}
+.goal-ms-add.inline input{width:150px;flex:0 0 auto;font-size:.76rem;padding:4px 9px;border-radius:18px}
 .goal-details{display:none;border-top:1px solid var(--border);margin-top:12px;padding-top:12px}
 .goal-card.open .goal-details{display:block}
 .goal-card.open .goal-chevron{transform:rotate(180deg)}
@@ -1602,50 +1616,25 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <!-- Stats overview -->
     <div class="goals-overview" id="goals-overview" style="margin-top:14px"></div>
 
-    <!-- AI goal planner -->
-    <div class="goal-planner">
-      <div class="goal-planner-head">
-        <div>
-          <div class="goal-planner-title"><span class="ico">🧭</span> Pianificatore AI</div>
-          <div class="goal-planner-sub">Scrivi un obiettivo: lo trasformo in milestone, piano settimanale e task datate applicabili alla dashboard.</div>
-        </div>
-        <button class="btn ghost sm" onclick="clearGoalPlan()" style="font-size:.72rem;padding:4px 10px">Svuota</button>
-      </div>
-      <div class="goal-planner-grid">
-        <input class="wide" type="text" id="plan-goal-title" placeholder="Obiettivo (es. preparare esame X entro 20 giorni)"/>
-        <input type="date" id="plan-goal-deadline"/>
-        <select id="plan-goal-area">
-          <option value="">Area</option>
-          <option value="double">💼 Double</option>
-          <option value="como">⛵ Como</option>
-          <option value="francese">🇫🇷 Francese</option>
-          <option value="lettura">📚 Lettura</option>
-          <option value="sport">🏋️ Sport</option>
-          <option value="social">🤝 Social</option>
-          <option value="personale">👤 Personale</option>
-        </select>
-        <select id="plan-goal-intensity">
-          <option value="normal">Ritmo normale</option>
-          <option value="light">Leggero</option>
-          <option value="intense">Intenso</option>
-        </select>
-      </div>
-      <textarea id="plan-goal-notes" rows="2" placeholder="Vincoli o contesto opzionale: giorni disponibili, materiale, difficoltà, cosa evitare…"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
-        <button class="btn sm" id="goal-plan-generate-btn" onclick="generateGoalPlan()">✨ Genera piano</button>
-        <button class="btn ghost sm" onclick="applyGoalPlan()" id="goal-plan-apply-btn" disabled>✓ Applica a obiettivi + task</button>
-        <span id="goal-plan-status" style="font-size:.76rem;color:var(--muted2)"></span>
-      </div>
-      <div id="goal-plan-preview" class="goal-plan-preview"></div>
-    </div>
+    <!-- Pianificatore AI rimosso su richiesta -->
 
     <!-- Add goal form -->
     <div class="goal-add-form" id="goal-add-form">
       <div style="font-size:.8rem;font-weight:700;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">Nuovo obiettivo</div>
       <div class="row" style="margin-bottom:10px">
-        <input type="text" id="goal-title" placeholder="Titolo (es. 12 libri letti) *" style="flex:2;min-width:200px"/>
+        <input type="text" id="goal-title" placeholder="Titolo *" style="flex:2;min-width:200px"/>
+        <select id="goal-type" onchange="_onGoalTypeChange()" style="flex:0 0 200px">
+          <option value="numeric">🔢 Numerico — conta verso N</option>
+          <option value="milestone">✅ A tappe — checklist</option>
+          <option value="binary">🎯 Traguardo — Sì/No</option>
+        </select>
+      </div>
+      <div class="row" style="margin-bottom:10px" id="goal-numeric-fields">
         <input type="number" id="goal-target" placeholder="Target *" min="1" style="flex:0 0 110px"/>
         <input type="text" id="goal-unit" placeholder="unità (libri, %, …)" style="flex:0 0 130px"/>
+      </div>
+      <div class="row" id="goal-type-hint" style="margin-bottom:10px;display:none">
+        <span style="font-size:.74rem;color:var(--muted2);line-height:1.4">Crea l'obiettivo, poi aggiungi le <strong>tappe</strong> nei dettagli: la barra avanza man mano che le spunti.</span>
       </div>
       <div class="row" style="margin-bottom:10px">
         <input type="text" id="goal-desc" placeholder="Perché conta? (motivazione)" style="flex:3;min-width:200px"/>
@@ -4520,13 +4509,34 @@ function renderHabits(){
 
 // ============ OBIETTIVI ============
 let _goalFilter = 'tutti';
+const _goalOpenIds = new Set(); // dettagli espansi: preservati tra re-render
 
 function _goalEnsureShape(g){
   if(g.priority === undefined) g.priority = 'medium';
   if(!Array.isArray(g.milestones)) g.milestones = [];
   if(!Array.isArray(g.log)) g.log = [];
   if(!g.created) g.created = todayISO();
+  if(!g.type) g.type = 'numeric';
   return g;
+}
+
+// Progresso effettivo a seconda del tipo di obiettivo.
+// numeric  → current/target (unità libere)
+// milestone→ tappe spuntate / tappe totali
+// binary   → 0 o 1 (Sì/No)
+function _goalProgress(g){
+  if(g.type === 'milestone'){
+    const ms = g.milestones || [];
+    const total = ms.length;
+    const done = ms.filter(m=>m.done).length;
+    return {current:done, target:total, pct: total>0 ? (done/total)*100 : 0, unit:'tappe', display:`${done} / ${total||'?'} tappe`};
+  }
+  if(g.type === 'binary'){
+    const done = (g.current||0) >= 1;
+    return {current:done?1:0, target:1, pct:done?100:0, unit:'', display: done ? '🎯 Raggiunto' : 'Non ancora raggiunto'};
+  }
+  const cur = g.current||0, tgt = g.target||0;
+  return {current:cur, target:tgt, pct: tgt>0 ? Math.min(100,(cur/tgt)*100) : 0, unit:g.unit||'', display:`${cur} / ${tgt} ${g.unit||''}`.trim()};
 }
 
 function _goalDaysBetween(a, b){
@@ -4536,24 +4546,26 @@ function _goalDaysBetween(a, b){
 }
 
 function _goalPace(g){
-  // Restituisce {state:'in-linea'|'in-anticipo'|'in-ritardo'|'completato'|'scaduto', expected, daysLeft}
-  const pct = g.target > 0 ? (g.current/g.target)*100 : 0;
+  // Restituisce {state:'in-linea'|'in-anticipo'|'in-ritardo'|'completato'|'scaduto', expected, daysLeft, prog}
+  const prog = _goalProgress(g);
   const today = todayISO();
-  if(pct >= 100) return {state:'completato', expected:g.target, daysLeft:null};
+  if(prog.pct >= 100) return {state:'completato', expected:prog.target, daysLeft:null, prog};
   const daysLeft = g.deadline ? _goalDaysBetween(today, g.deadline) : null;
-  if(daysLeft !== null && daysLeft < 0) return {state:'scaduto', expected:g.target, daysLeft};
-  if(!g.deadline || !g.created) return {state:'in-linea', expected:null, daysLeft};
+  if(daysLeft !== null && daysLeft < 0) return {state:'scaduto', expected:prog.target, daysLeft, prog};
+  // Traguardo Sì/No: nessun ritmo lineare, o è raggiunto o no
+  if(g.type === 'binary') return {state:'in-linea', expected:null, daysLeft, prog};
+  if(!g.deadline || !g.created) return {state:'in-linea', expected:null, daysLeft, prog};
   const totalDays = _goalDaysBetween(g.created, g.deadline);
-  if(totalDays <= 0) return {state:'in-linea', expected:null, daysLeft};
+  if(totalDays <= 0) return {state:'in-linea', expected:null, daysLeft, prog};
   const elapsed = _goalDaysBetween(g.created, today);
-  const expected = Math.min(g.target, g.target * (elapsed/totalDays));
-  if(elapsed <= 0) return {state:'in-linea', expected:0, daysLeft};
-  const ratio = g.current / expected;
+  const expected = Math.min(prog.target, prog.target * (elapsed/totalDays));
+  if(elapsed <= 0) return {state:'in-linea', expected:0, daysLeft, prog};
+  const ratio = prog.current / (expected || 1);
   let stateName;
   if(ratio >= 1.10) stateName = 'in-anticipo';
   else if(ratio < 0.85) stateName = 'in-ritardo';
   else stateName = 'in-linea';
-  return {state:stateName, expected, daysLeft};
+  return {state:stateName, expected, daysLeft, prog};
 }
 
 function toggleAddGoalForm(){
@@ -4561,19 +4573,38 @@ function toggleAddGoalForm(){
   const b = document.getElementById('goal-add-btn');
   const open = f.classList.toggle('open');
   b.textContent = open ? '× Chiudi' : '+ Obiettivo';
-  if(open) document.getElementById('goal-title').focus();
+  if(open){ _onGoalTypeChange(); document.getElementById('goal-title').focus(); }
+}
+
+// Mostra/nasconde i campi target+unità in base al tipo selezionato
+function _onGoalTypeChange(){
+  const type = document.getElementById('goal-type')?.value || 'numeric';
+  const numFields = document.getElementById('goal-numeric-fields');
+  const hint = document.getElementById('goal-type-hint');
+  if(numFields) numFields.style.display = type === 'numeric' ? '' : 'none';
+  if(hint) hint.style.display = type === 'milestone' ? 'flex' : 'none';
 }
 
 function addGoal(){
   ensureState();
   const title = document.getElementById('goal-title').value.trim();
-  const target = parseFloat(document.getElementById('goal-target').value);
-  if(!title || !target) { alert('Titolo e target obbligatori'); return; }
+  const type = document.getElementById('goal-type')?.value || 'numeric';
+  if(!title){ alert('Titolo obbligatorio'); return; }
+  let target = 0, unit = '';
+  if(type === 'numeric'){
+    target = parseFloat(document.getElementById('goal-target').value);
+    if(!target){ alert('Per un obiettivo numerico serve il target.'); return; }
+    unit = document.getElementById('goal-unit').value.trim() || '';
+  } else if(type === 'binary'){
+    target = 1;
+  } else { // milestone
+    target = 0; // derivato dalle tappe
+    unit = 'tappe';
+  }
   const g = {
-    id:uid(), title,
+    id:uid(), title, type,
     desc: document.getElementById('goal-desc').value.trim(),
-    target, current:0,
-    unit: document.getElementById('goal-unit').value.trim() || '',
+    target, current:0, unit,
     deadline: document.getElementById('goal-deadline').value || null,
     area: document.getElementById('goal-area').value || null,
     priority: document.getElementById('goal-priority').value || 'medium',
@@ -4585,7 +4616,10 @@ function addGoal(){
   ['goal-title','goal-desc','goal-target','goal-unit','goal-deadline'].forEach(i=>document.getElementById(i).value='');
   document.getElementById('goal-area').value='';
   document.getElementById('goal-priority').value='medium';
+  const typeSel = document.getElementById('goal-type'); if(typeSel) typeSel.value='numeric';
   toggleAddGoalForm();
+  // Per obiettivi a tappe/traguardo apri subito i dettagli così l'utente aggiunge i passi
+  if(type === 'milestone' || type === 'binary') _goalOpenIds.add(g.id);
   save(); renderGoals();
 }
 
@@ -4895,7 +4929,9 @@ function delGoal(id){
 }
 
 function toggleGoalDetails(id){
-  document.getElementById('goal-card-'+id)?.classList.toggle('open');
+  const card = document.getElementById('goal-card-'+id);
+  const open = card ? card.classList.toggle('open') : !_goalOpenIds.has(id);
+  if(open) _goalOpenIds.add(id); else _goalOpenIds.delete(id);
 }
 
 function addGoalMilestone(id){
@@ -4910,6 +4946,32 @@ function addGoalMilestone(id){
   save(); renderGoals();
   document.getElementById('goal-card-'+id)?.classList.add('open');
   setTimeout(()=>document.getElementById('goal-ms-input-'+id)?.focus(), 50);
+}
+
+// Aggiunta tappa dalla card principale (per obiettivi a tappe / traguardo)
+function addGoalMilestoneInline(id){
+  const inp = document.getElementById('goal-msq-'+id);
+  if(!inp) return;
+  const text = inp.value.trim();
+  if(!text) return;
+  const g = state.goals.find(x=>x.id===id); if(!g) return;
+  _goalEnsureShape(g);
+  g.milestones.push({id:uid(), text, done:false});
+  inp.value='';
+  save(); renderGoals();
+  setTimeout(()=>document.getElementById('goal-msq-'+id)?.focus(), 50);
+}
+
+// Traguardo Sì/No: segna raggiunto o annulla
+function setGoalBinaryDone(id, isDone){
+  const g = state.goals.find(x=>x.id===id); if(!g) return;
+  _goalEnsureShape(g);
+  g.type = 'binary';
+  g.target = 1;
+  g.current = isDone ? 1 : 0;
+  (g.log = g.log || []).push({id:uid(), date:todayISO(), delta:0, value:g.current, note: isDone ? '🎯 Traguardo raggiunto' : '↩ Traguardo annullato'});
+  if(isDone) g.completedAt = todayISO(); else g.completedAt = null;
+  save(); renderGoals();
 }
 
 function toggleGoalMilestone(goalId, msId){
@@ -4946,11 +5008,11 @@ function _renderGoalsOverview(){
   if(!w) return;
   const all = state.goals;
   const today = todayISO();
-  const done = all.filter(g=>g.target>0 && (g.current/g.target)>=1).length;
-  const late = all.filter(g=>g.deadline && g.deadline<today && (g.target<=0 || g.current/g.target<1)).length;
+  const done = all.filter(g=>_goalProgress(g).pct>=100).length;
+  const late = all.filter(g=>g.deadline && g.deadline<today && _goalProgress(g).pct<100).length;
   const behind = all.filter(g=>_goalPace(g).state==='in-ritardo').length;
   const ahead = all.filter(g=>_goalPace(g).state==='in-anticipo').length;
-  const avgPct = all.length ? Math.round(all.reduce((a,g)=>a+Math.min(100,(g.target>0?(g.current/g.target)*100:0)),0)/all.length) : 0;
+  const avgPct = all.length ? Math.round(all.reduce((a,g)=>a+_goalProgress(g).pct,0)/all.length) : 0;
   // Earliest deadline for "days left"
   const upcoming = all.filter(g=>g.deadline && g.deadline>=today).sort((a,b)=>a.deadline.localeCompare(b.deadline));
   const nextDeadline = upcoming[0]?.deadline;
@@ -4968,8 +5030,8 @@ function _renderGoalsOverview(){
 
 function _goalSortFn(a,b){
   const mode = document.getElementById('goals-sort')?.value || 'pace';
-  const pctA = a.target>0?(a.current/a.target):0;
-  const pctB = b.target>0?(b.current/b.target):0;
+  const pctA = _goalProgress(a).pct;
+  const pctB = _goalProgress(b).pct;
   const prioMap = {high:0, medium:1, low:2};
   const paceOrder = {'scaduto':0,'in-ritardo':1,'in-linea':2,'in-anticipo':3,'completato':4};
   switch(mode){
@@ -5021,16 +5083,18 @@ function renderGoals(){
   const prioLabel = {high:'Alta', medium:'Media', low:'Bassa'};
   const paceLabel = {'completato':'✓ Completato','in-anticipo':'🚀 In anticipo','in-linea':'✓ In linea','in-ritardo':'⚠ In ritardo','scaduto':'⛔ Scaduto'};
 
+  const typeBadge = {numeric:'🔢', milestone:'✅', binary:'🎯'};
   c.innerHTML = filtered.map(g=>{
-    const pct = g.target>0 ? Math.min(100, (g.current/g.target)*100) : 0;
     const pace = _goalPace(g);
+    const prog = pace.prog;
+    const pct = prog.pct;
     const done = pace.state==='completato';
     const late = pace.state==='scaduto';
     const behind = pace.state==='in-ritardo';
     const ahead = pace.state==='in-anticipo';
     const cls = pct>=80?'green':pct>=40?'yellow':'red';
     const area = g.area && AREAS[g.area];
-    const expectedPct = (pace.expected!==null && pace.expected!==undefined && g.target>0) ? Math.min(100,(pace.expected/g.target)*100) : null;
+    const expectedPct = (pace.expected!==null && pace.expected!==undefined && prog.target>0) ? Math.min(100,(pace.expected/prog.target)*100) : null;
     const daysLeft = pace.daysLeft;
     let daysLabel = '';
     if(daysLeft !== null && daysLeft !== undefined){
@@ -5043,12 +5107,13 @@ function renderGoals(){
     const msDone = ms.filter(m=>m.done).length;
     const logs = (g.log||[]).slice().reverse().slice(0,8);
 
-    return `<div class="goal-card ${done?'done':''} ${late?'late':''} ${behind?'behind':''} ${ahead?'ahead':''}" id="goal-card-${g.id}">
+    return `<div class="goal-card ${done?'done':''} ${late?'late':''} ${behind?'behind':''} ${ahead?'ahead':''}${_goalOpenIds.has(g.id)?' open':''}" id="goal-card-${g.id}">
       <div class="goal-head">
         <div style="flex:1;min-width:0">
           <div class="title">
             <span class="goal-prio-icon" title="Priorità ${prioLabel[g.priority]||''}">${prioIcon[g.priority]||'⚡'}</span>
             ${done?'✅ ':''}${escapeHtml(g.title)}
+            <span class="goal-type-badge" title="${g.type==='milestone'?'A tappe':g.type==='binary'?'Traguardo Sì/No':'Numerico'}">${typeBadge[g.type]||'🔢'}</span>
             ${area?`<span class="tag ${area.color}" style="font-size:.62rem">${area.icon} ${area.name}</span>`:''}
             <span class="goal-chevron" onclick="toggleGoalDetails('${g.id}')">▼</span>
           </div>
@@ -5060,7 +5125,7 @@ function renderGoals(){
       </div>
       ${g.desc?`<div class="goal-desc">${escapeHtml(g.desc)}</div>`:''}
       <div class="goal-progress">
-        <div class="vals">${g.current} / ${g.target} ${escapeHtml(g.unit||'')}</div>
+        <div class="vals">${escapeHtml(prog.display)}</div>
         <div class="bar">
           <div class="fill ${cls}" style="width:${pct}%"></div>
           ${expectedPct!==null?`<div class="expected-marker" style="left:${expectedPct}%" title="Atteso oggi: ${pace.expected.toFixed(1)}"></div>`:''}
@@ -5069,15 +5134,32 @@ function renderGoals(){
       </div>
       <div class="goal-pace-row">
         <span class="goal-pace-badge ${pace.state}">${paceLabel[pace.state]||pace.state}</span>
-        ${pace.expected!==null&&pace.expected!==undefined&&!done&&!late?`<span>Atteso oggi: <strong>${pace.expected.toFixed(1)}</strong> ${escapeHtml(g.unit||'')}</span>`:''}
-        ${ms.length?`<span>📋 ${msDone}/${ms.length} milestone</span>`:''}
+        ${g.type!=='binary'&&pace.expected!==null&&pace.expected!==undefined&&!done&&!late?`<span>Atteso oggi: <strong>${pace.expected.toFixed(1)}</strong> ${escapeHtml(prog.unit||'')}</span>`:''}
+        ${g.type==='numeric'&&ms.length?`<span>📋 ${msDone}/${ms.length} milestone</span>`:''}
         ${(g.log||[]).length?`<span>📝 ${(g.log||[]).length} update</span>`:''}
       </div>
+      ${(g.type==='milestone'||g.type==='binary')?`
+      <div class="goal-ms-inline">
+        ${ms.length ? ms.map(m=>`
+          <label class="goal-ms-chip ${m.done?'done':''}">
+            <input type="checkbox" ${m.done?'checked':''} onchange="toggleGoalMilestone('${g.id}','${m.id}')"/>
+            <span>${escapeHtml(m.text)}</span>
+          </label>`).join('') : '<span class="goal-ms-empty">Aggiungi i passi concreti qui →</span>'}
+        <div class="goal-ms-add inline">
+          <input type="text" id="goal-msq-${g.id}" placeholder="+ Aggiungi tappa…" onkeydown="if(event.key==='Enter')addGoalMilestoneInline('${g.id}')"/>
+          <button class="btn sm" onclick="addGoalMilestoneInline('${g.id}')">+</button>
+        </div>
+      </div>`:''}
       <div class="goal-controls">
+        ${g.type==='numeric'?`
         <button onclick="updateGoalProgress('${g.id}',1)" title="+1">+1</button>
         <button onclick="updateGoalProgress('${g.id}',-1)" title="-1">−1</button>
         <button onclick="setGoalProgress('${g.id}')">Imposta…</button>
-        <button onclick="logGoalProgress('${g.id}')" title="Aggiorna con nota">📝 Aggiorna</button>
+        <button onclick="logGoalProgress('${g.id}')" title="Aggiorna con nota">📝 Aggiorna</button>`:''}
+        ${g.type==='binary'?(done
+          ? `<button class="gc-undo" onclick="setGoalBinaryDone('${g.id}',false)">↩ Annulla traguardo</button>`
+          : `<button class="gc-done" onclick="setGoalBinaryDone('${g.id}',true)">🎯 Segna come raggiunto</button>`)
+        :''}
         <button onclick="toggleGoalDetails('${g.id}')">Dettagli ▾</button>
         <button class="gc-danger" onclick="delGoal('${g.id}')" title="Elimina">🗑</button>
       </div>
