@@ -816,6 +816,53 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .fin-kpi-sub{font-size:.7rem;color:var(--text-3);margin-top:4px;font-family:var(--mono)}
 .fin-kpi-sub.up{color:var(--up)}
 .fin-kpi-sub.down{color:var(--down)}
+/* ===== BUDGET MENSILE ===== */
+.budget-card{border-left:3px solid var(--teal)}
+.budget-hero{display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:linear-gradient(135deg,rgba(20,184,166,.10),rgba(139,92,246,.06));border:1px solid var(--border);border-radius:14px;padding:16px 20px;margin:6px 0 16px}
+.budget-hero.over{background:linear-gradient(135deg,rgba(239,68,68,.12),rgba(239,68,68,.04));border-color:rgba(239,68,68,.3)}
+.budget-hero.under{background:linear-gradient(135deg,rgba(34,197,94,.12),rgba(34,197,94,.04));border-color:rgba(34,197,94,.3)}
+.bg-daily{display:flex;flex-direction:column;gap:2px;flex:0 0 auto}
+.bg-daily-val{font-size:2.4rem;font-weight:800;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--text)}
+.bg-daily-val .cur{font-size:1.3rem;font-weight:700;opacity:.7;margin-right:2px}
+.bg-daily-lbl{font-size:.74rem;color:var(--muted2);font-weight:600}
+.bg-status{flex:1 1 200px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.bg-status-badge{align-self:flex-start;font-size:.72rem;font-weight:800;padding:4px 12px;border-radius:20px;letter-spacing:.02em}
+.bg-status-badge.on{background:rgba(20,184,166,.16);color:var(--teal)}
+.bg-status-badge.under{background:rgba(34,197,94,.16);color:#22c55e}
+.bg-status-badge.over{background:rgba(239,68,68,.16);color:#ef4444}
+.bg-status-msg{font-size:.82rem;color:var(--text);line-height:1.4}
+.budget-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.bg-kpi{background:var(--surface-2);border:1px solid var(--hair);border-radius:10px;padding:11px 13px}
+.bg-kpi-lbl{font-size:.6rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;font-weight:700;margin-bottom:5px;font-family:var(--mono)}
+.bg-kpi-val{font-size:1.15rem;font-weight:700;color:var(--text);font-family:var(--mono);font-variant-numeric:tabular-nums;line-height:1.1}
+.bg-kpi-val.pos{color:#22c55e}.bg-kpi-val.neg{color:#ef4444}
+.budget-bar-block{margin-bottom:12px}
+.budget-bar-head{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted2);margin-bottom:5px}
+.budget-bar-head strong{color:var(--text)}
+.budget-bar{height:9px;background:var(--surface-2);border-radius:5px;overflow:hidden;position:relative}
+.budget-bar-fill{height:100%;border-radius:5px;transition:width .35s ease}
+.budget-bar-fill.time{background:linear-gradient(90deg,#14b8a6,#8b5cf6)}
+.budget-bar-fill.money{background:linear-gradient(90deg,#22c55e,#f59e0b)}
+.budget-bar-fill.money.over{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+.budget-bar-marker{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--text);opacity:.5}
+.budget-update{background:var(--surface-2);border:1px dashed var(--border);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.budget-update-title{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:9px}
+.budget-update-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.budget-update-row input[type=number]{flex:1 1 160px;min-width:140px}
+.budget-update-row input[type=date]{flex:0 0 150px}
+.budget-update-row input[type=text]{flex:1 1 140px;min-width:120px}
+.budget-update-hint{font-size:.7rem;color:var(--muted2);margin-top:8px;line-height:1.4}
+.budget-hist-title{font-size:.7rem;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 8px}
+.budget-hist-row{display:flex;align-items:center;gap:10px;font-size:.8rem;padding:7px 0;border-bottom:1px solid var(--border)}
+.budget-hist-row:last-child{border-bottom:none}
+.budget-hist-date{font-family:var(--mono);font-size:.72rem;color:var(--muted2);flex:0 0 auto}
+.budget-hist-amt{font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.budget-hist-delta{font-size:.72rem;font-variant-numeric:tabular-nums}
+.budget-hist-delta.pos{color:#22c55e}.budget-hist-delta.neg{color:#ef4444}
+.budget-hist-note{color:var(--muted2);font-size:.74rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.budget-hist-del{cursor:pointer;color:var(--muted);opacity:.5;flex:0 0 auto}
+.budget-hist-del:hover{opacity:1;color:#ef4444}
+.budget-empty{text-align:center;color:var(--muted2);font-size:.86rem;padding:14px}
 .chiusure-kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
 .chiusure-kpi{background:var(--surface-2);border:1px solid var(--hair);border-radius:8px;padding:12px 14px}
 .chiusure-kpi-label{font-size:.6rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;font-weight:600;margin-bottom:4px;font-family:var(--mono)}
@@ -1928,8 +1975,41 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 
 <!-- ============ FINANZE ============ -->
 <section class="tab" id="tab-finanze">
+
+  <!-- BUDGET MENSILE -->
+  <div class="card budget-card" id="budget-card">
+    <h2 style="justify-content:space-between">
+      <span style="display:flex;align-items:center;gap:8px"><span class="ico">💶</span> Budget mensile <span class="card-badge" id="budget-cycle-badge"></span></span>
+      <button class="btn ghost sm" onclick="editBudgetSettings()" title="Modifica budget e giorno di partenza" style="font-size:.72rem;padding:4px 10px">⚙ Imposta</button>
+    </h2>
+
+    <!-- HERO: quanto posso spendere oggi -->
+    <div class="budget-hero" id="budget-hero"></div>
+
+    <!-- KPI tiles -->
+    <div class="budget-kpis" id="budget-kpis"></div>
+
+    <!-- barre ciclo + spesa -->
+    <div id="budget-bars"></div>
+
+    <!-- aggiorna liquidità -->
+    <div class="budget-update">
+      <div class="budget-update-title">💧 Aggiorna liquidità</div>
+      <div class="budget-update-row">
+        <input type="number" id="bg-liq-input" placeholder="Quanto hai adesso (€)" step="0.01" onkeydown="if(event.key==='Enter')addBudgetLiquidity()"/>
+        <input type="date" id="bg-liq-date"/>
+        <input type="text" id="bg-liq-note" placeholder="nota (opz.)"/>
+        <button class="btn sm" onclick="addBudgetLiquidity()">+ Aggiorna</button>
+      </div>
+      <div class="budget-update-hint">Inserisci ogni tanto la tua liquidità reale: ricalcolo quanto puoi spendere al giorno con quello che ti resta fino al reset.</div>
+    </div>
+
+    <!-- storico liquidità -->
+    <div id="budget-history"></div>
+  </div>
+
   <!-- KPI strip -->
-  <div class="card">
+  <div class="card" style="margin-top:16px">
     <h2 style="justify-content:space-between"><span style="display:flex;align-items:center;gap:8px"><span class="ico">💰</span> Net Worth</span><span class="card-badge" id="fin-points-count">0 snapshot</span></h2>
     <div class="fin-kpi-grid" id="fin-kpi-grid"></div>
   </div>
@@ -2797,7 +2877,8 @@ function defaultState(){ return {
     workToursHistoryOpen:false,
     calendarSyncUrl:'',
     calendarSyncToken:'',
-    finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null},dca:{ticker:'QQQ',contributions:[],history:null,historyAt:null,eurusd:null}}
+    finance:{netWorth:[],seeded:false,transactions:[],etoro:{holdings:[],quotes:{},eurusd:null,quotesAt:null},dca:{ticker:'QQQ',contributions:[],history:null,historyAt:null,eurusd:null}},
+    budget:{monthly:700, cycleStartDay:9, liquidity:[]}
   };}
 
 function load(){
@@ -6290,6 +6371,7 @@ function renderAll(){
   try { renderChiusure();       } catch(e){ console.error('renderChiusure error:', e); }
   try { renderMailBriefings(); } catch(e){ console.error('renderMailBriefings error:', e); }
   try { renderDailyMotivation(); } catch(e){ console.error('renderDailyMotivation error:', e); }
+  try { renderBudget();          } catch(e){ console.error('renderBudget error:', e); }
   try { renderFinance();         } catch(e){ console.error('renderFinance error:', e); }
   try { renderSpese();           } catch(e){ console.error('renderSpese error:', e); }
   try { renderEtoro();           } catch(e){ console.error('renderEtoro error:', e); }
@@ -7688,6 +7770,229 @@ function delNetWorthSnapshot(id){
 
 let _finRange = 'all';
 let _finChart = null;
+
+// ============ BUDGET MENSILE ============
+function _budgetEnsure(){
+  ensureState();
+  if(!state.budget) state.budget = {monthly:700, cycleStartDay:9, liquidity:[]};
+  if(typeof state.budget.monthly !== 'number') state.budget.monthly = 700;
+  if(typeof state.budget.cycleStartDay !== 'number') state.budget.cycleStartDay = 9;
+  if(!Array.isArray(state.budget.liquidity)) state.budget.liquidity = [];
+  return state.budget;
+}
+function _ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function _daysInMonth(y, m1){ return new Date(y, m1, 0).getDate(); } // m1 = 1-12
+function _budgetCycleStart(todayISO, startDay){
+  const [y,m,d] = todayISO.split('-').map(Number); // m = 1-12
+  let yy=y, mm=m;
+  if(d < startDay){ mm-=1; if(mm<1){ mm=12; yy-=1; } }
+  const day = Math.min(startDay, _daysInMonth(yy, mm));
+  return new Date(yy, mm-1, day);
+}
+function _budgetNextStart(cycleStart, startDay){
+  let yy=cycleStart.getFullYear(), mm=cycleStart.getMonth()+1+1; // mese successivo (1-12)
+  if(mm>12){ mm=1; yy+=1; }
+  const day = Math.min(startDay, _daysInMonth(yy, mm));
+  return new Date(yy, mm-1, day);
+}
+function _budgetCompute(){
+  const b = _budgetEnsure();
+  const monthly = b.monthly||0;
+  const startDay = b.cycleStartDay||1;
+  const today = todayISO();
+  const cs = _budgetCycleStart(today, startDay);
+  const ns = _budgetNextStart(cs, startDay);
+  const MS = 86400000;
+  const t0 = new Date(today+'T00:00:00');
+  const totalDays = Math.round((ns - cs)/MS);
+  let daysElapsed = Math.round((t0 - cs)/MS);
+  if(daysElapsed < 0) daysElapsed = 0;
+  if(daysElapsed > totalDays) daysElapsed = totalDays;
+  const daysLeft = Math.max(0, totalDays - daysElapsed); // include oggi
+  const dayNumber = Math.min(totalDays, daysElapsed + 1);
+  const referenceDaily = totalDays>0 ? monthly/totalDays : 0;
+  const csISO = _ymd(cs), nsISO = _ymd(ns);
+
+  const entries = (b.liquidity||[]).slice().sort((a,b)=> a.date.localeCompare(b.date) || String(a.id).localeCompare(String(b.id)));
+  const cycleEntries = entries.filter(e=> e.date >= csISO && e.date < nsISO);
+  const latest = cycleEntries.length ? cycleEntries[cycleEntries.length-1] : null;
+  const currentLiquidity = latest ? latest.amount : null;
+
+  let dailyAllowance=null, idealRemaining=null, deltaVsIdeal=null, spentSoFar=null, avgRate=null, projectedEnd=null, runOutDate=null, status='none';
+  if(currentLiquidity !== null){
+    dailyAllowance = daysLeft>0 ? currentLiquidity/daysLeft : currentLiquidity;
+    idealRemaining = Math.max(0, monthly - referenceDaily*daysElapsed);
+    deltaVsIdeal = currentLiquidity - idealRemaining;
+    spentSoFar = monthly - currentLiquidity;
+    avgRate = daysElapsed>0 ? spentSoFar/daysElapsed : null;
+    const rate = (avgRate!==null && avgRate>0) ? avgRate : referenceDaily;
+    projectedEnd = currentLiquidity - rate*daysLeft;
+    if(rate>0 && currentLiquidity>0){
+      const daysToZero = currentLiquidity/rate;
+      if(daysToZero < daysLeft){ runOutDate = _ymd(new Date(t0.getTime() + Math.floor(daysToZero)*MS)); }
+    }
+    const tol = referenceDaily*0.75;
+    if(Math.abs(deltaVsIdeal) <= tol) status='on';
+    else if(deltaVsIdeal > 0) status='under';
+    else status='over';
+  }
+  return {monthly,startDay,cs,ns,csISO,nsISO,totalDays,daysElapsed,daysLeft,dayNumber,referenceDaily,currentLiquidity,latest,cycleEntries,dailyAllowance,idealRemaining,deltaVsIdeal,spentSoFar,avgRate,projectedEnd,runOutDate,status};
+}
+const _EUR = n => (n==null||isNaN(n)) ? '—' : (n<0?'-':'') + '€' + Math.abs(n).toLocaleString('it-IT',{minimumFractionDigits:0, maximumFractionDigits: Math.abs(n)<100?2:0});
+const _MONTHS_IT = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+function _dLabel(d){ return d.getDate()+' '+_MONTHS_IT[d.getMonth()]; }
+
+function addBudgetLiquidity(){
+  const b = _budgetEnsure();
+  const inp = document.getElementById('bg-liq-input');
+  const dateEl = document.getElementById('bg-liq-date');
+  const noteEl = document.getElementById('bg-liq-note');
+  const amount = parseFloat((inp?.value||'').replace(',','.'));
+  if(isNaN(amount)){ alert('Inserisci la tua liquidità attuale (numero).'); return; }
+  const date = (dateEl && dateEl.value) ? dateEl.value : todayISO();
+  const note = (noteEl?.value||'').trim();
+  // una sola voce per data: sovrascrive
+  b.liquidity = b.liquidity.filter(e=> e.date !== date);
+  b.liquidity.push({id:uid(), date, amount, note});
+  b.liquidity.sort((a,b)=>a.date.localeCompare(b.date));
+  if(inp) inp.value='';
+  if(noteEl) noteEl.value='';
+  save(); renderBudget();
+}
+function deleteBudgetLiquidity(id){
+  const b = _budgetEnsure();
+  b.liquidity = b.liquidity.filter(e=>e.id!==id);
+  save(); renderBudget();
+}
+function editBudgetSettings(){
+  const b = _budgetEnsure();
+  const m = prompt('Budget mensile (€) da spendere per ciclo:', b.monthly);
+  if(m===null) return;
+  const mv = parseFloat((m||'').replace(',','.'));
+  if(!isNaN(mv) && mv>0) b.monthly = mv;
+  const d = prompt('Giorno del mese in cui parte il ciclo (es. 9 = quando arriva lo stipendio):', b.cycleStartDay);
+  if(d!==null){
+    const dv = parseInt(d,10);
+    if(!isNaN(dv) && dv>=1 && dv<=28) b.cycleStartDay = dv;
+    else if(!isNaN(dv) && dv>28) { b.cycleStartDay = 28; alert('Uso il giorno 28 come massimo per evitare problemi con i mesi corti.'); }
+  }
+  save(); renderBudget();
+}
+
+function renderBudget(){
+  const card = document.getElementById('budget-card');
+  if(!card) return;
+  const b = _budgetEnsure();
+  const c = _budgetCompute();
+
+  const badge = document.getElementById('budget-cycle-badge');
+  if(badge) badge.textContent = `${_dLabel(c.cs)} → ${_dLabel(new Date(c.ns.getTime()-86400000))}`;
+
+  // default data odierna nell'input
+  const dateEl = document.getElementById('bg-liq-date');
+  if(dateEl && !dateEl.value) dateEl.value = todayISO();
+
+  const hero = document.getElementById('budget-hero');
+  const kpis = document.getElementById('budget-kpis');
+  const bars = document.getElementById('budget-bars');
+  const hist = document.getElementById('budget-history');
+
+  if(c.currentLiquidity === null){
+    if(hero){
+      hero.className = 'budget-hero';
+      hero.innerHTML = `<div class="budget-empty">Nessuna liquidità registrata per questo ciclo (${_dLabel(c.cs)} → ${_dLabel(new Date(c.ns.getTime()-86400000))}).<br>Inserisci qui sotto quanto hai adesso: calcolo quanto puoi spendere al giorno.</div>`;
+    }
+    if(kpis) kpis.innerHTML = `
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Budget ciclo</div><div class="bg-kpi-val">${_EUR(c.monthly)}</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Durata ciclo</div><div class="bg-kpi-val">${c.totalDays} gg</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Giorno</div><div class="bg-kpi-val">${c.dayNumber} / ${c.totalDays}</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Budget teorico</div><div class="bg-kpi-val">${_EUR(c.referenceDaily)}/g</div></div>`;
+    if(bars) bars.innerHTML = '';
+    if(hist) hist.innerHTML = _budgetHistoryHtml(c);
+    return;
+  }
+
+  const statusMsg = {
+    on:   `Sei in linea col budget. Continua così 👍`,
+    under:`Sei sotto ritmo: hai <strong>${_EUR(c.deltaVsIdeal)}</strong> in più del previsto. Ottimo, stai risparmiando 💪`,
+    over: `Stai spendendo troppo: <strong>${_EUR(Math.abs(c.deltaVsIdeal))}</strong> sopra il ritmo. Rallenta un po' ⚠️`
+  }[c.status] || '';
+  const statusLabel = {on:'✓ In linea', under:'🟢 Sotto budget', over:'🔴 Sopra budget'}[c.status] || '';
+
+  if(hero){
+    hero.className = 'budget-hero' + (c.status==='over'?' over':c.status==='under'?' under':'');
+    hero.innerHTML = `
+      <div class="bg-daily">
+        <div class="bg-daily-val"><span class="cur">€</span>${(c.dailyAllowance).toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:2})}</div>
+        <div class="bg-daily-lbl">al giorno · per i prossimi ${c.daysLeft} gg (fino al ${_dLabel(new Date(c.ns.getTime()-86400000))})</div>
+      </div>
+      <div class="bg-status">
+        <span class="bg-status-badge ${c.status}">${statusLabel}</span>
+        <div class="bg-status-msg">${statusMsg}</div>
+      </div>`;
+  }
+
+  if(kpis){
+    const projCls = c.projectedEnd>=0 ? 'pos':'neg';
+    kpis.innerHTML = `
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Liquidità ora</div><div class="bg-kpi-val">${_EUR(c.currentLiquidity)}</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Speso finora</div><div class="bg-kpi-val">${_EUR(c.spentSoFar)}</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Ritmo medio</div><div class="bg-kpi-val">${c.avgRate!=null?_EUR(c.avgRate)+'/g':'—'}</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Budget teorico</div><div class="bg-kpi-val">${_EUR(c.referenceDaily)}/g</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Giorno</div><div class="bg-kpi-val">${c.dayNumber} / ${c.totalDays}</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Fine ciclo (stima)</div><div class="bg-kpi-val ${projCls}">${_EUR(c.projectedEnd)}</div></div>`;
+  }
+
+  if(bars){
+    const timePct = c.totalDays>0 ? (c.daysElapsed/c.totalDays)*100 : 0;
+    const spent = Math.max(0, c.spentSoFar);
+    const moneyPct = c.monthly>0 ? Math.min(100,(spent/c.monthly)*100) : 0;
+    const overSpent = spent > c.monthly;
+    let proj = '';
+    if(c.runOutDate){
+      proj = `<div style="font-size:.78rem;color:#ef4444;margin-top:4px;font-weight:600">⚠️ Di questo passo finisci i soldi il ${_dLabel(new Date(c.runOutDate+'T00:00:00'))}, prima del reset.</div>`;
+    } else if(c.projectedEnd>=0){
+      proj = `<div style="font-size:.78rem;color:var(--muted2);margin-top:4px">Di questo passo chiudi il ciclo con circa <strong style="color:#22c55e">${_EUR(c.projectedEnd)}</strong> di avanzo.</div>`;
+    }
+    bars.innerHTML = `
+      <div class="budget-bar-block">
+        <div class="budget-bar-head"><span>Tempo · giorno <strong>${c.dayNumber}</strong> di ${c.totalDays}</span><span>${c.daysLeft} gg rimasti</span></div>
+        <div class="budget-bar"><div class="budget-bar-fill time" style="width:${timePct}%"></div></div>
+      </div>
+      <div class="budget-bar-block">
+        <div class="budget-bar-head"><span>Speso <strong>${_EUR(spent)}</strong> di ${_EUR(c.monthly)}</span><span>${moneyPct.toFixed(0)}%</span></div>
+        <div class="budget-bar"><div class="budget-bar-fill money ${overSpent?'over':''}" style="width:${moneyPct}%"></div><div class="budget-bar-marker" style="left:${Math.min(100,timePct)}%" title="Dove dovresti essere oggi"></div></div>
+        ${proj}
+      </div>`;
+  }
+
+  if(hist) hist.innerHTML = _budgetHistoryHtml(c);
+}
+
+function _budgetHistoryHtml(c){
+  const rows = (c.cycleEntries||[]).slice().reverse();
+  if(!rows.length) return '';
+  let html = '<div class="budget-hist-title">💧 Aggiornamenti liquidità (ciclo corrente)</div>';
+  html += rows.map((e,i)=>{
+    // delta rispetto alla voce precedente in ordine cronologico
+    const idx = c.cycleEntries.indexOf(e);
+    const prev = idx>0 ? c.cycleEntries[idx-1] : null;
+    let delta = '';
+    if(prev){
+      const d = e.amount - prev.amount;
+      const cls = d>=0 ? 'pos':'neg';
+      delta = `<span class="budget-hist-delta ${cls}">${d>=0?'+':''}${_EUR(d)}</span>`;
+    }
+    return `<div class="budget-hist-row">
+      <span class="budget-hist-date">${_dLabel(new Date(e.date+'T00:00:00'))}</span>
+      <span class="budget-hist-amt">${_EUR(e.amount)}</span>
+      ${delta}
+      <span class="budget-hist-note">${escapeHtml(e.note||'')}</span>
+      <span class="budget-hist-del" onclick="deleteBudgetLiquidity('${e.id}')" title="Elimina">✕</span>
+    </div>`;
+  }).join('');
+  return html;
+}
 
 function renderFinance(){
   _ensureFinanceState();
