@@ -2028,7 +2028,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.72rem;color:var(--text-3)">
       <span><span style="display:inline-block;width:10px;height:2px;background:var(--acc);vertical-align:middle;margin-right:6px"></span>Net Worth</span>
       <span><span style="display:inline-block;width:10px;height:2px;background:var(--up);vertical-align:middle;margin-right:6px"></span>Azioni</span>
-      <span><span style="display:inline-block;width:10px;height:2px;background:var(--warn);vertical-align:middle;margin-right:6px"></span>Liquidità</span>
+      <span><span style="display:inline-block;width:10px;height:2px;background:var(--warn);vertical-align:middle;margin-right:6px"></span>Cash</span>
+      <span><span style="display:inline-block;width:10px;height:2px;background:#a78bfa;vertical-align:middle;margin-right:6px"></span>Risparmi</span>
     </div>
   </div>
 
@@ -2040,12 +2041,16 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <label>Data</label>
         <input type="date" id="fin-date">
       </div>
-      <div class="row" style="display:flex;gap:10px">
-        <div class="field" style="flex:1">
-          <label>Liquidità (€)</label>
+      <div class="row" style="display:flex;gap:10px;flex-wrap:wrap">
+        <div class="field" style="flex:1;min-width:120px">
+          <label>Cash (€)</label>
           <input type="number" id="fin-liquid" placeholder="0" step="0.01">
         </div>
-        <div class="field" style="flex:1">
+        <div class="field" style="flex:1;min-width:120px">
+          <label>Risparmi (€)</label>
+          <input type="number" id="fin-savings" placeholder="0" step="0.01">
+        </div>
+        <div class="field" style="flex:1;min-width:120px">
           <label>Azioni (€)</label>
           <input type="number" id="fin-stocks" placeholder="0" step="0.01">
         </div>
@@ -7730,10 +7735,12 @@ const NET_WORTH_SEED = [
 function _ensureFinanceState(){
   if(!state.finance) state.finance = {netWorth:[],seeded:false};
   if(!state.finance.seeded && (!state.finance.netWorth || !state.finance.netWorth.length)){
-    state.finance.netWorth = NET_WORTH_SEED.map(s=>({...s,id:uid(),total:Math.round((s.liquid+s.stocks)*100)/100}));
+    state.finance.netWorth = NET_WORTH_SEED.map(s=>({...s,id:uid(),savings:0,total:Math.round((s.liquid+s.stocks)*100)/100}));
     state.finance.seeded = true;
     save();
   }
+  // Backfill: snapshot vecchi senza la voce "risparmi"
+  (state.finance.netWorth||[]).forEach(s=>{ if(typeof s.savings !== 'number') s.savings = 0; });
 }
 
 function _fmtEur(v){
@@ -7748,15 +7755,17 @@ function addNetWorthSnapshot(){
   _ensureFinanceState();
   const date = document.getElementById('fin-date').value || todayISO();
   const liquid = parseFloat(document.getElementById('fin-liquid').value)||0;
+  const savings = parseFloat(document.getElementById('fin-savings').value)||0;
   const stocks = parseFloat(document.getElementById('fin-stocks').value)||0;
-  if(liquid===0 && stocks===0){ alert('Inserisci almeno un valore'); return; }
-  const total = Math.round((liquid+stocks)*100)/100;
+  if(liquid===0 && savings===0 && stocks===0){ alert('Inserisci almeno un valore'); return; }
+  const total = Math.round((liquid+savings+stocks)*100)/100;
   // Sostituisce se stessa data già esiste
   state.finance.netWorth = state.finance.netWorth.filter(s=>s.date!==date);
-  state.finance.netWorth.push({id:uid(),date,liquid,stocks,total});
+  state.finance.netWorth.push({id:uid(),date,liquid,savings,stocks,total});
   state.finance.netWorth.sort((a,b)=>a.date.localeCompare(b.date));
   save();
   document.getElementById('fin-liquid').value='';
+  document.getElementById('fin-savings').value='';
   document.getElementById('fin-stocks').value='';
   document.getElementById('fin-preview-total').textContent='€ 0';
   renderFinance();
@@ -8044,9 +8053,9 @@ function renderFinance(){
           <div class="fin-kpi-sub">annualizzato · ${years.toFixed(1)}a</div>
         </div>`:''}
         <div class="fin-kpi">
-          <div class="fin-kpi-label">Liquidità · Azioni</div>
-          <div class="fin-kpi-val" style="font-size:1rem">${_fmtEur(last.liquid)} · ${_fmtEur(last.stocks)}</div>
-          <div class="fin-kpi-sub">${last.total?Math.round(last.stocks/last.total*100):0}% in azioni</div>
+          <div class="fin-kpi-label">Cash · Risparmi · Azioni</div>
+          <div class="fin-kpi-val" style="font-size:.92rem">${_fmtEur(last.liquid)} · ${_fmtEur(last.savings||0)} · ${_fmtEur(last.stocks)}</div>
+          <div class="fin-kpi-sub">${last.total?Math.round(last.stocks/last.total*100):0}% azioni · ${last.total?Math.round(((last.savings||0)/last.total)*100):0}% risparmi</div>
         </div>
       `;
     }
@@ -8065,7 +8074,7 @@ function renderFinance(){
       lc.innerHTML = reverse.map(s=>`
         <div class="fin-row">
           <div class="fin-date">${s.date}</div>
-          <div class="fin-bd">L: ${_fmtEur(s.liquid)} · A: ${_fmtEur(s.stocks)}</div>
+          <div class="fin-bd">C: ${_fmtEur(s.liquid)} · R: ${_fmtEur(s.savings||0)} · A: ${_fmtEur(s.stocks)}</div>
           <div class="fin-tot">${_fmtEur(s.total)}</div>
           <button class="fin-del" onclick="delNetWorthSnapshot('${s.id}')" title="Elimina">✕</button>
         </div>
@@ -8089,6 +8098,7 @@ function _drawFinanceChart(list){
   const labels = filtered.map(s=>s.date);
   const totals = filtered.map(s=>s.total);
   const liquids = filtered.map(s=>s.liquid);
+  const savings = filtered.map(s=>s.savings||0);
   const stocks = filtered.map(s=>s.stocks);
   const isLight = document.documentElement.dataset.theme==='light';
   const gridColor = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
@@ -8102,7 +8112,8 @@ function _drawFinanceChart(list){
       datasets:[
         {label:'Net Worth',data:totals,borderColor:'#6ef0ff',backgroundColor:'rgba(110,240,255,.08)',borderWidth:2,tension:.3,fill:true,pointRadius:2,pointHoverRadius:5},
         {label:'Azioni',data:stocks,borderColor:'#4ade80',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]},
-        {label:'Liquidità',data:liquids,borderColor:'#f0b86e',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]}
+        {label:'Cash',data:liquids,borderColor:'#f0b86e',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]},
+        {label:'Risparmi',data:savings,borderColor:'#a78bfa',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]}
       ]
     },
     options:{
@@ -8124,13 +8135,14 @@ function _drawFinanceChart(list){
 (function bindFinanceUI(){
   const dateInp = document.getElementById('fin-date');
   if(dateInp) dateInp.value = todayISO();
-  ['fin-liquid','fin-stocks'].forEach(id=>{
+  ['fin-liquid','fin-savings','fin-stocks'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('input',()=>{
       const l = parseFloat(document.getElementById('fin-liquid').value)||0;
+      const r = parseFloat(document.getElementById('fin-savings').value)||0;
       const s = parseFloat(document.getElementById('fin-stocks').value)||0;
       const p = document.getElementById('fin-preview-total');
-      if(p) p.textContent = _fmtEurFull(l+s);
+      if(p) p.textContent = _fmtEurFull(l+r+s);
     });
   });
   document.querySelectorAll('.fin-range-btn').forEach(b=>{
