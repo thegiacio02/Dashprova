@@ -7827,17 +7827,29 @@ function _budgetCompute(){
   const latest = cycleEntries.length ? cycleEntries[cycleEntries.length-1] : null;
   const currentLiquidity = latest ? latest.amount : null;
 
-  let dailyAllowance=null, idealRemaining=null, deltaVsIdeal=null, spentSoFar=null, avgRate=null, projectedEnd=null, runOutDate=null, status='none';
-  if(currentLiquidity !== null){
-    dailyAllowance = daysLeft>0 ? currentLiquidity/daysLeft : currentLiquidity;
-    idealRemaining = Math.max(0, monthly - referenceDaily*daysElapsed);
-    deltaVsIdeal = currentLiquidity - idealRemaining;
-    spentSoFar = monthly - currentLiquidity;
-    avgRate = daysElapsed>0 ? spentSoFar/daysElapsed : null;
-    const rate = (avgRate!==null && avgRate>0) ? avgRate : referenceDaily;
-    projectedEnd = currentLiquidity - rate*daysLeft;
-    if(rate>0 && currentLiquidity>0){
-      const daysToZero = currentLiquidity/rate;
+  // Spesa del ciclo = SOLO i cali di liquidità tra uno snapshot e l'altro.
+  // I rialzi (ricariche, bonus, stipendio) sono entrate e NON contano come spesa.
+  let spent = 0, toppedUp = 0;
+  for(let i=1; i<cycleEntries.length; i++){
+    const d = cycleEntries[i-1].amount - cycleEntries[i].amount;
+    if(d > 0) spent += d; else toppedUp += (-d);
+  }
+  spent = Math.round(spent*100)/100;
+
+  let dailyAllowance=null, budgetRemaining=null, idealSpent=null, deltaVsIdeal=null, avgRate=null, projectedLeftover=null, runOutDate=null, status='none';
+  if(cycleEntries.length >= 1){
+    budgetRemaining = Math.max(0, monthly - spent);          // quanto resta del budget di 700
+    dailyAllowance = daysLeft>0 ? budgetRemaining/daysLeft : budgetRemaining;
+    idealSpent = referenceDaily * daysElapsed;               // quanto avresti "dovuto" spendere finora
+    deltaVsIdeal = idealSpent - spent;                       // >0 = hai speso meno del previsto (risparmi)
+    // ritmo medio reale: spesa / giorni dal primo aggiornamento del ciclo
+    const firstDate = cycleEntries[0].date;
+    const spanDays = Math.max(1, Math.round((t0 - new Date(firstDate+'T00:00:00'))/MS));
+    avgRate = cycleEntries.length >= 2 ? spent/spanDays : null;
+    const projRate = (avgRate!==null && avgRate>0) ? avgRate : referenceDaily;
+    projectedLeftover = monthly - (spent + projRate*daysLeft);
+    if(projRate>0 && budgetRemaining>0){
+      const daysToZero = budgetRemaining/projRate;
       if(daysToZero < daysLeft){ runOutDate = _ymd(new Date(t0.getTime() + Math.floor(daysToZero)*MS)); }
     }
     const tol = referenceDaily*0.75;
@@ -7845,7 +7857,7 @@ function _budgetCompute(){
     else if(deltaVsIdeal > 0) status='under';
     else status='over';
   }
-  return {monthly,startDay,cs,ns,csISO,nsISO,totalDays,daysElapsed,daysLeft,dayNumber,referenceDaily,currentLiquidity,latest,cycleEntries,dailyAllowance,idealRemaining,deltaVsIdeal,spentSoFar,avgRate,projectedEnd,runOutDate,status};
+  return {monthly,startDay,cs,ns,csISO,nsISO,totalDays,daysElapsed,daysLeft,dayNumber,referenceDaily,currentLiquidity,latest,cycleEntries,spent,toppedUp,budgetRemaining,idealSpent,dailyAllowance,deltaVsIdeal,avgRate,projectedLeftover,runOutDate,status};
 }
 const _EUR = n => (n==null||isNaN(n)) ? '—' : (n<0?'-':'') + '€' + Math.abs(n).toLocaleString('it-IT',{minimumFractionDigits:0, maximumFractionDigits: Math.abs(n)<100?2:0});
 const _MONTHS_IT = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
@@ -7922,9 +7934,9 @@ function renderBudget(){
   }
 
   const statusMsg = {
-    on:   `Sei in linea col budget. Continua così 👍`,
-    under:`Sei sotto ritmo: hai <strong>${_EUR(c.deltaVsIdeal)}</strong> in più del previsto. Ottimo, stai risparmiando 💪`,
-    over: `Stai spendendo troppo: <strong>${_EUR(Math.abs(c.deltaVsIdeal))}</strong> sopra il ritmo. Rallenta un po' ⚠️`
+    on:   `Sei in linea col budget di ${_EUR(c.monthly)}. Continua così 👍`,
+    under:`Hai speso <strong>${_EUR(c.deltaVsIdeal)}</strong> in meno del previsto. Stai risparmiando 💪`,
+    over: `Hai speso <strong>${_EUR(Math.abs(c.deltaVsIdeal))}</strong> più del previsto. Rallenta un po' ⚠️`
   }[c.status] || '';
   const statusLabel = {on:'✓ In linea', under:'🟢 Sotto budget', over:'🔴 Sopra budget'}[c.status] || '';
 
@@ -7933,7 +7945,7 @@ function renderBudget(){
     hero.innerHTML = `
       <div class="bg-daily">
         <div class="bg-daily-val"><span class="cur">€</span>${(c.dailyAllowance).toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:2})}</div>
-        <div class="bg-daily-lbl">al giorno · per i prossimi ${c.daysLeft} gg (fino al ${_dLabel(new Date(c.ns.getTime()-86400000))})</div>
+        <div class="bg-daily-lbl">al giorno · budget rimasto ${_EUR(c.budgetRemaining)} ÷ ${c.daysLeft} gg (fino al ${_dLabel(new Date(c.ns.getTime()-86400000))})</div>
       </div>
       <div class="bg-status">
         <span class="bg-status-badge ${c.status}">${statusLabel}</span>
@@ -7942,26 +7954,28 @@ function renderBudget(){
   }
 
   if(kpis){
-    const projCls = c.projectedEnd>=0 ? 'pos':'neg';
+    const projCls = c.projectedLeftover>=0 ? 'pos':'neg';
     kpis.innerHTML = `
-      <div class="bg-kpi"><div class="bg-kpi-lbl">Liquidità ora</div><div class="bg-kpi-val">${_EUR(c.currentLiquidity)}</div></div>
-      <div class="bg-kpi"><div class="bg-kpi-lbl">Speso finora</div><div class="bg-kpi-val">${_EUR(c.spentSoFar)}</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Budget rimasto</div><div class="bg-kpi-val">${_EUR(c.budgetRemaining)}</div></div>
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Speso nel ciclo</div><div class="bg-kpi-val">${_EUR(c.spent)}</div></div>
       <div class="bg-kpi"><div class="bg-kpi-lbl">Ritmo medio</div><div class="bg-kpi-val">${c.avgRate!=null?_EUR(c.avgRate)+'/g':'—'}</div></div>
       <div class="bg-kpi"><div class="bg-kpi-lbl">Budget teorico</div><div class="bg-kpi-val">${_EUR(c.referenceDaily)}/g</div></div>
       <div class="bg-kpi"><div class="bg-kpi-lbl">Giorno</div><div class="bg-kpi-val">${c.dayNumber} / ${c.totalDays}</div></div>
-      <div class="bg-kpi"><div class="bg-kpi-lbl">Fine ciclo (stima)</div><div class="bg-kpi-val ${projCls}">${_EUR(c.projectedEnd)}</div></div>`;
+      <div class="bg-kpi"><div class="bg-kpi-lbl">Liquidità ora</div><div class="bg-kpi-val">${_EUR(c.currentLiquidity)}</div></div>`;
   }
 
   if(bars){
     const timePct = c.totalDays>0 ? (c.daysElapsed/c.totalDays)*100 : 0;
-    const spent = Math.max(0, c.spentSoFar);
+    const spent = Math.max(0, c.spent);
     const moneyPct = c.monthly>0 ? Math.min(100,(spent/c.monthly)*100) : 0;
     const overSpent = spent > c.monthly;
     let proj = '';
     if(c.runOutDate){
-      proj = `<div style="font-size:.78rem;color:#ef4444;margin-top:4px;font-weight:600">⚠️ Di questo passo finisci i soldi il ${_dLabel(new Date(c.runOutDate+'T00:00:00'))}, prima del reset.</div>`;
-    } else if(c.projectedEnd>=0){
-      proj = `<div style="font-size:.78rem;color:var(--muted2);margin-top:4px">Di questo passo chiudi il ciclo con circa <strong style="color:#22c55e">${_EUR(c.projectedEnd)}</strong> di avanzo.</div>`;
+      proj = `<div style="font-size:.78rem;color:#ef4444;margin-top:4px;font-weight:600">⚠️ Di questo passo esaurisci il budget il ${_dLabel(new Date(c.runOutDate+'T00:00:00'))}, prima del reset.</div>`;
+    } else if(c.projectedLeftover>=0){
+      proj = `<div style="font-size:.78rem;color:var(--muted2);margin-top:4px">Di questo passo chiudi il ciclo con circa <strong style="color:#22c55e">${_EUR(c.projectedLeftover)}</strong> di budget avanzato.</div>`;
+    } else {
+      proj = `<div style="font-size:.78rem;color:#ef4444;margin-top:4px">Di questo passo sfori il budget di circa <strong>${_EUR(Math.abs(c.projectedLeftover))}</strong>.</div>`;
     }
     bars.innerHTML = `
       <div class="budget-bar-block">
