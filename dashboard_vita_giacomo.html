@@ -2027,7 +2027,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <div style="position:relative;height:280px"><canvas id="fin-chart"></canvas></div>
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.72rem;color:var(--text-3)">
       <span><span style="display:inline-block;width:10px;height:2px;background:var(--acc);vertical-align:middle;margin-right:6px"></span>Net Worth</span>
-      <span><span style="display:inline-block;width:10px;height:2px;background:var(--up);vertical-align:middle;margin-right:6px"></span>Azioni</span>
+      <span><span style="display:inline-block;width:10px;height:2px;background:var(--up);vertical-align:middle;margin-right:6px"></span>Azioni eToro</span>
+      <span><span style="display:inline-block;width:10px;height:2px;background:#f472b6;vertical-align:middle;margin-right:6px"></span>Azioni Fineco</span>
       <span><span style="display:inline-block;width:10px;height:2px;background:var(--warn);vertical-align:middle;margin-right:6px"></span>Cash</span>
       <span><span style="display:inline-block;width:10px;height:2px;background:#a78bfa;vertical-align:middle;margin-right:6px"></span>Risparmi</span>
     </div>
@@ -2041,9 +2042,9 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
         <label>Data</label>
         <input type="date" id="fin-date">
       </div>
-      <div class="row" style="display:flex;gap:10px;flex-wrap:wrap">
+      <div class="row" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
         <div class="field" style="flex:1;min-width:120px">
-          <label>Cash (€)</label>
+          <label>Cash · Fineco + Revolut (€)</label>
           <input type="number" id="fin-liquid" placeholder="0" step="0.01">
         </div>
         <div class="field" style="flex:1;min-width:120px">
@@ -2051,8 +2052,12 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
           <input type="number" id="fin-savings" placeholder="0" step="0.01">
         </div>
         <div class="field" style="flex:1;min-width:120px">
-          <label>Azioni (€)</label>
-          <input type="number" id="fin-stocks" placeholder="0" step="0.01">
+          <label>Azioni eToro (€)</label>
+          <input type="number" id="fin-stocks-etoro" placeholder="0" step="0.01">
+        </div>
+        <div class="field" style="flex:1;min-width:120px">
+          <label>Azioni Fineco (€)</label>
+          <input type="number" id="fin-stocks-fineco" placeholder="0" step="0.01">
         </div>
       </div>
       <div style="font-size:.78rem;color:var(--text-3);margin-bottom:10px">
@@ -7741,6 +7746,14 @@ function _ensureFinanceState(){
   }
   // Backfill: snapshot vecchi senza la voce "risparmi"
   (state.finance.netWorth||[]).forEach(s=>{ if(typeof s.savings !== 'number') s.savings = 0; });
+  // Backfill: azioni non ancora divise per broker → tutte su eToro, Fineco a 0
+  let _brokerMigrated = false;
+  (state.finance.netWorth||[]).forEach(s=>{
+    if(typeof s.stocksEtoro !== 'number'){ s.stocksEtoro = Number(s.stocks)||0; _brokerMigrated = true; }
+    if(typeof s.stocksFineco !== 'number'){ s.stocksFineco = 0; _brokerMigrated = true; }
+    s.stocks = Math.round((s.stocksEtoro + s.stocksFineco)*100)/100;
+  });
+  if(_brokerMigrated) save();
 }
 
 function _fmtEur(v){
@@ -7756,17 +7769,20 @@ function addNetWorthSnapshot(){
   const date = document.getElementById('fin-date').value || todayISO();
   const liquid = parseFloat(document.getElementById('fin-liquid').value)||0;
   const savings = parseFloat(document.getElementById('fin-savings').value)||0;
-  const stocks = parseFloat(document.getElementById('fin-stocks').value)||0;
+  const stocksEtoro = parseFloat(document.getElementById('fin-stocks-etoro').value)||0;
+  const stocksFineco = parseFloat(document.getElementById('fin-stocks-fineco').value)||0;
+  const stocks = Math.round((stocksEtoro+stocksFineco)*100)/100;
   if(liquid===0 && savings===0 && stocks===0){ alert('Inserisci almeno un valore'); return; }
   const total = Math.round((liquid+savings+stocks)*100)/100;
   // Sostituisce se stessa data già esiste
   state.finance.netWorth = state.finance.netWorth.filter(s=>s.date!==date);
-  state.finance.netWorth.push({id:uid(),date,liquid,savings,stocks,total});
+  state.finance.netWorth.push({id:uid(),date,liquid,savings,stocksEtoro,stocksFineco,stocks,total});
   state.finance.netWorth.sort((a,b)=>a.date.localeCompare(b.date));
   save();
   document.getElementById('fin-liquid').value='';
   document.getElementById('fin-savings').value='';
-  document.getElementById('fin-stocks').value='';
+  document.getElementById('fin-stocks-etoro').value='';
+  document.getElementById('fin-stocks-fineco').value='';
   document.getElementById('fin-preview-total').textContent='€ 0';
   renderFinance();
 }
@@ -8066,10 +8082,15 @@ function renderFinance(){
           <div class="fin-kpi-val" style="color:${cagr>=0?'var(--up)':'var(--down)'}">${cagr>=0?'+':''}${cagr.toFixed(1)}%</div>
           <div class="fin-kpi-sub">annualizzato · ${years.toFixed(1)}a</div>
         </div>`:''}
-        <div class="fin-kpi">
-          <div class="fin-kpi-label">Cash · Risparmi · Azioni</div>
-          <div class="fin-kpi-val" style="font-size:.92rem">${_fmtEur(last.liquid)} · ${_fmtEur(last.savings||0)} · ${_fmtEur(last.stocks)}</div>
-          <div class="fin-kpi-sub">${last.total?Math.round(last.stocks/last.total*100):0}% azioni · ${last.total?Math.round(((last.savings||0)/last.total)*100):0}% risparmi</div>
+        <div class="fin-kpi" style="grid-column:span 2">
+          <div class="fin-kpi-label">Cash · Risparmi</div>
+          <div class="fin-kpi-val" style="font-size:.92rem;white-space:nowrap">${_fmtEur(last.liquid)} · ${_fmtEur(last.savings||0)}</div>
+          <div class="fin-kpi-sub">${last.total?Math.round(((last.savings||0)/last.total)*100):0}% risparmi</div>
+        </div>
+        <div class="fin-kpi" style="grid-column:span 2">
+          <div class="fin-kpi-label">Azioni eToro · Fineco</div>
+          <div class="fin-kpi-val" style="font-size:.92rem;white-space:nowrap">${_fmtEur(last.stocksEtoro||0)} · ${_fmtEur(last.stocksFineco||0)}</div>
+          <div class="fin-kpi-sub">${last.total?Math.round(last.stocks/last.total*100):0}% azioni</div>
         </div>
       `;
     }
@@ -8088,13 +8109,20 @@ function renderFinance(){
       lc.innerHTML = reverse.map(s=>`
         <div class="fin-row">
           <div class="fin-date">${s.date}</div>
-          <div class="fin-bd">C: ${_fmtEur(s.liquid)} · R: ${_fmtEur(s.savings||0)} · A: ${_fmtEur(s.stocks)}</div>
+          <div class="fin-bd" title="Cash · Risparmi · Azioni eToro · Azioni Fineco">${_finBreakdown(s)}</div>
           <div class="fin-tot">${_fmtEur(s.total)}</div>
           <button class="fin-del" onclick="delNetWorthSnapshot('${s.id}')" title="Elimina">✕</button>
         </div>
       `).join('');
     }
   }
+}
+
+// Breakdown compatto delle 4 voci; ogni segmento resta intero se la riga va a capo.
+function _finBreakdown(s){
+  return [['C',s.liquid],['R',s.savings||0],['eT',s.stocksEtoro||0],['Fi',s.stocksFineco||0]]
+    .map(([lab,v])=>`<span style="white-space:nowrap">${lab}: ${_fmtEur(v)}</span>`)
+    .join(' · ');
 }
 
 function _drawFinanceChart(list){
@@ -8113,7 +8141,8 @@ function _drawFinanceChart(list){
   const totals = filtered.map(s=>s.total);
   const liquids = filtered.map(s=>s.liquid);
   const savings = filtered.map(s=>s.savings||0);
-  const stocks = filtered.map(s=>s.stocks);
+  const etoro = filtered.map(s=>s.stocksEtoro||0);
+  const fineco = filtered.map(s=>s.stocksFineco||0);
   const isLight = document.documentElement.dataset.theme==='light';
   const gridColor = isLight ? 'rgba(0,0,0,.08)' : 'rgba(255,255,255,.06)';
   const textColor = isLight ? '#5a6070' : '#a4abb8';
@@ -8125,7 +8154,8 @@ function _drawFinanceChart(list){
       labels,
       datasets:[
         {label:'Net Worth',data:totals,borderColor:'#6ef0ff',backgroundColor:'rgba(110,240,255,.08)',borderWidth:2,tension:.3,fill:true,pointRadius:2,pointHoverRadius:5},
-        {label:'Azioni',data:stocks,borderColor:'#4ade80',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]},
+        {label:'Azioni eToro',data:etoro,borderColor:'#4ade80',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]},
+        {label:'Azioni Fineco',data:fineco,borderColor:'#f472b6',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]},
         {label:'Cash',data:liquids,borderColor:'#f0b86e',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]},
         {label:'Risparmi',data:savings,borderColor:'#a78bfa',backgroundColor:'transparent',borderWidth:1.5,tension:.3,fill:false,pointRadius:1,pointHoverRadius:4,borderDash:[3,3]}
       ]
@@ -8149,14 +8179,13 @@ function _drawFinanceChart(list){
 (function bindFinanceUI(){
   const dateInp = document.getElementById('fin-date');
   if(dateInp) dateInp.value = todayISO();
-  ['fin-liquid','fin-savings','fin-stocks'].forEach(id=>{
+  ['fin-liquid','fin-savings','fin-stocks-etoro','fin-stocks-fineco'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.addEventListener('input',()=>{
-      const l = parseFloat(document.getElementById('fin-liquid').value)||0;
-      const r = parseFloat(document.getElementById('fin-savings').value)||0;
-      const s = parseFloat(document.getElementById('fin-stocks').value)||0;
+      const val = i => parseFloat((document.getElementById(i)||{}).value)||0;
+      const tot = val('fin-liquid') + val('fin-savings') + val('fin-stocks-etoro') + val('fin-stocks-fineco');
       const p = document.getElementById('fin-preview-total');
-      if(p) p.textContent = _fmtEurFull(l+r+s);
+      if(p) p.textContent = _fmtEurFull(tot);
     });
   });
   document.querySelectorAll('.fin-range-btn').forEach(b=>{
