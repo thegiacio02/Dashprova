@@ -1,0 +1,10 @@
+node_modules/
+package-lock.json
+package.json
+.DS_Store
+*.log
+legacy_dashboard_data.json
+.env.local
+.env.localEDITAMI.txt
+.email_briefings_input.json
+.calendar_events_input.json
