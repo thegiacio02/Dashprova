@@ -16,6 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
@@ -1935,7 +1936,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
     <h2><span class="ico">💾</span> Backup & ripristino</h2>
     <p style="font-size:.78rem;color:var(--muted2);margin-bottom:12px">I dati sono salvati in Firestore sul tuo account Firebase. Esporta un backup quando vuoi una copia offline.</p>
     <div class="row">
-      <button class="btn" onclick="exportData()">⬇ Esporta JSON</button>
+      <button class="btn" onclick="exportExcel()">⬇ Esporta Excel</button>
+      <button class="btn ghost" onclick="exportData()">⬇ Esporta JSON</button>
       <button class="btn ghost" onclick="document.getElementById('imp').click()">⬆ Importa JSON</button>
       <input type="file" id="imp" style="display:none" accept=".json" onchange="importData(event)"/>
       <button class="btn danger" onclick="resetAll()">🗑 Reset totale</button>
@@ -3571,6 +3573,242 @@ function importData(e){
   r.onload=()=>{ try{ state=JSON.parse(r.result); save(); renderAll(); alert('Importato.'); }catch(err){ alert('File non valido'); } };
   r.readAsText(f);
 }
+// ============ EXPORT EXCEL ============
+// Backup leggibile di tutto lo stato: un foglio per ogni collezione, più il
+// JSON integrale come rete di sicurezza se la mappatura per colonne perdesse
+// qualche campo. Il foglio Net Worth porta un grafico Excel nativo (non
+// un'immagine): SheetJS non sa produrlo, quindi le parti OOXML vengono
+// scritte a mano e iniettate nello zip con JSZip.
+
+const XLS_CELL_MAX = 32000;   // limite Excel 32767, con margine
+
+function _xlsName(name, used){
+  let n = String(name).replace(/[\\\/\?\*\[\]:]/g, ' ').trim().slice(0,31) || 'Foglio';
+  const base = n;
+  let i = 2;
+  while(used.has(n.toLowerCase())){
+    const suf = ' ' + (i++);
+    n = base.slice(0, 31-suf.length) + suf;
+  }
+  used.add(n.toLowerCase());
+  return n;
+}
+
+function _xlsVal(v){
+  if(v === null || v === undefined) return '';
+  if(typeof v === 'boolean') return v ? 'sì' : 'no';
+  if(typeof v === 'object'){
+    const s = JSON.stringify(v);
+    return s.length > XLS_CELL_MAX ? s.slice(0, XLS_CELL_MAX) + '…[troncato]' : s;
+  }
+  if(typeof v === 'string' && v.length > XLS_CELL_MAX) return v.slice(0, XLS_CELL_MAX) + '…[troncato]';
+  return v;
+}
+
+// Array di oggetti → foglio con l'unione delle chiavi come intestazione.
+// Generico di proposito: campi nuovi finiscono nell'export senza altre modifiche.
+function _xlsSheetFromArray(arr){
+  const cols = [];
+  arr.forEach(o=>{
+    if(o && typeof o === 'object' && !Array.isArray(o)){
+      Object.keys(o).forEach(k=>{ if(!cols.includes(k)) cols.push(k); });
+    }
+  });
+  if(!cols.length) return XLSX.utils.aoa_to_sheet([['valore'], ...arr.map(v=>[_xlsVal(v)])]);
+  return XLSX.utils.aoa_to_sheet([cols, ...arr.map(o=>cols.map(c=>_xlsVal(o && o[c])))]);
+}
+
+// Oggetto mappa (es. habitLog: {data: {...}}) → foglio chiave/valore
+function _xlsSheetFromMap(obj){
+  const rows = [['chiave','valore']];
+  Object.keys(obj).forEach(k=>rows.push([k, _xlsVal(obj[k])]));
+  return XLSX.utils.aoa_to_sheet(rows);
+}
+
+function _xlsNetWorthRows(){
+  const list = ((state.finance && state.finance.netWorth) || [])
+    .slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  const rows = [['Data','Cash','Risparmi','Azioni eToro','Azioni Fineco','Totale']];
+  list.forEach(s=>rows.push([
+    s.date,
+    Number(s.liquid)||0,
+    Number(s.savings)||0,
+    Number(s.stocksEtoro)||0,
+    Number(s.stocksFineco)||0,
+    Number(s.total)||0
+  ]));
+  return rows;
+}
+
+const _XLS_SERIES = [
+  {col:'B', name:'Cash',          color:'F0B86E'},
+  {col:'C', name:'Risparmi',      color:'A78BFA'},
+  {col:'D', name:'Azioni eToro',  color:'4ADE80'},
+  {col:'E', name:'Azioni Fineco', color:'F472B6'},
+  {col:'F', name:'Totale',        color:'2AA9C0'}
+];
+
+function _xlsChartXml(sheetName, nRows){
+  const last = nRows + 1;                      // riga 1 = intestazioni
+  const q = "'" + sheetName.replace(/'/g,"''") + "'";
+  const cat = `<cat><strRef><f>${q}!$A$2:$A$${last}</f></strRef></cat>`;
+  const ser = _XLS_SERIES.map((s,i)=>`<ser>`
+    + `<idx val="${i}"/><order val="${i}"/>`
+    + `<tx><strRef><f>${q}!$${s.col}$1</f></strRef></tx>`
+    + `<spPr><a:ln w="20000"><a:solidFill><a:srgbClr val="${s.color}"/></a:solidFill></a:ln></spPr>`
+    + `<marker><symbol val="none"/></marker>`
+    + cat
+    + `<val><numRef><f>${q}!$${s.col}$2:$${s.col}$${last}</f></numRef></val>`
+    + `</ser>`).join('');
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+    + `<chartSpace xmlns="http://schemas.openxmlformats.org/drawingml/2006/chart"`
+    + ` xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"`
+    + ` xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">`
+    + `<chart>`
+    + `<title><tx><rich><a:bodyPr/><a:p><a:pPr><a:defRPr/></a:pPr><a:r><a:t>Andamento Net Worth</a:t></a:r></a:p></rich></tx><overlay val="0"/></title>`
+    + `<autoTitleDeleted val="0"/>`
+    + `<plotArea><layout/><lineChart><grouping val="standard"/><varyColors val="0"/>`
+    + ser
+    + `<marker val="1"/><axId val="111111111"/><axId val="222222222"/></lineChart>`
+    + `<catAx><axId val="111111111"/><scaling><orientation val="minMax"/></scaling><delete val="0"/>`
+    + `<axPos val="b"/><crossAx val="222222222"/><lblOffset val="100"/>`
+    + `<majorTickMark val="none"/><minorTickMark val="none"/><tickLblPos val="nextTo"/></catAx>`
+    + `<valAx><axId val="222222222"/><scaling><orientation val="minMax"/></scaling><delete val="0"/>`
+    + `<axPos val="l"/><majorGridlines/><crossAx val="111111111"/>`
+    + `<majorTickMark val="none"/><minorTickMark val="none"/><tickLblPos val="nextTo"/></valAx>`
+    + `</plotArea><legend><legendPos val="b"/><overlay val="0"/></legend>`
+    + `<plotVisOnly val="1"/><dispBlanksAs val="gap"/></chart></chartSpace>`;
+}
+
+const _XLS_DRAWING_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"`
+  + ` xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"`
+  + ` xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart"`
+  + ` xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">`
+  + `<xdr:oneCellAnchor><xdr:from><xdr:col>7</xdr:col><xdr:colOff>0</xdr:colOff>`
+  + `<xdr:row>1</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>`
+  + `<xdr:ext cx="9000000" cy="4500000"/>`
+  + `<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr>`
+  + `<xdr:cNvPr id="2" name="Grafico Net Worth"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>`
+  + `<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm>`
+  + `<a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">`
+  + `<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" r:id="rId1"/>`
+  + `</a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:oneCellAnchor></xdr:wsDr>`;
+
+const _XLS_DRAWING_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+  + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart"`
+  + ` Target="../charts/chart1.xml"/></Relationships>`;
+
+const _XLS_SHEET_RELS = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>`
+  + `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`
+  + `<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing"`
+  + ` Target="../drawings/drawing1.xml"/></Relationships>`;
+
+// Aggiunge il grafico al foglio 1 dello zip prodotto da SheetJS.
+async function _xlsInjectChart(buf, sheetName, nRows){
+  const zip = await JSZip.loadAsync(buf);
+  const sheetPath = 'xl/worksheets/sheet1.xml';
+  if(!zip.file(sheetPath)) throw new Error('sheet1.xml non trovato');
+
+  zip.file('xl/charts/chart1.xml', _xlsChartXml(sheetName, nRows));
+  zip.file('xl/drawings/drawing1.xml', _XLS_DRAWING_XML);
+  zip.file('xl/drawings/_rels/drawing1.xml.rels', _XLS_DRAWING_RELS);
+  zip.file('xl/worksheets/_rels/sheet1.xml.rels', _XLS_SHEET_RELS);
+
+  const ct = await zip.file('[Content_Types].xml').async('string');
+  zip.file('[Content_Types].xml', ct.replace('</Types>',
+      '<Override PartName="/xl/charts/chart1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>'
+    + '<Override PartName="/xl/drawings/drawing1.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>'
+    + '</Types>'));
+
+  let sheet = await zip.file(sheetPath).async('string');
+  // <drawing> deve essere l'ultimo figlio di <worksheet>
+  if(!/<drawing /.test(sheet)){
+    if(!/xmlns:r=/.test(sheet)){
+      sheet = sheet.replace('<worksheet ', '<worksheet xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" ');
+    }
+    sheet = sheet.replace('</worksheet>', '<drawing r:id="rId1"/></worksheet>');
+  }
+  zip.file(sheetPath, sheet);
+
+  return await zip.generateAsync({type:'blob',
+    mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+
+async function exportExcel(){
+  if(typeof XLSX === 'undefined'){ alert('Libreria Excel non caricata. Controlla la connessione e ricarica.'); return; }
+  try{
+    const wb = XLSX.utils.book_new();
+    const used = new Set();
+
+    // 1. Net Worth per primo: è il foglio che riceve il grafico
+    const nwRows = _xlsNetWorthRows();
+    const nwName = _xlsName('Net Worth', used);
+    const nwSheet = XLSX.utils.aoa_to_sheet(nwRows);
+    nwSheet['!cols'] = [{wch:12},{wch:11},{wch:11},{wch:14},{wch:15},{wch:12}];
+    XLSX.utils.book_append_sheet(wb, nwSheet, nwName);
+
+    // 2. un foglio per ogni collezione dello stato
+    const scalari = [];
+    Object.keys(state).sort().forEach(k=>{
+      if(k === 'finance') return;                       // già sopra, il resto va nei scalari
+      const v = state[k];
+      if(Array.isArray(v)){
+        if(v.length) XLSX.utils.book_append_sheet(wb, _xlsSheetFromArray(v), _xlsName(k, used));
+        else scalari.push([k, '(vuoto)']);
+      } else if(v && typeof v === 'object'){
+        const chiavi = Object.keys(v);
+        if(chiavi.length > 6) XLSX.utils.book_append_sheet(wb, _xlsSheetFromMap(v), _xlsName(k, used));
+        else scalari.push([k, _xlsVal(v)]);
+      } else {
+        scalari.push([k, _xlsVal(v)]);
+      }
+    });
+
+    // budget: le ricariche di liquidità meritano un foglio proprio
+    const liq = (state.budget && state.budget.liquidity) || [];
+    if(liq.length) XLSX.utils.book_append_sheet(wb, _xlsSheetFromArray(liq), _xlsName('budget liquidita', used));
+
+    if(scalari.length){
+      XLSX.utils.book_append_sheet(wb,
+        XLSX.utils.aoa_to_sheet([['chiave','valore'], ...scalari]), _xlsName('Altri dati', used));
+    }
+
+    // 3. rete di sicurezza: JSON integrale a pezzi da una cella
+    const json = JSON.stringify(state);
+    const pezzi = [];
+    for(let i=0;i<json.length;i+=XLS_CELL_MAX) pezzi.push([json.slice(i,i+XLS_CELL_MAX)]);
+    XLSX.utils.book_append_sheet(wb,
+      XLSX.utils.aoa_to_sheet([['JSON completo — concatena le righe per ricostruirlo'], ...pezzi]),
+      _xlsName('JSON completo', used));
+
+    const buf = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+
+    let blob;
+    const righeDati = nwRows.length - 1;
+    if(righeDati >= 2 && typeof JSZip !== 'undefined'){
+      try{
+        blob = await _xlsInjectChart(buf, nwName, righeDati);
+      }catch(e){
+        console.warn('Grafico non iniettato, esporto solo i dati:', e);
+        blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      }
+    } else {
+      blob = new Blob([buf], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    }
+
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `dashboard_giacomo_${todayISO()}.xlsx`;
+    a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
+  }catch(e){
+    console.error('exportExcel:', e);
+    alert('Export Excel fallito: ' + e.message);
+  }
+}
+
 function resetAll(){
   if(!confirm('Cancellare TUTTI i dati? Operazione irreversibile.')) return;
   state = defaultState();
