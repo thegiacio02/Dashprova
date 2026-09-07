@@ -6540,14 +6540,15 @@ const NEWS_SOURCES = [
       'https://feeds.bloomberg.com/politics/news.rss',
       'https://news.google.com/rss/search?q=when:1d+site:bloomberg.com&hl=en-US&gl=US&ceid=US:en'
   ]},
+  // feeds.reuters.com è stato dismesso: resta solo la ricerca Google News
   { id:'reuters', name:'Reuters', color:'#FF8000', feeds:[
-      'https://feeds.reuters.com/reuters/businessNews',
-      'https://feeds.reuters.com/reuters/topNews',
       'https://news.google.com/rss/search?q=when:1d+site:reuters.com&hl=en-US&gl=US&ceid=US:en'
   ]},
+  // /rss/notizie.xml risponde 404: sostituito dalle sezioni ancora attive
   { id:'sole24', name:'Il Sole 24 Ore', color:'#0057A8', feeds:[
-      'https://www.ilsole24ore.com/rss/notizie.xml',
       'https://www.ilsole24ore.com/rss/economia.xml',
+      'https://www.ilsole24ore.com/rss/italia.xml',
+      'https://www.ilsole24ore.com/rss/finanza.xml',
       'https://news.google.com/rss/search?q=when:1d+site:ilsole24ore.com&hl=it-IT&gl=IT&ceid=IT:it'
   ]}
 ];
@@ -6572,12 +6573,41 @@ const CORS_PROXIES = [
   u => 'https://corsproxy.io/?' + encodeURIComponent(u),
   u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u)
 ];
+// Senza timeout un proxy che non risponde lascia la promise appesa per minuti
+// e lo spinner non arriva mai al ramo d'errore.
+const FEED_TIMEOUT_MS = 8000;
 let newsLoaded = false;
 
+// "2026-09-07 10:23:45" non è ISO: Safari lo rifiuta, quindi normalizziamo.
+function _normFeedDate(v){
+  const d = new Date(String(v||'').trim().replace(' ','T'));
+  return isNaN(d) ? new Date().toISOString() : d.toISOString();
+}
+
+// rss2json restituisce il feed già in JSON e con header CORS. È l'unico
+// servizio pubblico rimasto in piedi, quindi si prova per primo; i proxy
+// XML restano come fallback per quando torneranno su.
+async function fetchFeedViaRss2Json(rssUrl){
+  const res = await fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl),
+                          {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
+  if(!res.ok) return null;
+  const data = await res.json();
+  if(data.status!=='ok' || !Array.isArray(data.items) || !data.items.length) return null;
+  return data.items.map(i=>({
+    title:   (i.title||'').trim(),
+    link:    (i.link||'').trim(),
+    pubDate: _normFeedDate(i.pubDate)
+  })).filter(i=>i.title);
+}
+
 async function fetchFeedXML(rssUrl){
+  try{
+    const viaJson = await fetchFeedViaRss2Json(rssUrl);
+    if(viaJson && viaJson.length) return viaJson;
+  }catch(e){ /* passa ai proxy XML */ }
   for(const proxy of CORS_PROXIES){
     try{
-      const res = await fetch(proxy(rssUrl), {cache:'no-store'});
+      const res = await fetch(proxy(rssUrl), {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
       if(!res.ok) continue;
       const text = await res.text();
       if(!text || text.length<100) continue;
@@ -6787,7 +6817,7 @@ async function fetchStooq(stooqSym){
   const url = `https://stooq.com/q/d/l/?s=${stooqSym}&i=d`;
   for(const proxy of CORS_PROXIES){
     try{
-      const res = await fetch(proxy(url), {cache:'no-store'});
+      const res = await fetch(proxy(url), {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
       if(!res.ok) continue;
       const text = await res.text();
       const lines = text.trim().split(/\r?\n/).filter(l=>l && !l.startsWith('Date'));
@@ -6806,7 +6836,7 @@ async function fetchYahoo(sym){
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`;
   for(const proxy of CORS_PROXIES){
     try{
-      const res = await fetch(proxy(url), {cache:'no-store'});
+      const res = await fetch(proxy(url), {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
       if(!res.ok) continue;
       const text = await res.text();
       const data = JSON.parse(text);
@@ -8901,7 +8931,7 @@ async function fetchYahooHistory(sym, range='15y', interval='1mo'){
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}`;
   for(const proxy of CORS_PROXIES){
     try{
-      const res = await fetch(proxy(url), {cache:'no-store'});
+      const res = await fetch(proxy(url), {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
       if(!res.ok) continue;
       const data = JSON.parse(await res.text());
       const r = data?.chart?.result?.[0];
