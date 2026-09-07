@@ -6576,6 +6576,16 @@ const CORS_PROXIES = [
 // Senza timeout un proxy che non risponde lascia la promise appesa per minuti
 // e lo spinner non arriva mai al ramo d'errore.
 const FEED_TIMEOUT_MS = 8000;
+
+// Un proxy che fallisce finisce in quarantena. Senza, ogni giro del ticker
+// riprova tutti i proxy morti su ogni simbolo: ~34s per simbolo e centinaia
+// di richieste destinate a fallire. La quarantena scade da sola, quindi se
+// un servizio torna su viene ripreso senza intervento.
+const PROXY_QUARANTINE_MS = 10*60*1000;
+const _proxyDownUntil = new Map();
+const _proxyUsable   = i => (_proxyDownUntil.get(i)||0) <= Date.now();
+const _markProxyDown = i => _proxyDownUntil.set(i, Date.now() + PROXY_QUARANTINE_MS);
+const _markProxyUp   = i => _proxyDownUntil.delete(i);
 let newsLoaded = false;
 
 // "2026-09-07 10:23:45" non è ISO: Safari lo rifiuta, quindi normalizziamo.
@@ -6605,10 +6615,13 @@ async function fetchFeedXML(rssUrl){
     const viaJson = await fetchFeedViaRss2Json(rssUrl);
     if(viaJson && viaJson.length) return viaJson;
   }catch(e){ /* passa ai proxy XML */ }
-  for(const proxy of CORS_PROXIES){
+  for(let _pi=0; _pi<CORS_PROXIES.length; _pi++){
+    if(!_proxyUsable(_pi)) continue;
+    const proxy = CORS_PROXIES[_pi];
     try{
       const res = await fetch(proxy(rssUrl), {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
-      if(!res.ok) continue;
+      if(!res.ok){ _markProxyDown(_pi); continue; }
+      _markProxyUp(_pi);
       const text = await res.text();
       if(!text || text.length<100) continue;
       const xml = new DOMParser().parseFromString(text,'text/xml');
@@ -6620,7 +6633,7 @@ async function fetchFeedXML(rssUrl){
         link:  (n.querySelector('link')?.getAttribute('href') || n.querySelector('link')?.textContent || '').trim(),
         pubDate: (n.querySelector('pubDate')?.textContent || n.querySelector('updated')?.textContent || n.querySelector('published')?.textContent || new Date().toISOString()).trim()
       })).filter(i=>i.title);
-    }catch(e){ /* try next proxy */ }
+    }catch(e){ _markProxyDown(_pi); }
   }
   return null;
 }
@@ -6815,10 +6828,13 @@ function renderWeather(dayIdx){
 async function fetchStooq(stooqSym){
   // daily history CSV: Date,Open,High,Low,Close,Volume — sorted ascending
   const url = `https://stooq.com/q/d/l/?s=${stooqSym}&i=d`;
-  for(const proxy of CORS_PROXIES){
+  for(let _pi=0; _pi<CORS_PROXIES.length; _pi++){
+    if(!_proxyUsable(_pi)) continue;
+    const proxy = CORS_PROXIES[_pi];
     try{
       const res = await fetch(proxy(url), {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
-      if(!res.ok) continue;
+      if(!res.ok){ _markProxyDown(_pi); continue; }
+      _markProxyUp(_pi);
       const text = await res.text();
       const lines = text.trim().split(/\r?\n/).filter(l=>l && !l.startsWith('Date'));
       if(lines.length<2) continue;
@@ -6828,16 +6844,19 @@ async function fetchStooq(stooqSym){
       const prevClose= parseFloat(prev[4]); // close giorno prima
       if(isNaN(price) || isNaN(prevClose)) continue;
       return { price, prev: prevClose };
-    }catch(e){}
+    }catch(e){ _markProxyDown(_pi); }
   }
   return null;
 }
 async function fetchYahoo(sym){
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=5d`;
-  for(const proxy of CORS_PROXIES){
+  for(let _pi=0; _pi<CORS_PROXIES.length; _pi++){
+    if(!_proxyUsable(_pi)) continue;
+    const proxy = CORS_PROXIES[_pi];
     try{
       const res = await fetch(proxy(url), {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
-      if(!res.ok) continue;
+      if(!res.ok){ _markProxyDown(_pi); continue; }
+      _markProxyUp(_pi);
       const text = await res.text();
       const data = JSON.parse(text);
       const r = data?.chart?.result?.[0];
@@ -6850,16 +6869,85 @@ async function fetchYahoo(sym){
       if(closes.length >= 2) prev = closes[closes.length - 2];
       else prev = m.previousClose ?? m.chartPreviousClose;
       return { price, prev };
-    }catch(e){}
+    }catch(e){ _markProxyDown(_pi); }
   }
   return null;
 }
 const STOOQ_MAP = { 'QQQ':'qqq.us', 'FTSEMIB.MI':'^fmib', 'EURUSD=X':'eurusd' };
+
+// ── Sorgenti con CORS nativo, senza proxy ──────────────────────────────
+// Yahoo non manda header CORS, quindi dipende dai proxy pubblici (oggi
+// tutti fuori uso). Cambi e crypto hanno API che rispondono direttamente
+// al browser, quindi per quei simboli si evita del tutto il proxy.
+// Frankfurter espone il fixing BCE: un solo giorno lavorativo di dato,
+// aggiornato ~16:00 CET, quindi nel weekend resta fermo a venerdì.
+const NATIVE_FX = { 'EURUSD=X':'EURUSD', 'GBPUSD=X':'GBPUSD', 'USDJPY=X':'USDJPY' };
+const NATIVE_CG = { 'BTC-USD':'bitcoin', 'ETH-USD':'ethereum' };
+const NATIVE_TTL_MS = 60*1000;
+
+// Il ticker chiede i 15 simboli in parallelo: memorizziamo la promise, non
+// il risultato, così le richieste dello stesso gruppo si fondono in una sola.
+const _nativeCache = {};
+function _nativeCached(key, fn){
+  const hit = _nativeCache[key];
+  if(hit && Date.now()-hit.at < NATIVE_TTL_MS) return hit.p;
+  const p = fn().catch(e=>{ _nativeCache[key] = null; throw e; });
+  _nativeCache[key] = {p, at: Date.now()};
+  return p;
+}
+
+// Una chiamata sola per tutti e tre i cambi: base EUR, incroci derivati.
+function _fetchFxSeries(){
+  return _nativeCached('fx', async ()=>{
+    const iso = d => d.toISOString().slice(0,10);
+    const end = new Date(), start = new Date(Date.now() - 10*86400000);
+    const res = await fetch(`https://api.frankfurter.dev/v1/${iso(start)}..${iso(end)}?base=EUR&symbols=USD,GBP,JPY`,
+                            {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
+    if(!res.ok) return null;
+    const data = await res.json();
+    const days = Object.keys(data.rates||{}).sort();
+    if(days.length < 2) return null;
+    const pick = k => { const r = data.rates[k]; return {EURUSD:r.USD, GBPUSD:r.USD/r.GBP, USDJPY:r.JPY/r.USD}; };
+    return { last: pick(days[days.length-1]), prev: pick(days[days.length-2]) };
+  });
+}
+
+function _fetchCryptoPrices(){
+  return _nativeCached('cg', async ()=>{
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true',
+                            {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
+    if(!res.ok) return null;
+    return await res.json();
+  });
+}
+
+async function fetchQuoteNative(sym){
+  if(NATIVE_FX[sym]){
+    const fx = await _fetchFxSeries();
+    if(!fx) return null;
+    const k = NATIVE_FX[sym];
+    const price = fx.last[k], prev = fx.prev[k];
+    return (isFinite(price) && isFinite(prev) && prev !== 0) ? {price, prev} : null;
+  }
+  if(NATIVE_CG[sym]){
+    const cg = await _fetchCryptoPrices();
+    const row = cg && cg[NATIVE_CG[sym]];
+    if(!row || !isFinite(row.usd)) return null;
+    // CoinGecko dà la variazione 24h, da cui si ricava il prezzo di riferimento
+    const chg = Number(row.usd_24h_change);
+    const prev = (isFinite(chg) && chg > -100) ? row.usd / (1 + chg/100) : row.usd;
+    return {price: row.usd, prev};
+  }
+  return null;
+}
+
 async function fetchQuote(sym){
+  const native = await fetchQuoteNative(sym).catch(()=>null);
+  if(native) return native;
   return (await fetchYahoo(sym)) || (await fetchStooq(STOOQ_MAP[sym]));
 }
 function fmtPrice(v, sym){
-  if(sym.includes('EURUSD')) return v.toFixed(4);
+  if(sym.includes('EURUSD') || sym.includes('GBPUSD')) return v.toFixed(4);
   if(v>=1000) return v.toLocaleString('it-IT',{minimumFractionDigits:0,maximumFractionDigits:0});
   return v.toFixed(2);
 }
@@ -8929,10 +9017,13 @@ function setDcaCurrency(cur){
 // Serie storica mensile (usa adjclose per includere i dividendi → total return)
 async function fetchYahooHistory(sym, range='15y', interval='1mo'){
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}`;
-  for(const proxy of CORS_PROXIES){
+  for(let _pi=0; _pi<CORS_PROXIES.length; _pi++){
+    if(!_proxyUsable(_pi)) continue;
+    const proxy = CORS_PROXIES[_pi];
     try{
       const res = await fetch(proxy(url), {cache:'no-store', signal: AbortSignal.timeout(FEED_TIMEOUT_MS)});
-      if(!res.ok) continue;
+      if(!res.ok){ _markProxyDown(_pi); continue; }
+      _markProxyUp(_pi);
       const data = JSON.parse(await res.text());
       const r = data?.chart?.result?.[0];
       const ts = r?.timestamp;
@@ -8946,7 +9037,7 @@ async function fetchYahooHistory(sym, range='15y', interval='1mo'){
         out.push({ym:_ym(new Date(ts[i]*1000)), close:c});
       }
       if(out.length) return out;
-    }catch(e){}
+    }catch(e){ _markProxyDown(_pi); }
   }
   return null;
 }
@@ -11523,10 +11614,13 @@ async function loadFrNews(){
 
   let items = null;
   for(const feed of feeds){
-    for(const proxy of CORS_PROXIES){
+    for(let _pi=0; _pi<CORS_PROXIES.length; _pi++){
+      if(!_proxyUsable(_pi)) continue;
+      const proxy = CORS_PROXIES[_pi];
       try{
         const res = await fetch(proxy(feed), {cache:'no-store', signal: AbortSignal.timeout(8000)});
-        if(!res.ok) continue;
+        if(!res.ok){ _markProxyDown(_pi); continue; }
+      _markProxyUp(_pi);
         const text = await res.text();
         if(!text || text.length < 100) continue;
         const xml = new DOMParser().parseFromString(text, 'text/xml');
@@ -11539,7 +11633,7 @@ async function loadFrNews(){
           pubDate: (n.querySelector('pubDate')?.textContent || n.querySelector('updated')?.textContent || '').trim()
         })).filter(i=>i.title);
         if(items && items.length) break;
-      }catch(e){ /* try next */ }
+      }catch(e){ _markProxyDown(_pi); }
     }
     if(items && items.length) break;
   }
