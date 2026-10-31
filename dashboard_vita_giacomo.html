@@ -1035,6 +1035,37 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
 .oggi-section-sep::before,.oggi-section-sep::after{content:'';flex:1;height:1px;background:var(--border)}
 .oggi-section-sep span{font-size:.6rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);white-space:nowrap;padding:0 2px}
 /* ===== OGGI GRID ORDERS ===== */
+#oggi-sep-nosmoke{order:1}
+#nosmoke-card{order:2;grid-column:1/-1}
+/* ===== SMOKE FREE TRACKER ===== */
+.nosmoke-card{border-left:3px solid #22c55e;background:linear-gradient(135deg,rgba(34,197,94,.09),rgba(20,184,166,.04))}
+.ns-empty{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:4px 0}
+.ns-empty-ico{font-size:1.9rem;line-height:1}
+.ns-empty-txt{flex:1;min-width:200px;font-size:.84rem;color:var(--muted2);line-height:1.5}
+.ns-empty-txt strong{color:var(--text);font-size:.92rem}
+.ns-main{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.ns-counter{flex:0 0 auto;display:flex;flex-direction:column;gap:1px}
+.ns-days{font-size:3rem;font-weight:800;line-height:1;letter-spacing:-.03em;color:#22c55e;font-variant-numeric:tabular-nums}
+.ns-days-lbl{font-size:.82rem;font-weight:700;color:var(--text);letter-spacing:-.01em}
+.ns-sub{font-size:.71rem;color:var(--muted2);font-family:var(--mono);margin-top:3px}
+.ns-stats{display:flex;gap:10px;flex-wrap:wrap;flex:1;min-width:200px}
+.ns-stat{flex:1 1 92px;background:var(--surface-2);border:1px solid var(--hair);border-radius:10px;padding:9px 11px}
+.ns-stat .v{font-size:1.1rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums;line-height:1.1}
+.ns-stat .l{font-size:.6rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-top:3px}
+.ns-milestone{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.ns-ms-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.78rem;margin-bottom:6px}
+.ns-ms-next{color:var(--text)}
+.ns-ms-next strong{color:#22c55e}
+.ns-ms-eta{color:var(--muted2);font-family:var(--mono);font-size:.72rem;white-space:nowrap}
+.ns-ms-bar{height:7px;background:var(--surface-2);border-radius:4px;overflow:hidden}
+.ns-ms-fill{height:100%;background:linear-gradient(90deg,#22c55e,#14b8a6);border-radius:4px;transition:width .4s ease}
+.ns-ms-last{font-size:.73rem;color:var(--muted2);margin-top:7px;line-height:1.45}
+.ns-ms-last b{color:#22c55e;font-weight:700}
+.ns-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
+.ns-actions button{background:transparent;border:1px solid var(--border);color:var(--muted2);padding:4px 11px;border-radius:7px;font-size:.72rem;cursor:pointer;font-weight:600;transition:all .15s}
+.ns-actions button:hover{border-color:var(--teal);color:var(--teal)}
+.ns-actions button.ns-relapse:hover{border-color:var(--red);color:var(--red)}
+@media(max-width:620px){.ns-days{font-size:2.3rem}.ns-main{gap:16px}}
 #oggi-sep-agenda{order:3}
 #calendar-today-card{order:4;grid-column:1/-1;border-left:3px solid #4285f4}
 #oggi-sep-azioni{order:5}
@@ -1143,6 +1174,8 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
   #tab-oggi.today-command-layout{grid-template-columns:1fr}
   #tab-oggi.today-command-layout > *{grid-column:1/-1!important}
   #oggi-hero-header{order:0}
+  #oggi-sep-nosmoke{order:1}
+  #nosmoke-card{order:2}
   #oggi-sep-agenda{order:3}
   #calendar-today-card{order:4}
   #oggi-sep-azioni{order:5}
@@ -1320,6 +1353,14 @@ footer{text-align:center;padding:24px;color:var(--muted);font-size:.72rem}
       <span class="weather-mini-temp" id="weather-mini-temp">—°</span>
       <span class="weather-mini-summary" id="weather-mini-summary">Meteo Milano</span>
     </div>
+  </div>
+
+  <!-- SEP: SMOKE FREE -->
+  <div class="oggi-section-sep" id="oggi-sep-nosmoke"><span>🚭 Smoke free</span></div>
+
+  <!-- CONTATORE NON FUMO -->
+  <div class="card nosmoke-card" id="nosmoke-card">
+    <div id="nosmoke-body"></div>
   </div>
 
   <!-- SEP: AGENDA -->
@@ -2495,7 +2536,8 @@ function defaultState(){ return {
     calendarSyncUrl:'',
     calendarSyncToken:'',
     finance:{netWorth:[],seeded:false},
-    budget:{monthly:700, cycleStartDay:9, liquidity:[]}
+    budget:{monthly:700, cycleStartDay:9, liquidity:[]},
+    noSmoke:{quitAt:null, cigsPerDay:10, pricePerPack:6, cigsPerPack:20, history:[]}
   };}
 
 function load(){
@@ -5056,9 +5098,167 @@ function renderOggiHero(){
   dateEl.textContent = new Date().toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 }
 
+// ============ SMOKE FREE TRACKER ============
+function _nsEnsure(){
+  ensureState();
+  if(!state.noSmoke) state.noSmoke = {quitAt:null, cigsPerDay:10, pricePerPack:6, cigsPerPack:20, history:[]};
+  const n = state.noSmoke;
+  if(typeof n.cigsPerDay   !== 'number') n.cigsPerDay = 10;
+  if(typeof n.pricePerPack !== 'number') n.pricePerPack = 6;
+  if(typeof n.cigsPerPack  !== 'number' || n.cigsPerPack <= 0) n.cigsPerPack = 20;
+  if(!Array.isArray(n.history)) n.history = [];
+  return n;
+}
+
+// Traguardi di salute (tempistiche divulgate da NHS / OMS)
+const NS_MILESTONES = [
+  {h:1/3,        label:'20 minuti',   text:'Battito e pressione tornano ai valori normali'},
+  {h:8,          label:'8 ore',       text:'Nicotina e monossido di carbonio nel sangue dimezzati'},
+  {h:24,         label:'24 ore',      text:'Monossido di carbonio eliminato, i polmoni iniziano a ripulirsi'},
+  {h:48,         label:'48 ore',      text:'Gusto e olfatto migliorano nettamente'},
+  {h:72,         label:'72 ore',      text:'Bronchi più rilassati: respiri meglio e hai più energia'},
+  {h:14*24,      label:'2 settimane', text:'Circolazione migliorata, muoverti costa meno fatica'},
+  {h:30*24,      label:'1 mese',      text:'Tosse e affanno iniziano a diminuire'},
+  {h:90*24,      label:'3 mesi',      text:'Capacità polmonare aumentata fino al 10%'},
+  {h:365*24,     label:'1 anno',      text:'Rischio di infarto circa dimezzato rispetto a un fumatore'},
+  {h:5*365*24,   label:'5 anni',      text:'Rischio di ictus vicino a quello di un non fumatore'},
+  {h:10*365*24,  label:'10 anni',     text:'Rischio di tumore al polmone circa dimezzato'},
+  {h:15*365*24,  label:'15 anni',     text:'Rischio cardiovascolare come chi non ha mai fumato'}
+];
+
+function _nsCompute(){
+  const n = _nsEnsure();
+  if(!n.quitAt) return {configured:false, n};
+  const start = new Date(n.quitAt);
+  if(isNaN(start)) return {configured:false, n};
+  const ms = Math.max(0, Date.now() - start.getTime());
+  const days  = Math.floor(ms/86400000);
+  const hours = Math.floor(ms/3600000) % 24;
+  const mins  = Math.floor(ms/60000) % 60;
+  const hoursTotal = ms/3600000;
+  const cigsAvoided = Math.floor((ms/86400000) * n.cigsPerDay);
+  const perCig = n.cigsPerPack > 0 ? (n.pricePerPack / n.cigsPerPack) : 0;
+  const moneySaved = cigsAvoided * perCig;
+
+  let next = null, prevH = 0;
+  for(const m of NS_MILESTONES){ if(hoursTotal < m.h){ next = m; break; } prevH = m.h; }
+  const reached = NS_MILESTONES.filter(m => hoursTotal >= m.h);
+  const lastReached = reached.length ? reached[reached.length-1] : null;
+  let msPct = 100, msEta = '';
+  if(next){
+    msPct = Math.max(0, Math.min(100, ((hoursTotal - prevH) / (next.h - prevH)) * 100));
+    const remH = next.h - hoursTotal;
+    msEta = remH < 1 ? `${Math.max(1,Math.ceil(remH*60))} min`
+          : remH < 48 ? `${Math.ceil(remH)} h`
+          : `${Math.ceil(remH/24)} giorni`;
+  }
+  // record: miglior striscia tra quelle passate e quella attuale
+  const bestPast = n.history.reduce((a,h)=>Math.max(a, h.days||0), 0);
+  return {configured:true, n, start, ms, days, hours, mins, hoursTotal, cigsAvoided, moneySaved,
+          next, msPct, msEta, lastReached, reachedCount:reached.length, total:NS_MILESTONES.length,
+          bestPast, isRecord: days >= bestPast};
+}
+
+function renderNoSmoke(){
+  const el = document.getElementById('nosmoke-body');
+  if(!el) return;
+  const c = _nsCompute();
+
+  if(!c.configured){
+    el.innerHTML = `<div class="ns-empty">
+      <div class="ns-empty-ico">🚭</div>
+      <div class="ns-empty-txt"><strong>Da quanto non fumi?</strong><br>Imposta il momento in cui hai smesso: conto i giorni, le sigarette evitate, i soldi risparmiati e i traguardi di salute raggiunti.</div>
+      <button class="btn sm" onclick="setupNoSmoke()">Imposta data</button>
+    </div>`;
+    return;
+  }
+
+  const money = '€' + c.moneySaved.toLocaleString('it-IT',{minimumFractionDigits:0, maximumFractionDigits: c.moneySaved<100?2:0});
+  const startTxt = c.start.toLocaleDateString('it-IT',{day:'numeric',month:'short',year:'numeric'}) +
+                   ' · ' + c.start.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const recordBadge = (c.bestPast>0 && c.isRecord) ? ' 🏆' : '';
+
+  let msBlock = '';
+  if(c.next){
+    msBlock = `
+      <div class="ns-ms-head">
+        <span class="ns-ms-next">Prossimo traguardo: <strong>${c.next.label}</strong> — ${escapeHtml(c.next.text)}</span>
+        <span class="ns-ms-eta">tra ${c.msEta}</span>
+      </div>
+      <div class="ns-ms-bar"><div class="ns-ms-fill" style="width:${c.msPct}%"></div></div>`;
+  } else {
+    msBlock = `<div class="ns-ms-head"><span class="ns-ms-next">🎉 Hai raggiunto <strong>tutti i traguardi</strong> di salute. Enorme.</span></div>`;
+  }
+  if(c.lastReached){
+    msBlock += `<div class="ns-ms-last">✓ <b>${c.lastReached.label}</b>: ${escapeHtml(c.lastReached.text)}</div>`;
+  }
+
+  el.innerHTML = `
+    <div class="ns-main">
+      <div class="ns-counter">
+        <div class="ns-days">${c.days}${recordBadge}</div>
+        <div class="ns-days-lbl">giorn${c.days===1?'o':'i'} senza fumare</div>
+        <div class="ns-sub">${c.hours}h ${c.mins}m · da ${startTxt}</div>
+      </div>
+      <div class="ns-stats">
+        <div class="ns-stat"><div class="v">${c.cigsAvoided.toLocaleString('it-IT')}</div><div class="l">sigarette evitate</div></div>
+        <div class="ns-stat"><div class="v">${money}</div><div class="l">risparmiati</div></div>
+        <div class="ns-stat"><div class="v">${c.reachedCount}/${c.total}</div><div class="l">traguardi salute</div></div>
+        ${c.bestPast>0?`<div class="ns-stat"><div class="v">${c.bestPast}</div><div class="l">record precedente</div></div>`:''}
+      </div>
+    </div>
+    <div class="ns-milestone">${msBlock}</div>
+    <div class="ns-actions">
+      <button onclick="setupNoSmoke()" title="Correggi la data di inizio">📅 Data</button>
+      <button onclick="editNoSmokeSettings()" title="Sigarette al giorno e prezzo">⚙ Abitudini</button>
+      <button class="ns-relapse" onclick="resetNoSmoke()" title="Azzera e riparti da adesso">↺ Ho ricominciato</button>
+    </div>`;
+}
+
+function setupNoSmoke(){
+  const n = _nsEnsure();
+  const first = !n.quitAt;
+  const curD = n.quitAt ? n.quitAt.slice(0,10) : todayISO();
+  const d = prompt('Data in cui hai smesso di fumare (YYYY-MM-DD):', curD);
+  if(d === null) return;
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d.trim())){ alert('Formato non valido. Usa YYYY-MM-DD (es. 2026-09-15).'); return; }
+  const curT = n.quitAt ? new Date(n.quitAt).toTimeString().slice(0,5) : '09:00';
+  const t = prompt('Orario approssimativo (HH:MM):', curT);
+  if(t === null) return;
+  const tt = /^\d{1,2}:\d{2}$/.test(t.trim()) ? t.trim().padStart(5,'0') : '00:00';
+  const dt = new Date(`${d.trim()}T${tt}:00`);
+  if(isNaN(dt)){ alert('Data o ora non valida.'); return; }
+  if(dt.getTime() > Date.now()){ alert('La data è nel futuro: controlla.'); return; }
+  n.quitAt = dt.toISOString();
+  save(); renderNoSmoke();
+  if(first) editNoSmokeSettings();
+}
+
+function editNoSmokeSettings(){
+  const n = _nsEnsure();
+  const c = prompt('Quante sigarette fumavi al giorno?', n.cigsPerDay);
+  if(c !== null){ const v = parseFloat(String(c).replace(',','.')); if(!isNaN(v) && v >= 0) n.cigsPerDay = v; }
+  const p = prompt('Prezzo di un pacchetto (€):', n.pricePerPack);
+  if(p !== null){ const v = parseFloat(String(p).replace(',','.')); if(!isNaN(v) && v >= 0) n.pricePerPack = v; }
+  const k = prompt('Quante sigarette per pacchetto?', n.cigsPerPack);
+  if(k !== null){ const v = parseInt(k,10); if(!isNaN(v) && v > 0) n.cigsPerPack = v; }
+  save(); renderNoSmoke();
+}
+
+function resetNoSmoke(){
+  const n = _nsEnsure();
+  if(!n.quitAt) return;
+  const c = _nsCompute();
+  if(!confirm(`Azzerare il contatore e ripartire da adesso?\n\nLa striscia attuale (${c.days} giorni) viene salvata nello storico come record da battere.`)) return;
+  n.history.push({from:n.quitAt, to:new Date().toISOString(), days:c.days});
+  n.quitAt = new Date().toISOString();
+  save(); renderNoSmoke();
+}
+
 // ============ MASTER RENDER ============
 function renderAll(){
   try { renderOggiHero(); } catch(e){}
+  try { renderNoSmoke(); } catch(e){ console.error('renderNoSmoke:', e); }
   paintCornice();
   try { renderTopKpis(); } catch(e){}
   try { renderWeekly(); } catch(e){}
@@ -5681,6 +5881,8 @@ setInterval(loadWeather, 15*60*1000);   // ogni 15min
 setInterval(loadQuotes,  5*60*1000);    // ogni 5min
 renderOggiHero();                       // saluto+data subito, senza aspettare Firestore
 setInterval(renderOggiHero, 60*1000);   // aggiorna ogni minuto (cambio ora)
+try { renderNoSmoke(); } catch(e){}     // contatore smoke free subito
+setInterval(()=>{ try{ renderNoSmoke(); }catch(e){} }, 60*1000); // tick dei minuti
 
 // ============ TICKER TAPE (trading room) ============
 const TICKER_SYMS = [
